@@ -540,7 +540,6 @@ class CGmain: public BaseProject {
 			dampedCamPos = CamPos * (1 - exp(-lambdaCam * deltaT)) +
 						 dampedCamPos * exp(-lambdaCam * deltaT); 
 			M = MakeViewProjectionLookAt(dampedCamPos, CamTarget, glm::vec3(0,1,0), CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
-			RebuildPipeline();
 		} else {
 
 			CamYaw -= ROT_SPEED * deltaT * viewVec.y;
@@ -554,8 +553,11 @@ class CGmain: public BaseProject {
 			glm::vec3 Cam1Pos = cubePosition + glm::vec3(glm::rotate(glm::mat4(1), Yaw, glm::vec3(0,1,0)) *
 							 glm::vec4(Cam1stPos,1));
 			M = MakeViewProjectionLookInDirection(Cam1Pos, Yaw + CamYaw, CamPitch, CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
-			RebuildPipeline();
 		} 
+
+		if(currScene == 2) {
+			RebuildPipeline();
+		}
 
 		glm::mat4 ViewPrj =  M;
 		UniformBufferObject ubo{};

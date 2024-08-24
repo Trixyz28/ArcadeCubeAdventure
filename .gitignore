@@ -1,0 +1,9 @@
+/*
+!.gitignore
+!headers/
+!models/
+!modules/
+!shaders/
+!textures/
+!CGmain.cpp
+!README.md

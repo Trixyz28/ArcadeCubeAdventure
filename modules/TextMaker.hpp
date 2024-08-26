@@ -202,9 +202,8 @@ struct TextMaker {
 	}
 
 	void createTextDescriptorSets() {
-		DS.init(BP, &DSL, {
-					{0, TEXTURE, 0, &T}
-				});
+		Texture* TA[] = { &T };
+		DS.init(BP, &DSL, TA);
 	}
 
 	void pipelinesAndDescriptorSetsInit() {

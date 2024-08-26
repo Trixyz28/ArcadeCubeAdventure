@@ -46,16 +46,17 @@ class CGmain: public BaseProject {
 	protected:
 	
 	// Descriptor Layouts ["classes" of what will be passed to the shaders]
-	DescriptorSetLayout DSL;
+	DescriptorSetLayout DSL, DSLBlinn;
 
 	// Vertex formats
 	VertexDescriptor VD;
 
 	// Pipelines [Shader couples]
-	Pipeline P;
+	Pipeline P, PBlinn;
 
 	Scene SC;
 	glm::vec3 **deltaP;
+	std::vector<PipelineRef> PRs;
 
 	TextMaker txt;
 
@@ -111,10 +112,16 @@ class CGmain: public BaseProject {
 	void localInit() {
 		// Descriptor Layouts [what will be passed to the shaders]
 		DSL.init(this, {
-					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS},
-					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
-					{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS}
+					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(UniformBufferObject)},
+					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
+					{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(GlobalUniformBufferObject)}
 				});
+
+		DSLBlinn.init(this, {
+					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(UniformBufferObject)},
+					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
+					{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(GlobalUniformBufferObject)}
+			});
 
 		// Vertex descriptors
 		VD.init(this, {
@@ -132,6 +139,12 @@ class CGmain: public BaseProject {
 		P.init(this, &VD, "shaders/PhongVert.spv", "shaders/PhongFrag.spv", {&DSL});
 		P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
  								    VK_CULL_MODE_NONE, false);
+		PBlinn.init(this, &VD, "shaders/PhongVert.spv", "shaders/BlinnFrag.spv", { &DSLBlinn });
+
+
+		PRs.resize(2);
+		PRs[0].init("P", &P, &VD);
+		PRs[1].init("PBlinn", &PBlinn, &VD);
 
 		// Models, textures and Descriptors (values assigned to the uniforms)
 /*		std::vector<Vertex> vertices = {
@@ -146,19 +159,19 @@ class CGmain: public BaseProject {
 
 
 		// Load Scene: the models are stored in json
-		SC.init(this, &VD, DSL, P, "models/scene.json");
+		SC.init(this, &VD, DSL, PRs, "models/scene.json");
 		
 		// Updates the text
 		txt.init(this, &outText);
 
 		// Init local variables
-		cubePosition = glm::vec3(SC.I[SC.InstanceIds["tb"]].Wm[3]);
+		cubePosition = glm::vec3(SC.I[SC.InstanceIds["tb"]]->Wm[3]);
 		cubeInitialPosition = cubePosition;
 		Yaw = 0;
 		
 		deltaP = (glm::vec3 **)calloc(SC.InstanceCount, sizeof(glm::vec3 *));
 		for(int i=0; i < SC.InstanceCount; i++) {
-			deltaP[i] = new glm::vec3(SC.I[i].Wm[3]);
+			deltaP[i] = new glm::vec3(SC.I[i]->Wm[3]);
 		}
 	}
 	
@@ -166,6 +179,7 @@ class CGmain: public BaseProject {
 	void pipelinesAndDescriptorSetsInit() {
 		// This creates a new pipeline (with the current surface), using its shaders
 		P.create();
+		PBlinn.create();
 
 		// Here you define the data set
 		SC.pipelinesAndDescriptorSetsInit(DSL);
@@ -284,8 +298,7 @@ class CGmain: public BaseProject {
 	// with their buffers and textures
 	
 	void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-		// binds the pipeline
-		P.bind(commandBuffer);
+		
 
 /*		// binds the data set
 		DS1.bind(commandBuffer, P, 0, currentImage);
@@ -540,7 +553,7 @@ class CGmain: public BaseProject {
 			dampedCamPos = CamPos * (1 - exp(-lambdaCam * deltaT)) +
 						 dampedCamPos * exp(-lambdaCam * deltaT); 
 			M = MakeViewProjectionLookAt(dampedCamPos, CamTarget, glm::vec3(0,1,0), CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
-			RebuildPipeline();
+			//RebuildPipeline();
 		} else {
 
 			CamYaw -= ROT_SPEED * deltaT * viewVec.y;
@@ -554,9 +567,12 @@ class CGmain: public BaseProject {
 			glm::vec3 Cam1Pos = cubePosition + glm::vec3(glm::rotate(glm::mat4(1), Yaw, glm::vec3(0,1,0)) *
 							 glm::vec4(Cam1stPos,1));
 			M = MakeViewProjectionLookInDirection(Cam1Pos, Yaw + CamYaw, CamPitch, CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
-			RebuildPipeline();
+			//RebuildPipeline();
 		} 
 
+		if (currScene == 2) {
+			RebuildPipeline();
+		}
 		glm::mat4 ViewPrj =  M;
 		UniformBufferObject ubo{};
 		glm::mat4 baseTr = glm::mat4(1.0f);								
@@ -577,12 +593,13 @@ class CGmain: public BaseProject {
 				int i = SC.InstanceIds[it->c_str()];
 				glm::vec3 dP = glm::vec3(glm::rotate(glm::mat4(1), Yaw, glm::vec3(0,1,0)) *
 										 glm::vec4(*deltaP[i],1));
-				ubo.mMat = MakeWorld(cubePosition + dP, Yaw, 0.0f, 0) * baseTr * SC.I[i].Wm * SC.M[SC.I[i].Mid]->Wm;
+				ubo.mMat = MakeWorld(cubePosition + dP, Yaw, 0.0f, 0) * baseTr * SC.I[i]->Wm * SC.M[SC.I[i]->Mid]->Wm;
 				ubo.mvpMat = ViewPrj * ubo.mMat;
 				ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
 
-				SC.DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-				SC.DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
+
+				SC.I[i]->DS[0]->map(currentImage, &ubo, sizeof(ubo), 0);
+				SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 			}
 
 			/*
@@ -618,8 +635,8 @@ class CGmain: public BaseProject {
 				ubo.mvpMat = glm::mat4(0);
 				ubo.nMat = glm::mat4(0);
 
-				SC.DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-				SC.DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
+				SC.I[i]->DS[0]->map(currentImage, &ubo, sizeof(ubo), 0);
+				SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 			}
 		}
 
@@ -628,12 +645,12 @@ class CGmain: public BaseProject {
 			int i = SC.InstanceIds[it->c_str()];
 //std::cout << *it << " " << i << "\n";
 			// Product per transform matrix
-			ubo.mMat = SC.I[i].Wm * baseTr ;
+			ubo.mMat = SC.I[i]->Wm * baseTr ;
 			ubo.mvpMat = ViewPrj * ubo.mMat;
 			ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
 
-			SC.DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-			SC.DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
+			SC.I[i]->DS[0]->map(currentImage, &ubo, sizeof(ubo), 0);
+			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
 	}
 };

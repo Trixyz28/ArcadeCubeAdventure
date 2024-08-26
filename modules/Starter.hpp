@@ -280,12 +280,14 @@ struct DescriptorSetLayoutBinding {
 	uint32_t binding;
 	VkDescriptorType type;
 	VkShaderStageFlags flags;
+	int linkSize;
 };
 
 
 struct DescriptorSetLayout {
 	BaseProject *BP;
  	VkDescriptorSetLayout descriptorSetLayout;
+	std::vector<DescriptorSetLayoutBinding> Bindings;
  	
  	void init(BaseProject *bp, std::vector<DescriptorSetLayoutBinding> B);
 	void cleanup();
@@ -339,7 +341,7 @@ struct DescriptorSet {
 	std::vector<bool> toFree;
 
 	void init(BaseProject *bp, DescriptorSetLayout *L,
-		std::vector<DescriptorSetElement> E);
+		Texture **Txs);
 	void cleanup();
   	void bind(VkCommandBuffer commandBuffer, Pipeline &P, int setId, int currentImage);
   	void map(int currentImage, void *src, int size, int slot);
@@ -3263,9 +3265,10 @@ void Pipeline::cleanup() {
 		vkDestroyPipelineLayout(BP->device, pipelineLayout, nullptr);
 }
 
-void DescriptorSetLayout::init(BaseProject *bp, std::vector<DescriptorSetLayoutBinding> B) {
+void DescriptorSetLayout::init(BaseProject* bp, std::vector<DescriptorSetLayoutBinding> B) {
 	BP = bp;
-	
+	Bindings = B;
+
 	std::vector<VkDescriptorSetLayoutBinding> bindings;
 	bindings.resize(B.size());
 	for(int i = 0; i < B.size(); i++) {
@@ -3293,20 +3296,28 @@ void DescriptorSetLayout::cleanup() {
     	vkDestroyDescriptorSetLayout(BP->device, descriptorSetLayout, nullptr);	
 }
 
-void DescriptorSet::init(BaseProject *bp, DescriptorSetLayout *DSL,
-						 std::vector<DescriptorSetElement> E) {
+void DescriptorSet::init(BaseProject* bp, DescriptorSetLayout* DSL,
+							Texture** Txs) {
 	BP = bp;
+	int size = DSL->Bindings.size();
 	
-	uniformBuffers.resize(E.size());
-	uniformBuffersMemory.resize(E.size());
-	toFree.resize(E.size());
+	uniformBuffers.resize(size);
+	uniformBuffersMemory.resize(size);
+	toFree.resize(size);
 
-	for (int j = 0; j < E.size(); j++) {
+	std::cout << "Descriptor set init: " << size << "\n";
+
+	for (int j = 0; j < size; j++) {
 		uniformBuffers[j].resize(BP->swapChainImages.size());
 		uniformBuffersMemory[j].resize(BP->swapChainImages.size());
-		if(E[j].type == UNIFORM) {
+		
+		std::cout << j << " " << DSL->Bindings[j].type << "\n";
+		
+		if(DSL->Bindings[j].type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
+			
+			
 			for (size_t i = 0; i < BP->swapChainImages.size(); i++) {
-				VkDeviceSize bufferSize = E[j].size;
+				VkDeviceSize bufferSize = DSL->Bindings[j].linkSize;
 				BP->createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 									 	 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 									 	 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -3336,30 +3347,31 @@ void DescriptorSet::init(BaseProject *bp, DescriptorSetLayout *DSL,
 	}
 	
 	for (size_t i = 0; i < BP->swapChainImages.size(); i++) {
-		std::vector<VkWriteDescriptorSet> descriptorWrites(E.size());
-		std::vector<VkDescriptorBufferInfo> bufferInfo(E.size());
-		std::vector<VkDescriptorImageInfo> imageInfo(E.size());
-		for (int j = 0; j < E.size(); j++) {
-			if(E[j].type == UNIFORM) {
+		std::vector<VkWriteDescriptorSet> descriptorWrites(size);
+		std::vector<VkDescriptorBufferInfo> bufferInfo(size);
+		std::vector<VkDescriptorImageInfo> imageInfo(size);
+		for (int j = 0; j < size; j++) {
+			if (DSL->Bindings[j].type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
 				bufferInfo[j].buffer = uniformBuffers[j][i];
 				bufferInfo[j].offset = 0;
-				bufferInfo[j].range = E[j].size;
+				bufferInfo[j].range = DSL->Bindings[j].linkSize;
 				
 				descriptorWrites[j].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 				descriptorWrites[j].dstSet = descriptorSets[i];
-				descriptorWrites[j].dstBinding = E[j].binding;
+				descriptorWrites[j].dstBinding = DSL->Bindings[j].binding;
 				descriptorWrites[j].dstArrayElement = 0;
 				descriptorWrites[j].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 				descriptorWrites[j].descriptorCount = 1;
 				descriptorWrites[j].pBufferInfo = &bufferInfo[j];
-			} else if(E[j].type == TEXTURE) {
+			} else if(DSL->Bindings[j].type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
+				Texture* Tx = Txs[DSL->Bindings[j].linkSize];
 				imageInfo[j].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-				imageInfo[j].imageView = E[j].tex->textureImageView;
-				imageInfo[j].sampler = E[j].tex->textureSampler;
+				imageInfo[j].imageView = Tx->textureImageView;
+				imageInfo[j].sampler = Tx->textureSampler;
 		
 				descriptorWrites[j].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 				descriptorWrites[j].dstSet = descriptorSets[i];
-				descriptorWrites[j].dstBinding = E[j].binding;
+				descriptorWrites[j].dstBinding = DSL->Bindings[j].binding;
 				descriptorWrites[j].dstArrayElement = 0;
 				descriptorWrites[j].descriptorType =
 											VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;

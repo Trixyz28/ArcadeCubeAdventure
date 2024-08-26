@@ -3310,9 +3310,7 @@ void DescriptorSet::init(BaseProject* bp, DescriptorSetLayout* DSL,
 	for (int j = 0; j < size; j++) {
 		uniformBuffers[j].resize(BP->swapChainImages.size());
 		uniformBuffersMemory[j].resize(BP->swapChainImages.size());
-		
-		std::cout << j << " " << DSL->Bindings[j].type << "\n";
-		
+
 		if(DSL->Bindings[j].type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
 			
 			

@@ -23,10 +23,24 @@ struct UniformBufferObject {
 };
 
 struct GlobalUniformBufferObject {
+	/*
 	alignas(16) glm::vec3 lightDir;
 	alignas(16) glm::vec4 lightColor;
 	alignas(16) glm::vec3 eyePos;
 	alignas(16) glm::vec4 eyeDir;
+	*/
+	struct {
+		alignas(16) glm::vec3 v;
+	} lightDir[2];
+	struct {
+		alignas(16) glm::vec3 v;
+	} lightPos[2];
+	alignas(16) glm::vec4 lightColor[2];
+	alignas(4) float cosIn;
+	alignas(4) float cosOut;
+	alignas(16) glm::vec3 eyePos;
+	alignas(16) glm::vec4 eyeDir;
+	alignas(16) glm::vec2 lightOn;
 };
 
 
@@ -136,10 +150,10 @@ class CGmain: public BaseProject {
 				});
 
 		// Pipelines [Shader couples]
-		P.init(this, &VD, "shaders/PhongVert.spv", "shaders/PhongFrag.spv", {&DSL});
+		P.init(this, &VD, "shaders/Vert.spv", "shaders/PhongFrag.spv", {&DSL});
 		P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
  								    VK_CULL_MODE_NONE, false);
-		PBlinn.init(this, &VD, "shaders/PhongVert.spv", "shaders/BlinnFrag.spv", { &DSLBlinn });
+		PBlinn.init(this, &VD, "shaders/Vert.spv", "shaders/BlinnFrag.spv", { &DSLBlinn });
 
 
 		PRs.resize(2);
@@ -577,7 +591,7 @@ class CGmain: public BaseProject {
 		UniformBufferObject ubo{};
 		glm::mat4 baseTr = glm::mat4(1.0f);								
 		// Here is where you actually update your uniforms
-
+		/*
 		// updates global uniforms
 		GlobalUniformBufferObject gubo{};
 		gubo.lightDir = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
@@ -585,6 +599,20 @@ class CGmain: public BaseProject {
 		gubo.eyePos = dampedCamPos;
 		gubo.eyeDir = glm::vec4(0);
 		gubo.eyeDir.w = 1.0;
+		*/
+		GlobalUniformBufferObject gubo{};
+		gubo.lightDir[0].v = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
+		gubo.lightPos[0].v = glm::vec3(1.0f);
+		gubo.lightColor[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		gubo.lightDir[1].v = glm::normalize(glm::vec3(dampedCamPos.x- cubePosition.x, 0.0f, dampedCamPos.z - cubePosition.z));
+		gubo.lightPos[1].v = cubePosition;
+		gubo.lightColor[1] = glm::vec4(0.0f, 0.5f, 1.0f, 5.0f);
+		gubo.eyePos = dampedCamPos;
+		gubo.eyeDir = glm::vec4(0);
+		gubo.eyeDir.w = 1.0;
+		gubo.lightOn = glm::vec2(1.0f,1.0f);
+		gubo.cosIn = cos(0.4591524628390111f); ;
+		gubo.cosOut = cos(0.5401793718338013f);
 
 //		for(int i = 0; i < SC.InstanceCount; i++) {
 		// Draw the truck

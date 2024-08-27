@@ -7,7 +7,6 @@
 
 
 
-
 std::vector<SingleText> outText = {
 	{1, {"Third Person", "Press 1 to change view", "", ""}, 0, 0},
 	{1, {"First Person", "Press 1 to change view", "", ""}, 0, 0}
@@ -114,7 +113,6 @@ class CGmain: public BaseProject {
 	// Other application parameters
 	float Yaw;
 	glm::vec3 cubePosition;
-	glm::vec3 cubeInitialPosition;
 
 
 	// currScene = 0: third person view, currScene = 1: first person view
@@ -180,7 +178,6 @@ class CGmain: public BaseProject {
 
 		// Init local variables
 		cubePosition = glm::vec3(SC.I[SC.InstanceIds["tb"]]->Wm[3]);
-		cubeInitialPosition = cubePosition;
 		Yaw = 0;
 		
 		deltaP = (glm::vec3 **)calloc(SC.InstanceCount, sizeof(glm::vec3 *));
@@ -342,41 +339,41 @@ class CGmain: public BaseProject {
 	}
 
 	// Control cube's movements
-	void moveCube(glm::vec3 &cubeVec) {
+	void getCubeDirection(glm::vec3 &cubeVec) {
 
 		// Left 
-		if (glfwGetKey(window, GLFW_KEY_A)) {
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
 			cubeVec.x = -1.0f;
 		}
 
 		// Right
-		if (glfwGetKey(window, GLFW_KEY_D)) {
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
 			cubeVec.x = 1.0f;
 		}
 
 		// Forward
-		if (glfwGetKey(window, GLFW_KEY_S)) {
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
 			cubeVec.z = 1.0f;
 		}
 
 		// Backward
-		if (glfwGetKey(window, GLFW_KEY_W)) {
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
 			cubeVec.z = -1.0f;
 		}
 
 		// Up
-		if (glfwGetKey(window, GLFW_KEY_SPACE)) {
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
 			cubeVec.y = 1.0f;
 		}
 
 		// Down
-		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)) {
+		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
 			cubeVec.y = -1.0f;
 		}
 	}
 
 	// Control the visual direction
-	void changeViewDir(glm::vec3 &viewVec) {
+	void getCameraDirection(glm::vec3 &viewVec) {
 		if (glfwGetKey(window, GLFW_KEY_LEFT)) {
 			viewVec.y = -1.0f;
 		}
@@ -388,12 +385,6 @@ class CGmain: public BaseProject {
 		}
 		if (glfwGetKey(window, GLFW_KEY_DOWN)) {
 			viewVec.x = 1.0f;
-		}
-		if (glfwGetKey(window, GLFW_KEY_Q)) {
-			viewVec.z = 1.0f;
-		}
-		if (glfwGetKey(window, GLFW_KEY_E)) {
-			viewVec.z = -1.0f;
 		}
 	}
 
@@ -408,19 +399,19 @@ class CGmain: public BaseProject {
 		float deltaT;
 		getTime(deltaT);
 
+		glm::vec3 cubeDirection = glm::vec3(0.0f);
+		getCubeDirection(cubeDirection);
 
-		glm::vec3 cubeVec = glm::vec3(0.0f);
-		moveCube(cubeVec);
-
-		glm::vec3 viewVec = glm::vec3(0.0f);
-		changeViewDir(viewVec);
+		glm::vec3 cameraDirection = glm::vec3(0.0f);
+		getCameraDirection(cameraDirection);
 		
-		static float CamPitch = glm::radians(20.0f);
-		static float CamYaw   = M_PI;
-		static float CamDist  = 10.0f;
-		static float CamRoll  = 0.0f;
+		static float cameraPitch = glm::radians(20.0f);
+		static float cameraYaw   = M_PI;
+		static float cameraRoll = 0.0f;
+		static float cameraDistance  = 10.0f;
+
 		const glm::vec3 CamTargetDelta = glm::vec3(0,2,0);
-		const glm::vec3 Cam1stPos = glm::vec3(0.49061f, 2.07f, 2.7445f);
+		const glm::vec3 Cam1stPos = glm::vec3(0.5f, 2.0f, 2.5f);
 		
 		static float SteeringAng = 0.0f;
 		static float dampedVel = 0.0f;
@@ -440,7 +431,7 @@ class CGmain: public BaseProject {
 
 		const float FLY_SPEED = 0.05f;
 
-		SteeringAng += -cubeVec.x * STEERING_SPEED * deltaT;
+		SteeringAng += -cubeDirection.x * STEERING_SPEED * deltaT;
 		SteeringAng = (SteeringAng < glm::radians(-35.0f) ? glm::radians(-35.0f) :
 					  (SteeringAng > glm::radians(35.0f)  ? glm::radians(35.0f)  : SteeringAng));
 		
@@ -452,10 +443,10 @@ class CGmain: public BaseProject {
 		double lambdaVel = 8.0f;
 		double dampedVelEpsilon = 0.001f;
 		double flyVel = 0.0f;
-		dampedVel =  MOVE_SPEED * deltaT * cubeVec.z * (1 - exp(-lambdaVel * deltaT)) +
+		dampedVel =  MOVE_SPEED * deltaT * cubeDirection.z * (1 - exp(-lambdaVel * deltaT)) +
 					 dampedVel * exp(-lambdaVel * deltaT);
 		dampedVel = ((fabs(dampedVel) < dampedVelEpsilon) ? 0.0f : dampedVel);
-		flyVel = FLY_SPEED * cubeVec.y;
+		flyVel = FLY_SPEED * cubeDirection.y;
 
 		if(dampedVel != 0.0f) {
 			glm::vec3 oldPos = cubePosition;
@@ -474,7 +465,7 @@ class CGmain: public BaseProject {
 				cubePosition.z = cubePosition.z - cos(Yaw) * dampedVel;
 				cubePosition.y += flyVel;
 			}
-			if(cubeVec.x == 0) {
+			if(cubeDirection.x == 0) {
 				if(SteeringAng > STEERING_SPEED * deltaT) {
 					SteeringAng -= STEERING_SPEED * deltaT;
 				} else if(SteeringAng < -STEERING_SPEED * deltaT) {
@@ -497,16 +488,16 @@ class CGmain: public BaseProject {
 				if(currScene == 0) {
 					currScene = 1;
 					
-					CamPitch = glm::radians(20.0f);
-					CamYaw   = M_PI;
-					CamRoll  = 0.0f;
+					cameraPitch = glm::radians(20.0f);
+					cameraYaw   = M_PI;
+					cameraRoll  = 0.0f;
 					dampedCamPos = cubePosition;
 				}
 				else {
 					currScene = 0;
-					CamPitch = glm::radians(0.0f);
-					CamYaw = M_PI;
-					CamRoll = 0.0f;
+					cameraPitch = glm::radians(0.0f);
+					cameraYaw = M_PI;
+					cameraRoll = 0.0f;
 				}
 
 				std::cout << "Scene : " << currScene << "\n";
@@ -532,10 +523,10 @@ class CGmain: public BaseProject {
 
 				printVec3("Pos = ", cubePosition);
 				std::cout << "Yaw         = " << Yaw         << ";\n";
-				std::cout << "CamPitch    = " << CamPitch    << ";\n";
-				std::cout << "CamYaw      = " << CamYaw      << ";\n";
-				std::cout << "CamRoll     = " << CamRoll     << ";\n";
-				std::cout << "CamDist     = " << CamDist     << ";\n";
+				std::cout << "CamPitch    = " << cameraPitch    << ";\n";
+				std::cout << "CamYaw      = " << cameraYaw      << ";\n";
+				std::cout << "CamRoll     = " << cameraRoll     << ";\n";
+				std::cout << "CamDist     = " << cameraDistance     << ";\n";
 				std::cout << "SteeringAng = " << SteeringAng << ";\n";
 
 			}
@@ -548,39 +539,39 @@ class CGmain: public BaseProject {
 
 		
 		if(currScene == 0) {
-			CamYaw += ROT_SPEED * deltaT * viewVec.y;
-			CamPitch -= ROT_SPEED * deltaT * viewVec.x;
-			CamRoll -= ROT_SPEED * deltaT * viewVec.z;
-			CamDist -= MOVE_SPEED * deltaT * cubeVec.y;
+			cameraYaw += ROT_SPEED * deltaT * cameraDirection.y;
+			cameraPitch -= ROT_SPEED * deltaT * cameraDirection.x;
+			cameraRoll -= ROT_SPEED * deltaT * cameraDirection.z;
+			cameraDistance -= MOVE_SPEED * deltaT * cubeDirection.y;
 		
-			CamYaw = (CamYaw < 0.0f ? 0.0f : (CamYaw > 2*M_PI ? 2*M_PI : CamYaw));
-			CamPitch = (CamPitch < 0.0f ? 0.0f : (CamPitch > M_PI_2-0.01f ? M_PI_2-0.01f : CamPitch));
-			CamRoll = (CamRoll < -M_PI ? -M_PI : (CamRoll > M_PI ? M_PI : CamRoll));
-			CamDist = (CamDist < 7.0f ? 7.0f : (CamDist > 15.0f ? 15.0f : CamDist));
+			cameraYaw = (cameraYaw < 0.0f ? 0.0f : (cameraYaw > 2*M_PI ? 2*M_PI : cameraYaw));
+			cameraPitch = (cameraPitch < 0.0f ? 0.0f : (cameraPitch > M_PI_2-0.01f ? M_PI_2-0.01f : cameraPitch));
+			cameraRoll = (cameraRoll < -M_PI ? -M_PI : (cameraRoll > M_PI ? M_PI : cameraRoll));
+			cameraDistance = (cameraDistance < 7.0f ? 7.0f : (cameraDistance > 15.0f ? 15.0f : cameraDistance));
 				
 			glm::vec3 CamTarget = cubePosition + glm::vec3(glm::rotate(glm::mat4(1), Yaw, glm::vec3(0,1,0)) *
 							 glm::vec4(CamTargetDelta,1));
-			CamPos = CamTarget + glm::vec3(glm::rotate(glm::mat4(1), Yaw + CamYaw, glm::vec3(0,1,0)) * glm::rotate(glm::mat4(1), -CamPitch, glm::vec3(1,0,0)) * 
-							 glm::vec4(0,0,CamDist,1));
+			CamPos = CamTarget + glm::vec3(glm::rotate(glm::mat4(1), Yaw + cameraYaw, glm::vec3(0,1,0)) * glm::rotate(glm::mat4(1), -cameraPitch, glm::vec3(1,0,0)) * 
+							 glm::vec4(0,0,cameraDistance,1));
 
 			const float lambdaCam = 10.0f;
 			dampedCamPos = CamPos * (1 - exp(-lambdaCam * deltaT)) +
 						 dampedCamPos * exp(-lambdaCam * deltaT); 
-			M = MakeViewProjectionLookAt(dampedCamPos, CamTarget, glm::vec3(0,1,0), CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
+			M = MakeViewProjectionLookAt(dampedCamPos, CamTarget, glm::vec3(0,1,0), cameraRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
 			//RebuildPipeline();
 		} else {
 
-			CamYaw -= ROT_SPEED * deltaT * viewVec.y;
-			CamPitch -= ROT_SPEED * deltaT * viewVec.x;
-			CamRoll -= ROT_SPEED * deltaT * viewVec.z;
+			cameraYaw -= ROT_SPEED * deltaT * cameraDirection.y;
+			cameraPitch -= ROT_SPEED * deltaT * cameraDirection.x;
+			cameraRoll -= ROT_SPEED * deltaT * cameraDirection.z;
 		
-			CamYaw = (CamYaw < M_PI_2 ? M_PI_2 : (CamYaw > 1.5*M_PI ? 1.5*M_PI : CamYaw));
-			CamPitch = (CamPitch < -0.25*M_PI ? -0.25*M_PI : (CamPitch > 0.25*M_PI ? 0.25*M_PI : CamPitch));
-			CamRoll = (CamRoll < -M_PI ? -M_PI : (CamRoll > M_PI ? M_PI : CamRoll));
+			cameraYaw = (cameraYaw < M_PI_2 ? M_PI_2 : (cameraYaw > 1.5*M_PI ? 1.5*M_PI : cameraYaw));
+			cameraPitch = (cameraPitch < -0.25*M_PI ? -0.25*M_PI : (cameraPitch > 0.25*M_PI ? 0.25*M_PI : cameraPitch));
+			cameraRoll = (cameraRoll < -M_PI ? -M_PI : (cameraRoll > M_PI ? M_PI : cameraRoll));
 				
 			glm::vec3 Cam1Pos = cubePosition + glm::vec3(glm::rotate(glm::mat4(1), Yaw, glm::vec3(0,1,0)) *
 							 glm::vec4(Cam1stPos,1));
-			M = MakeViewProjectionLookInDirection(Cam1Pos, Yaw + CamYaw, CamPitch, CamRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
+			M = MakeViewProjectionLookInDirection(Cam1Pos, Yaw + cameraYaw, cameraPitch, cameraRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
 			//RebuildPipeline();
 		} 
 

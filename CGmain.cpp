@@ -80,7 +80,7 @@ class CGmain: public BaseProject {
 	// std::vector<std::string> trkOpEl = {"tbo", "tswo"};
 
 	// Landscape drawing
-	std::vector<std::string> trkScn =  {"pln", "prm"};
+	std::vector<std::string> trkScn =  {"pln", "prm", "cube"};
 
 
 	// Aspect ratio
@@ -419,9 +419,6 @@ class CGmain: public BaseProject {
 		
 // printVec3("m: ", m);
 // printVec3("r: ", r);
-		
-		// Speed of rotating field of view
-		const float STEERING_SPEED = glm::radians(360.0f);
 
 		// Speed of rotating direction of move
 		const float ROT_SPEED = glm::radians(100.0f);
@@ -431,7 +428,7 @@ class CGmain: public BaseProject {
 
 		const float FLY_SPEED = 0.05f;
 
-		SteeringAng += -cubeDirection.x * STEERING_SPEED * deltaT;
+		SteeringAng += -cubeDirection.x * deltaT;
 		SteeringAng = (SteeringAng < glm::radians(-35.0f) ? glm::radians(-35.0f) :
 					  (SteeringAng > glm::radians(35.0f)  ? glm::radians(35.0f)  : SteeringAng));
 		
@@ -466,10 +463,10 @@ class CGmain: public BaseProject {
 				cubePosition.y += flyVel;
 			}
 			if(cubeDirection.x == 0) {
-				if(SteeringAng > STEERING_SPEED * deltaT) {
-					SteeringAng -= STEERING_SPEED * deltaT;
-				} else if(SteeringAng < -STEERING_SPEED * deltaT) {
-					SteeringAng += STEERING_SPEED * deltaT;
+				if(SteeringAng > deltaT) {
+					SteeringAng -= deltaT;
+				} else if(SteeringAng < - deltaT) {
+					SteeringAng += deltaT;
 				} else {
 					SteeringAng = 0.0f;
 				}					

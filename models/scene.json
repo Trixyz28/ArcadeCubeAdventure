@@ -1,10 +1,35 @@
 {
 	"models": [
-		{"id": "tbo",  "model": "models/TruckBodyO.mgcg",      "format":"MGCG"},
-		{"id": "tswo", "model": "models/TruckBodySteeringWheelO.mgcg",     "format":"MGCG"},
-		{"id": "pln",  "model": "models/LargePlane.obj",       "format":"OBJ"},
-		{"id": "prm",  "model": "models/City_6_Industrial.gltf",      "format":"GLTF"},
-		{"id": "tb",  "model": "models/Diamond_Blue.mgcg",      "format":"MGCG"}
+		{
+			"id": "tbo",
+			"model": "models/TruckBodyO.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "tswo",
+			"model": "models/TruckBodySteeringWheelO.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "pln",
+			"model": "models/LargePlane.obj",
+			"format": "OBJ"
+		},
+		{
+			"id": "prm",
+			"model": "models/City_6_Industrial.gltf",
+			"format": "GLTF"
+		},
+		{
+			"id": "tb",
+			"model": "models/Diamond_Blue.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "cube",
+			"model": "models/rubik_cube.obj",
+			"format": "OBJ"
+		}
 	],
 	"textures": [
 		{"id": "t0", "texture": "textures/VehiclePack_BaseColor.png"},
@@ -33,8 +58,13 @@
 				"transform": [1, 0, 0, 0.61326,
 					   0, 0.939693, 0.34202, 1.3127,
 					   0, 0.34202, 0.939693, 3.3405,
+					   0, 0, 0, 1]},
+			{"id": "cube",   "model": "cube",   "texture": ["t3"],
+				"transform": [10, 0, 0, 1,
+					   0, 10, 0, 3,
+					   0, 0, 10, 2,
 					   0, 0, 0, 1]}
-		]},
+		 ]},
 		{"pipeline":  "PBlinn", "elements": [
 			 {"id": "tb",   "model": "tb",   "texture": ["t3"],
 				"transform": [1.0, 0, 0, 0,

@@ -58,6 +58,9 @@ struct TextMaker {
 		createTextDescriptorSetAndVertexLayout();
 		createTextPipeline();
 		createTextModelAndTexture();
+
+		BP->texturesInPool += 1;
+		BP->setsInPool += 1;
 	}
 
 

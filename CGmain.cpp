@@ -96,10 +96,13 @@ class CGmain: public BaseProject {
     	windowResizable = GLFW_TRUE;
 		initialBackgroundColor = {0.0f, 0.85f, 1.0f, 1.0f};
 		
+		/*
 		// Descriptor pool sizes
 		uniformBlocksInPool = 19 * 2 + 2;
 		texturesInPool = 19 + 1;
 		setsInPool = 19 + 1;
+		*/
+		
 
 		Ar = 4.0f / 3.0f;
 	}
@@ -160,6 +163,7 @@ class CGmain: public BaseProject {
 		PRs[0].init("P", &P, &VD);
 		PRs[1].init("PBlinn", &PBlinn, &VD);
 
+
 		// Models, textures and Descriptors (values assigned to the uniforms)
 /*		std::vector<Vertex> vertices = {
 					   {{-100.0,0.0f,-100.0}, {0.0f,0.0f}, {0.0f,1.0f,0.0f}},
@@ -171,6 +175,9 @@ class CGmain: public BaseProject {
 		M1.indices = {0, 1, 2,    1, 3, 2};
 		M1.initMesh(this, &VD); */
 
+		uniformBlocksInPool = 0;
+		texturesInPool = 0;
+		setsInPool = 0;
 
 		// Load Scene: the models are stored in json
 		SC.init(this, &VD, DSL, PRs, "models/scene.json");
@@ -187,6 +194,11 @@ class CGmain: public BaseProject {
 		for(int i=0; i < SC.InstanceCount; i++) {
 			deltaP[i] = new glm::vec3(SC.I[i]->Wm[3]);
 		}
+
+		std::cout << "Initialization completed!\n";
+		std::cout << "Uniform Blocks in the Pool  : " << uniformBlocksInPool << "\n";
+		std::cout << "Textures in the Pool        : " << texturesInPool << "\n";
+		std::cout << "Descriptor Sets in the Pool : " << setsInPool << "\n";
 	}
 	
 	// Here you create your pipelines and Descriptor Sets!
@@ -325,7 +337,7 @@ class CGmain: public BaseProject {
 				static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
 		std::cout << M1.indices.size();
 */
-		SC.populateCommandBuffer(commandBuffer, currentImage, P);
+		SC.populateCommandBuffer(commandBuffer, currentImage);
 		txt.populateCommandBuffer(commandBuffer, currentImage, currScene);
 	}
 

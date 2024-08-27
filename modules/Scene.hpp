@@ -146,7 +146,21 @@ class Scene {
 					PI[k].I[j].PI = &PI[k];
 					PI[k].I[j].D = &PI[k].PR->P->D;
 					PI[k].I[j].NDs = PI[k].I[j].D->size();
-					//BP->DPSZs.setsInPool += PI[k].I[j].NDs;
+					BP->setsInPool += PI[k].I[j].NDs;
+
+					for (int h = 0; h < PI[k].I[j].NDs; h++) {
+						DescriptorSetLayout* DSL = (*PI[k].I[j].D)[h];
+						int DSLsize = DSL->Bindings.size();
+
+						for (int l = 0; l < DSLsize; l++) {
+							if (DSL->Bindings[l].type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
+								BP->uniformBlocksInPool += 1;
+							}
+							else {
+								BP->texturesInPool += 1;
+							}
+						}
+					}
 
 					InstanceCount++;
 				}
@@ -229,7 +243,7 @@ class Scene {
 		free(PI);
 	}
 	
-    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage, Pipeline &P) {
+    void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
 		for (int k = 0; k < PipelineInstanceCount; k++) {
 			for (int i = 0; i < PI[k].InstanceCount; i++) {
 				Pipeline *P = PI[k].I[i].PI->PR->P;

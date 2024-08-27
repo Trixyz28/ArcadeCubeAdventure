@@ -367,6 +367,9 @@ public:
         mainLoop();
         cleanup();
     }
+	int uniformBlocksInPool = 0;
+	int texturesInPool = 0;
+	int setsInPool = 0;
 
 protected:
 	uint32_t windowWidth;
@@ -374,9 +377,7 @@ protected:
 	bool windowResizable;
 	std::string windowTitle;
 	VkClearColorValue initialBackgroundColor;
-	int uniformBlocksInPool;
-	int texturesInPool;
-	int setsInPool;
+	
 
     GLFWwindow* window;
     VkInstance instance;
@@ -458,9 +459,9 @@ protected:
 		createColorResources();
 		createDepthResources();			
 		createFramebuffers();			
-		createDescriptorPool();			
-
+				
 		localInit();
+		createDescriptorPool();
 		pipelinesAndDescriptorSetsInit();
 
 		createCommandBuffers();			

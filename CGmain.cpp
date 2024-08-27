@@ -73,14 +73,14 @@ class CGmain: public BaseProject {
 
 	TextMaker txt;
 
-	
-	std::vector<std::string> trkClEl = {"tb"};
+	// Draw the main 
+	std::vector<std::string> mainObj = {"tb"};
 
 	// Models for first-person view
 	// std::vector<std::string> trkOpEl = {"tbo", "tswo"};
 
 	// Landscape drawing
-	std::vector<std::string> trkScn =  {"pln", "prm", "cube"};
+	std::vector<std::string> staticObj =  {"pln", "prm", "cube"};
 
 
 	// Aspect ratio
@@ -224,10 +224,11 @@ class CGmain: public BaseProject {
 	// You also have to destroy the pipelines: since they need to be rebuilt, they have two different
 	// methods: .cleanup() recreates them, while .destroy() delete them completely
 	void localCleanup() {	
+		/*
 		for(int i=0; i < SC.InstanceCount; i++) {
 			delete deltaP[i];
 		}
-		free(deltaP);
+		free(deltaP);*/
 
 		// Cleanup descriptor set layouts
 		DSL.cleanup();
@@ -384,6 +385,7 @@ class CGmain: public BaseProject {
 		}
 	}
 
+	
 	// Control the visual direction
 	void getCameraDirection(glm::vec3 &viewVec) {
 		if (glfwGetKey(window, GLFW_KEY_LEFT)) {
@@ -425,7 +427,7 @@ class CGmain: public BaseProject {
 		const glm::vec3 CamTargetDelta = glm::vec3(0,2,0);
 		const glm::vec3 Cam1stPos = glm::vec3(0.5f, 2.0f, 2.5f);
 		
-		static float SteeringAng = 0.0f;
+		static float rotationAngle = 0.0f;
 		static float dampedVel = 0.0f;
 
 		
@@ -433,16 +435,15 @@ class CGmain: public BaseProject {
 // printVec3("r: ", r);
 
 		// Speed of rotating direction of move
-		const float ROT_SPEED = glm::radians(100.0f);
+		const float rotationSpeed = glm::radians(100.0f);
 
 		// Speed of moving
-		const float MOVE_SPEED = 4.0f;
+		const float moveSpeed = 4.0f;
 
 		const float FLY_SPEED = 0.05f;
 
-		SteeringAng += -cubeDirection.x * deltaT;
-		SteeringAng = (SteeringAng < glm::radians(-35.0f) ? glm::radians(-35.0f) :
-					  (SteeringAng > glm::radians(35.0f)  ? glm::radians(35.0f)  : SteeringAng));
+		// rotation angle
+		rotationAngle += -cubeDirection.x * deltaT;
 		
 
 		glm::mat4 M;
@@ -452,17 +453,19 @@ class CGmain: public BaseProject {
 		double lambdaVel = 8.0f;
 		double dampedVelEpsilon = 0.001f;
 		double flyVel = 0.0f;
-		dampedVel =  MOVE_SPEED * deltaT * cubeDirection.z * (1 - exp(-lambdaVel * deltaT)) +
+		dampedVel =  moveSpeed * deltaT * cubeDirection.z * (1 - exp(-lambdaVel * deltaT)) +
 					 dampedVel * exp(-lambdaVel * deltaT);
 		dampedVel = ((fabs(dampedVel) < dampedVelEpsilon) ? 0.0f : dampedVel);
+
+
 		flyVel = FLY_SPEED * cubeDirection.y;
 
 		if(dampedVel != 0.0f) {
 			glm::vec3 oldPos = cubePosition;
 			
-			if(SteeringAng != 0.0f) {
+			if(rotationAngle != 0.0f) {
 				const float l = 2.78f;
-				float r = l / tan(SteeringAng);
+				float r = l / tan(rotationAngle);
 				float cx = cubePosition.x + r * cos(Yaw);
 				float cz = cubePosition.z - r * sin(Yaw);
 				float Dbeta = dampedVel / r;
@@ -475,12 +478,12 @@ class CGmain: public BaseProject {
 				cubePosition.y += flyVel;
 			}
 			if(cubeDirection.x == 0) {
-				if(SteeringAng > deltaT) {
-					SteeringAng -= deltaT;
-				} else if(SteeringAng < - deltaT) {
-					SteeringAng += deltaT;
+				if(rotationAngle > deltaT) {
+					rotationAngle -= deltaT;
+				} else if(rotationAngle < - deltaT) {
+					rotationAngle += deltaT;
 				} else {
-					SteeringAng = 0.0f;
+					rotationAngle = 0.0f;
 				}					
 			}
 
@@ -536,7 +539,7 @@ class CGmain: public BaseProject {
 				std::cout << "CamYaw      = " << cameraYaw      << ";\n";
 				std::cout << "CamRoll     = " << cameraRoll     << ";\n";
 				std::cout << "CamDist     = " << cameraDistance     << ";\n";
-				std::cout << "SteeringAng = " << SteeringAng << ";\n";
+				std::cout << "SteeringAng = " << rotationAngle << ";\n";
 
 			}
 		} else {
@@ -548,10 +551,10 @@ class CGmain: public BaseProject {
 
 		
 		if(currScene == 0) {
-			cameraYaw += ROT_SPEED * deltaT * cameraDirection.y;
-			cameraPitch -= ROT_SPEED * deltaT * cameraDirection.x;
-			cameraRoll -= ROT_SPEED * deltaT * cameraDirection.z;
-			cameraDistance -= MOVE_SPEED * deltaT * cubeDirection.y;
+			cameraYaw += rotationSpeed * deltaT * cameraDirection.y;
+			cameraPitch -= rotationSpeed * deltaT * cameraDirection.x;
+			cameraRoll -= rotationSpeed * deltaT * cameraDirection.z;
+			cameraDistance -= moveSpeed * deltaT * cubeDirection.y;
 		
 			cameraYaw = (cameraYaw < 0.0f ? 0.0f : (cameraYaw > 2*M_PI ? 2*M_PI : cameraYaw));
 			cameraPitch = (cameraPitch < 0.0f ? 0.0f : (cameraPitch > M_PI_2-0.01f ? M_PI_2-0.01f : cameraPitch));
@@ -567,12 +570,11 @@ class CGmain: public BaseProject {
 			dampedCamPos = CamPos * (1 - exp(-lambdaCam * deltaT)) +
 						 dampedCamPos * exp(-lambdaCam * deltaT); 
 			M = MakeViewProjectionLookAt(dampedCamPos, CamTarget, glm::vec3(0,1,0), cameraRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
-			//RebuildPipeline();
 		} else {
 
-			cameraYaw -= ROT_SPEED * deltaT * cameraDirection.y;
-			cameraPitch -= ROT_SPEED * deltaT * cameraDirection.x;
-			cameraRoll -= ROT_SPEED * deltaT * cameraDirection.z;
+			cameraYaw -= rotationSpeed * deltaT * cameraDirection.y;
+			cameraPitch -= rotationSpeed * deltaT * cameraDirection.x;
+			cameraRoll -= rotationSpeed * deltaT * cameraDirection.z;
 		
 			cameraYaw = (cameraYaw < M_PI_2 ? M_PI_2 : (cameraYaw > 1.5*M_PI ? 1.5*M_PI : cameraYaw));
 			cameraPitch = (cameraPitch < -0.25*M_PI ? -0.25*M_PI : (cameraPitch > 0.25*M_PI ? 0.25*M_PI : cameraPitch));
@@ -581,12 +583,8 @@ class CGmain: public BaseProject {
 			glm::vec3 Cam1Pos = cubePosition + glm::vec3(glm::rotate(glm::mat4(1), Yaw, glm::vec3(0,1,0)) *
 							 glm::vec4(Cam1stPos,1));
 			M = MakeViewProjectionLookInDirection(Cam1Pos, Yaw + cameraYaw, cameraPitch, cameraRoll, glm::radians(90.0f), Ar, 0.1f, 500.0f);
-			//RebuildPipeline();
 		} 
 
-		if (currScene == 2) {
-			RebuildPipeline();
-		}
 		glm::mat4 ViewPrj =  M;
 		UniformBufferObject ubo{};
 		glm::mat4 baseTr = glm::mat4(1.0f);								
@@ -617,7 +615,7 @@ class CGmain: public BaseProject {
 //		for(int i = 0; i < SC.InstanceCount; i++) {
 		// Draw the truck
 		if(currScene == 0) {
-			for (std::vector<std::string>::iterator it = trkClEl.begin(); it != trkClEl.end(); it++) {
+			for (std::vector<std::string>::iterator it = mainObj.begin(); it != mainObj.end(); it++) {
 				int i = SC.InstanceIds[it->c_str()];
 				glm::vec3 dP = glm::vec3(glm::rotate(glm::mat4(1), Yaw, glm::vec3(0,1,0)) *
 										 glm::vec4(*deltaP[i],1));
@@ -657,7 +655,7 @@ class CGmain: public BaseProject {
 				SC.DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
 			}
 			*/
-			for (std::vector<std::string>::iterator it = trkClEl.begin(); it != trkClEl.end(); it++) {
+			for (std::vector<std::string>::iterator it = mainObj.begin(); it != mainObj.end(); it++) {
 				int i = SC.InstanceIds[it->c_str()];
 				ubo.mMat = glm::mat4(0);
 				ubo.mvpMat = glm::mat4(0);
@@ -669,7 +667,7 @@ class CGmain: public BaseProject {
 		}
 
 		// Draw the landscape
-		for (std::vector<std::string>::iterator it = trkScn.begin(); it != trkScn.end(); it++) {
+		for (std::vector<std::string>::iterator it = staticObj.begin(); it != staticObj.end(); it++) {
 			int i = SC.InstanceIds[it->c_str()];
 //std::cout << *it << " " << i << "\n";
 			// Product per transform matrix

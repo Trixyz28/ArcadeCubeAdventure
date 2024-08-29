@@ -47,9 +47,9 @@
 		 ]},
 		{"pipeline":  "PBlinn", "elements": [
 			 {"id": "tb",   "model": "tb",   "texture": ["t3"],
-				"transform": [1.0, 0, 0, 0,
-					   0, 1.0, 0, 0,
-					   0, 0, 1.0, 0,
+				"transform": [0.2, 0, 0, 0,
+					   0, 0.2, 0, 0,
+					   0, 0, 0.2, 0,
 					   0, 0, 0, 1]}
 		]}
 	]

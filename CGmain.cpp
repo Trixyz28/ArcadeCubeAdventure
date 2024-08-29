@@ -119,9 +119,12 @@ class CGmain: public BaseProject {
 	float rotationAngle;
 	float movingSpeed, rotationSpeed;
 	
-	glm::mat4 viewMatrix;
-	float camDistance;
 	glm::vec3 camPosition, camRotation;
+	float camDistance;
+	float minCamDistance, maxCamDistance;
+	glm::mat4 viewMatrix;
+	
+	
 
 
 
@@ -196,8 +199,11 @@ class CGmain: public BaseProject {
 		rotationSpeed = 0.2f;
 
 
-		camPosition = cubePosition + glm::vec3(5.0f, 2.5f, 5.0f);
+		camPosition = cubePosition + glm::vec3(3.0f, 2.5f, 3.0f);
 		camRotation = glm::vec3(0.0f);
+		camDistance = 2.0f;
+		minCamDistance = 1.0f;
+		maxCamDistance = 3.0f;
 		
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -345,6 +351,14 @@ class CGmain: public BaseProject {
 		if (glfwGetKey(window, GLFW_KEY_DOWN)) {
 			camRotation.y -= rotationSpeed;
 		}
+		if (glfwGetKey(window, GLFW_KEY_R)) {
+			camDistance -= 0.01f;
+		}
+		if (glfwGetKey(window, GLFW_KEY_F)) {
+			camDistance += 0.01f;
+		}
+
+		camDistance = glm::clamp(camDistance, minCamDistance, maxCamDistance);
 	}
 
 
@@ -473,9 +487,9 @@ class CGmain: public BaseProject {
 		worldMatrix *= glm::rotate(glm::mat4(1.0f), glm::radians(rotationAngle),
 			glm::vec3(0.0f, 1.0f, 0.0f));
 
-		camPosition = glm::vec3(sin(glm::radians(rotationAngle + camRotation.x)) * 0.5f,
+		camPosition = glm::normalize(glm::vec3(sin(glm::radians(rotationAngle + camRotation.x)) * 0.5f,
 			-sin(glm::radians(camRotation.y)),
-			cos(glm::radians(rotationAngle + camRotation.x)) *0.5f) + cubePosition;
+			cos(glm::radians(rotationAngle + camRotation.x)) *0.5f)) * camDistance + cubePosition;
 
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 

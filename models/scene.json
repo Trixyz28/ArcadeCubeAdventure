@@ -39,17 +39,17 @@
 					   0, 0,-0.03, 0.3,
 					   0, 0.03, 0,   120,
 					   0, 0, 0, 1]},
-			{"id": "cube",   "model": "cube",   "texture": ["t3"],
-				"transform": [10, 0, 0, 1,
-					   0, 10, 0, 3,
-					   0, 0, 10, 2,
+			{"id": "tb",   "model": "tb",   "texture": ["t3"],
+				"transform": [0.01, 0, 0, 1,
+					   0, 0.01, 0, 3,
+					   0, 0, 0.01, 2,
 					   0, 0, 0, 1]}
 		 ]},
 		{"pipeline":  "PBlinn", "elements": [
-			 {"id": "tb",   "model": "tb",   "texture": ["t3"],
-				"transform": [0.2, 0, 0, 0,
-					   0, 0.2, 0, 0,
-					   0, 0, 0.2, 0,
+			 {"id": "cube",   "model": "cube",   "texture": ["t3"],
+				"transform": [10, 0, 0, 0,
+					   0, 10, 0, 0,
+					   0, 0, 10, 0,
 					   0, 0, 0, 1]}
 		]}
 	]

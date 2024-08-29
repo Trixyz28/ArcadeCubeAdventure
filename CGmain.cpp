@@ -53,9 +53,9 @@ struct Vertex {
 #include "modules/Scene.hpp"
 
 // MAIN ! 
-class CGmain: public BaseProject {
-	protected:
-	
+class CGmain : public BaseProject {
+protected:
+
 	// Descriptor Layouts ["classes" of what will be passed to the shaders]
 	DescriptorSetLayout DSL, DSLcube;
 
@@ -70,10 +70,10 @@ class CGmain: public BaseProject {
 
 	TextMaker txt;
 
-	std::string cubeObj = "tb";
+	std::string cubeObj = "cube";
 
 	// Landscape drawing
-	std::vector<std::string> staticObj =  {"pln", "prm", "cube"};
+	std::vector<std::string> staticObj = { "pln", "prm", "tb" };
 
 	UniformBufferObject cubeUbo{};
 	UniformBufferObject staticUbo{};
@@ -87,16 +87,16 @@ class CGmain: public BaseProject {
 		windowWidth = 800;
 		windowHeight = 600;
 		windowTitle = "CG - Project";
-    	windowResizable = GLFW_TRUE;
-		initialBackgroundColor = {0.0f, 0.85f, 1.0f, 1.0f};
-		
+		windowResizable = GLFW_TRUE;
+		initialBackgroundColor = { 0.0f, 0.85f, 1.0f, 1.0f };
+
 		/*
 		// Descriptor pool sizes
 		uniformBlocksInPool = 19 * 2 + 2;
 		texturesInPool = 19 + 1;
 		setsInPool = 19 + 1;
 		*/
-		
+
 
 		Ar = 4.0f / 3.0f;
 	}
@@ -109,29 +109,36 @@ class CGmain: public BaseProject {
 
 
 	// Other application parameters
-	
+
 	// currScene = 0: third person view, currScene = 1: first person view
 	int currScene = 0;
-	
 
-	
+
+
 	glm::vec3 cubePosition;
 	float cubeRotAngle;
 	float cubeMovSpeed, cubeRotSpeed;
-	
+
 	glm::vec3 camPosition, camRotation;
 	float camRotSpeed;
 	float camDistance;
 	float minCamDistance, maxCamDistance;
 	glm::mat4 viewMatrix;
-	
-	
+
+	float jumpSpeed = 0.0f;
+	bool isJumping = false;
+	float gravity = -0.0005f;
+	float jumpForce = 0.2f;
+	float groundLevel = 0.5f;
+
+	bool debounce;
+	int currDebounce;
 
 
 
 
 
-	
+
 	// Here you load and setup all your Vulkan Models and Texutures.
 	// Here you also create your Descriptor set layouts and load the shaders for the pipelines
 	void localInit() {
@@ -140,7 +147,7 @@ class CGmain: public BaseProject {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(UniformBufferObject)},
 					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
 					{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(GlobalUniformBufferObject)}
-				});
+			});
 
 		DSLcube.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(UniformBufferObject)},
@@ -151,19 +158,19 @@ class CGmain: public BaseProject {
 		// Vertex descriptors
 		VD.init(this, {
 				  {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
-				}, {
-				  {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos),
-				         sizeof(glm::vec3), POSITION},
-				  {0, 1, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, UV),
-				         sizeof(glm::vec2), UV},
-				  {0, 2, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, norm),
-				         sizeof(glm::vec3), NORMAL}
-				});
+			}, {
+			  {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos),
+					 sizeof(glm::vec3), POSITION},
+			  {0, 1, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, UV),
+					 sizeof(glm::vec2), UV},
+			  {0, 2, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, norm),
+					 sizeof(glm::vec3), NORMAL}
+			});
 
 		// Pipelines [Shader couples]
-		P.init(this, &VD, "shaders/Vert.spv", "shaders/PhongFrag.spv", {&DSL});
+		P.init(this, &VD, "shaders/Vert.spv", "shaders/PhongFrag.spv", { &DSL });
 		P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
- 								    VK_CULL_MODE_NONE, false);
+			VK_CULL_MODE_NONE, false);
 		Pcube.init(this, &VD, "shaders/Vert.spv", "shaders/BlinnFrag.spv", { &DSLcube });
 
 
@@ -189,7 +196,7 @@ class CGmain: public BaseProject {
 
 		// Load Scene: the models are stored in json
 		SC.init(this, &VD, DSL, PRs, "models/scene.json");
-		
+
 		// Updates the text
 		txt.init(this, &outText);
 
@@ -206,7 +213,10 @@ class CGmain: public BaseProject {
 		camDistance = 2.0f;
 		minCamDistance = 1.0f;
 		maxCamDistance = 3.0f;
-		
+
+		debounce = false;
+		currDebounce = 0;
+
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 
 
@@ -217,7 +227,7 @@ class CGmain: public BaseProject {
 		std::cout << "Textures in the Pool        : " << texturesInPool << "\n";
 		std::cout << "Descriptor Sets in the Pool : " << setsInPool << "\n";
 	}
-	
+
 	// Here you create your pipelines and Descriptor Sets!
 	void pipelinesAndDescriptorSetsInit() {
 		// This creates a new pipeline (with the current surface), using its shaders
@@ -244,7 +254,7 @@ class CGmain: public BaseProject {
 	// All the object classes defined in Starter.hpp have a method .cleanup() for this purpose
 	// You also have to destroy the pipelines: since they need to be rebuilt, they have two different
 	// methods: .cleanup() recreates them, while .destroy() delete them completely
-	void localCleanup() {	
+	void localCleanup() {
 		/*
 		for(int i=0; i < SC.InstanceCount; i++) {
 			delete deltaP[i];
@@ -254,42 +264,42 @@ class CGmain: public BaseProject {
 		// Cleanup descriptor set layouts
 		DSL.cleanup();
 		DSLcube.cleanup();
-		
+
 		// Destroies the pipelines
 		P.destroy();
 		Pcube.destroy();
 
-		SC.localCleanup();		
-		txt.localCleanup();		
+		SC.localCleanup();
+		txt.localCleanup();
 	}
 
 
 
-	
+
 	// Here it is the creation of the command buffer:
 	// You send to the GPU all the objects you want to draw,
 	// with their buffers and textures
-	
-	void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-		
 
-/*		// binds the data set
-		DS1.bind(commandBuffer, P, 0, currentImage);
-					
-		// binds the model
-		M1.bind(commandBuffer);
-		
-		// record the drawing command in the command buffer
-		vkCmdDrawIndexed(commandBuffer,
-				static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
-		std::cout << M1.indices.size();
-*/
+	void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
+
+
+		/*		// binds the data set
+				DS1.bind(commandBuffer, P, 0, currentImage);
+
+				// binds the model
+				M1.bind(commandBuffer);
+
+				// record the drawing command in the command buffer
+				vkCmdDrawIndexed(commandBuffer,
+						static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
+				std::cout << M1.indices.size();
+		*/
 		SC.populateCommandBuffer(commandBuffer, currentImage);
 		txt.populateCommandBuffer(commandBuffer, currentImage, currScene);
 	}
 
 
-	void getTime(float &deltaT) {
+	void getTime(float& deltaT) {
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		static float lastTime = 0.0f;
 
@@ -298,10 +308,31 @@ class CGmain: public BaseProject {
 			(currentTime - startTime).count();
 		deltaT = time - lastTime;
 		lastTime = time;
+
+
 	}
 
+	void scroll_callback(double xoffset, double yoffset)
+	{
+		camDistance -= (float)yoffset;
+		camDistance = glm::clamp(camDistance, minCamDistance, maxCamDistance);
+	}
+
+
+	void getJump() {
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !isJumping) {
+			if (!debounce) {
+				debounce = true;
+				currDebounce = GLFW_KEY_SPACE;
+				isJumping = true;
+				jumpSpeed = jumpForce;
+			}
+		}
+	}
+
+
 	// Control cube's movements
-	void getCubeAction() {
+	void getActions() {
 
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 			cubeRotAngle += cubeRotSpeed;
@@ -337,11 +368,6 @@ class CGmain: public BaseProject {
 		}
 
 		/*
-		// Up
-		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-			cubePosition.y += 1.0f;
-		}
-
 		// Down
 		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
 			cubePosition.y -= 1.0f;
@@ -367,19 +393,11 @@ class CGmain: public BaseProject {
 
 	}
 
-	
-	// Control the visual direction
-	void getCamAction() {
-
-	}
 
 
 	// Here is where you update the uniforms.
 	// Very likely this will be where you will be writing the logic of your application.
 	void updateUniformBuffer(uint32_t currentImage) {
-
-		static bool debounce = false;
-		static int curDebounce = 0;
 
 
 		// Standard procedure to quit when the ESC key is pressed
@@ -486,13 +504,25 @@ class CGmain: public BaseProject {
 			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
 
-		getCubeAction();
+		getJump();
+
+		if (isJumping) {
+			cubePosition.y += jumpSpeed;
+			jumpSpeed += gravity;
+
+			if (cubePosition.y <= groundLevel) {
+				cubePosition.y = groundLevel;
+				isJumping = false;
+				jumpSpeed = 0.0f;
+			}
+
+			debounce = false;
+			currDebounce = 0;
+
+		}
 
 
-
-		getCamAction();
-
-
+		getActions();
 		
 		worldMatrix = glm::translate(glm::mat4(1.0f), cubePosition);
 		worldMatrix *= glm::rotate(glm::mat4(1.0f), glm::radians(cubeRotAngle),

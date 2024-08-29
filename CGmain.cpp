@@ -116,10 +116,11 @@ class CGmain: public BaseProject {
 
 	
 	glm::vec3 cubePosition;
-	float rotationAngle;
-	float movingSpeed, rotationSpeed;
+	float cubeRotAngle;
+	float cubeMovSpeed, cubeRotSpeed;
 	
 	glm::vec3 camPosition, camRotation;
+	float camRotSpeed;
 	float camDistance;
 	float minCamDistance, maxCamDistance;
 	glm::mat4 viewMatrix;
@@ -194,13 +195,14 @@ class CGmain: public BaseProject {
 
 		// Init local variables
 		cubePosition = glm::vec3(0.0f, 0.5f, 0.0f);
-		rotationAngle = 0.0f;
-		movingSpeed = 0.01f;
-		rotationSpeed = 0.2f;
+		cubeRotAngle = 0.0f;
+		cubeMovSpeed = 0.01f;
+		cubeRotSpeed = 0.2f;
 
 
 		camPosition = cubePosition + glm::vec3(3.0f, 2.5f, 3.0f);
 		camRotation = glm::vec3(0.0f);
+		camRotSpeed = 0.1f;
 		camDistance = 2.0f;
 		minCamDistance = 1.0f;
 		maxCamDistance = 3.0f;
@@ -303,25 +305,33 @@ class CGmain: public BaseProject {
 
 		// Left 
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-			rotationAngle += rotationSpeed;
+			cubeRotAngle += cubeRotSpeed;
 		}
 
 		// Right
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-			rotationAngle -= rotationSpeed;
+			cubeRotAngle -= cubeRotSpeed;
 		}
 		
+		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+			cubeRotAngle += cubeRotSpeed;
+			camRotation.x += cubeRotSpeed;
+		}
+		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+			cubeRotAngle -= cubeRotSpeed;
+			camRotation.x -= cubeRotSpeed;
+		}
 		
 		// Forward
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-			cubePosition.x += movingSpeed * glm::sin(glm::radians(rotationAngle));
-			cubePosition.z += movingSpeed * glm::cos(glm::radians(rotationAngle));
+			cubePosition.x += cubeMovSpeed * glm::sin(glm::radians(cubeRotAngle));
+			cubePosition.z += cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle));
 		}
 
 		// Backward
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-			cubePosition.x -= movingSpeed * glm::sin(glm::radians(rotationAngle));
-			cubePosition.z -= movingSpeed * glm::cos(glm::radians(rotationAngle));
+			cubePosition.x -= cubeMovSpeed * glm::sin(glm::radians(cubeRotAngle));
+			cubePosition.z -= cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle));
 		}
 
 		/*
@@ -334,31 +344,31 @@ class CGmain: public BaseProject {
 		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
 			cubePosition.y -= 1.0f;
 		}*/
+
+
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+			camRotation.y += camRotSpeed;
+		}
+		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+			camRotation.y -= camRotSpeed;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+			camDistance -= 0.01f;
+		}
+		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+			camDistance += 0.01f;
+		}
+
+		camDistance = glm::clamp(camDistance, minCamDistance, maxCamDistance);
+		camRotation.y = glm::clamp(camRotation.y, 0.0f, 80.0f);
+
 	}
 
 	
 	// Control the visual direction
 	void getCamAction() {
-		if (glfwGetKey(window, GLFW_KEY_LEFT)) {
-			camRotation.x += rotationSpeed;
-		}
-		if (glfwGetKey(window, GLFW_KEY_RIGHT)) {
-			camRotation.x -= rotationSpeed;
-		}
-		if (glfwGetKey(window, GLFW_KEY_UP)) {
-			camRotation.y += rotationSpeed;
-		}
-		if (glfwGetKey(window, GLFW_KEY_DOWN)) {
-			camRotation.y -= rotationSpeed;
-		}
-		if (glfwGetKey(window, GLFW_KEY_R)) {
-			camDistance -= 0.01f;
-		}
-		if (glfwGetKey(window, GLFW_KEY_F)) {
-			camDistance += 0.01f;
-		}
 
-		camDistance = glm::clamp(camDistance, minCamDistance, maxCamDistance);
 	}
 
 
@@ -374,7 +384,6 @@ class CGmain: public BaseProject {
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		}
-
 
 
 		const float fovY = glm::radians(90.0f);
@@ -484,12 +493,12 @@ class CGmain: public BaseProject {
 
 		
 		worldMatrix = glm::translate(glm::mat4(1.0f), cubePosition);
-		worldMatrix *= glm::rotate(glm::mat4(1.0f), glm::radians(rotationAngle),
+		worldMatrix *= glm::rotate(glm::mat4(1.0f), glm::radians(cubeRotAngle),
 			glm::vec3(0.0f, 1.0f, 0.0f));
 
-		camPosition = glm::normalize(glm::vec3(sin(glm::radians(rotationAngle + camRotation.x)) * 0.5f,
-			-sin(glm::radians(camRotation.y)),
-			cos(glm::radians(rotationAngle + camRotation.x)) *0.5f)) * camDistance + cubePosition;
+		camPosition = glm::normalize(glm::vec3(sin(glm::radians(cubeRotAngle)) * 0.5f,
+			sin(glm::radians(camRotation.y)),
+			cos(glm::radians(cubeRotAngle)) *0.5f)) * camDistance + cubePosition;
 
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 

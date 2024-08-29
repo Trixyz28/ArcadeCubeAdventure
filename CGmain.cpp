@@ -303,16 +303,6 @@ class CGmain: public BaseProject {
 	// Control cube's movements
 	void getCubeAction() {
 
-		// Left 
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-			cubeRotAngle += cubeRotSpeed;
-		}
-
-		// Right
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-			cubeRotAngle -= cubeRotSpeed;
-		}
-		
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 			cubeRotAngle += cubeRotSpeed;
 			camRotation.x += cubeRotSpeed;
@@ -332,6 +322,18 @@ class CGmain: public BaseProject {
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
 			cubePosition.x -= cubeMovSpeed * glm::sin(glm::radians(cubeRotAngle));
 			cubePosition.z -= cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle));
+		}
+
+		// Left 
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+			cubePosition.x -= cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle));
+			cubePosition.z -= cubeMovSpeed * -glm::sin(glm::radians(cubeRotAngle));
+		}
+
+		// Right
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+			cubePosition.x += cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle));
+			cubePosition.z += cubeMovSpeed * -glm::sin(glm::radians(cubeRotAngle));
 		}
 
 		/*
@@ -388,7 +390,7 @@ class CGmain: public BaseProject {
 
 		const float fovY = glm::radians(90.0f);
 		const float nearPlane = 0.1f;
-		const float farPlane = 200.0f;
+		const float farPlane = 500.0f;
 
 		glm::mat4 prjMatrix = glm::mat4(1.0f / (Ar * glm::tan(fovY / 2.0f)), 0, 0, 0,
 			0, -1.0f / glm::tan(fovY / 2.0f), 0, 0,

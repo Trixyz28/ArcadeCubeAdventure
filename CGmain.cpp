@@ -95,8 +95,8 @@ protected:
 	// Main application parameters
 	void setWindowParameters() {
 		// window size, title and initial background
-		windowWidth = 800;
-		windowHeight = 600;
+		windowWidth = 1920;
+		windowHeight = 1080;
 		windowTitle = "CG - Project";
 		windowResizable = GLFW_TRUE;
 		initialBackgroundColor = { 0.0f, 0.85f, 1.0f, 1.0f };
@@ -109,7 +109,7 @@ protected:
 		*/
 
 
-		Ar = 4.0f / 3.0f;
+		Ar = (float)windowWidth / (float)windowHeight;
 	}
 
 	// What to do when the window changes size
@@ -216,15 +216,15 @@ protected:
 		txt.init(this, &outText);
 
 		// Init local variables
-		cubePosition = glm::vec3(0.0f, 0.5f, 0.0f);
+		cubePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 		cubeRotAngle = 0.0f;
 		cubeMovSpeed = 0.02f;
 		cubeRotSpeed = 0.2f;
 		cubeColor = glm::vec3(0.0f, 0.0f, 0.0f);
 
 
-		camPosition = cubePosition;
-		camRotation = glm::vec3(0.0f);
+		camPosition = cubePosition + glm::vec3(0.0f, 0.5f, 0.0f);
+		camRotation = glm::vec3(0.0f, 0.0f, 0.0f);
 		camRotSpeed = 0.1f;
 		camDistance = 2.0f;
 		minCamDistance = 1.0f;
@@ -234,7 +234,7 @@ protected:
 		isJumping = false;
 		gravity = -0.0008f;
 		jumpForce = 0.2f;
-		groundLevel = 0.5f;
+		groundLevel = 0.0f;
 		camNFSpeed = 0.003f;
 
 		debounce = false;
@@ -560,11 +560,16 @@ protected:
 
 		glm::vec3 newCamPosition = glm::normalize(glm::vec3(sin(glm::radians(cubeRotAngle)),
 			sin(glm::radians(camRotation.y)),
-			cos(glm::radians(cubeRotAngle)))) * camDistance + cubePosition;
+			cos(glm::radians(cubeRotAngle)))) * camDistance + cubePosition + glm::vec3(0.0f, 0.5f, 0.0f);
+
+		newCamPosition.x = glm::clamp(newCamPosition.x, -237.5f, 237.5f);
+		newCamPosition.z = glm::clamp(newCamPosition.z, -237.5f, 237.5f);
+		newCamPosition.y = glm::clamp(newCamPosition.y, 0.5f, 160.0f);
 
 		float dampLambda = 10.0f;
 
 		camPosition = camPosition * exp(-dampLambda * deltaTime)  + newCamPosition * (1-exp(-dampLambda * deltaTime));
+
 
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 

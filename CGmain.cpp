@@ -514,7 +514,7 @@ protected:
 		getJump();
 
 		if (isJumping) {
-			cubePosition.y += jumpSpeed * deltaTime;
+			cubePosition.y += jumpSpeed;
 			jumpSpeed += gravity * deltaTime;
 
 			if (cubePosition.y <= groundLevel) {

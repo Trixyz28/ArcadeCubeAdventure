@@ -131,6 +131,7 @@ protected:
 	float camRotSpeed;
 	float camDistance;
 	float minCamDistance, maxCamDistance;
+	float camNFSpeed;
 	glm::mat4 viewMatrix;
 
 	float jumpSpeed;
@@ -228,8 +229,9 @@ protected:
 		jumpSpeed = 0.0f;
 		isJumping = false;
 		gravity = -0.0005f;
-		jumpForce = 0.2f;
+		jumpForce = 0.35f;
 		groundLevel = 0.5f;
+		camNFSpeed = 0.003f;
 
 		debounce = false;
 		currDebounce = 0;
@@ -326,6 +328,7 @@ protected:
 			(currentTime - startTime).count();
 		float deltaT = time - lastTime;
 		lastTime = time;
+		deltaT = deltaT * 1e6;
 
 		return deltaT;
 	}
@@ -354,36 +357,36 @@ protected:
 	void getActions() {
 
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-			cubeRotAngle += cubeRotSpeed;
-			camRotation.x += cubeRotSpeed;
+			cubeRotAngle += cubeRotSpeed * deltaTime;
+			camRotation.x += cubeRotSpeed * deltaTime;
 		}
 		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-			cubeRotAngle -= cubeRotSpeed;
-			camRotation.x -= cubeRotSpeed;
+			cubeRotAngle -= cubeRotSpeed * deltaTime;
+			camRotation.x -= cubeRotSpeed * deltaTime;
 		}
 		
 		// Forward
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-			cubePosition.x += cubeMovSpeed * glm::sin(glm::radians(cubeRotAngle));
-			cubePosition.z += cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle));
+			cubePosition.x += cubeMovSpeed * glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
+			cubePosition.z += cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
 		}
 
 		// Backward
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-			cubePosition.x -= cubeMovSpeed * glm::sin(glm::radians(cubeRotAngle));
-			cubePosition.z -= cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle));
+			cubePosition.x -= cubeMovSpeed * glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
+			cubePosition.z -= cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
 		}
 
 		// Left 
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-			cubePosition.x -= cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle));
-			cubePosition.z -= cubeMovSpeed * -glm::sin(glm::radians(cubeRotAngle));
+			cubePosition.x -= cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
+			cubePosition.z -= cubeMovSpeed * -glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
 		}
 
 		// Right
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-			cubePosition.x += cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle));
-			cubePosition.z += cubeMovSpeed * -glm::sin(glm::radians(cubeRotAngle));
+			cubePosition.x += cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
+			cubePosition.z += cubeMovSpeed * -glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
 		}
 
 		/*
@@ -394,21 +397,18 @@ protected:
 
 
 		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-			camRotation.y += camRotSpeed;
+			camRotation.y += camRotSpeed * deltaTime;
 		}
 		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-			camRotation.y -= camRotSpeed;
+			camRotation.y -= camRotSpeed * deltaTime;
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
-			camDistance -= 0.01f;
+			camDistance -= camNFSpeed * deltaTime;
 		}
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
-			camDistance += 0.01f;
+			camDistance += camNFSpeed * deltaTime;
 		}
-
-		camDistance = glm::clamp(camDistance, minCamDistance, maxCamDistance);
-		camRotation.y = glm::clamp(camRotation.y, 0.0f, 80.0f);
 
 	}
 
@@ -513,7 +513,7 @@ protected:
 		getJump();
 
 		if (isJumping) {
-			cubePosition.y += jumpSpeed;
+			cubePosition.y += jumpSpeed * deltaTime;
 			jumpSpeed += gravity;
 
 			if (cubePosition.y <= groundLevel) {
@@ -533,6 +533,8 @@ protected:
 			glm::vec3(0.0f, 1.0f, 0.0f));
 
 		getActions();
+		camDistance = glm::clamp(camDistance, minCamDistance, maxCamDistance);
+		camRotation.y = glm::clamp(camRotation.y, 0.0f, 85.0f);
 
 		glm::vec3 newCamPosition = glm::normalize(glm::vec3(sin(glm::radians(cubeRotAngle)),
 			sin(glm::radians(camRotation.y)),
@@ -540,7 +542,7 @@ protected:
 
 		float dampLambda = 10.0f;
 
-		camPosition = camPosition * exp(-dampLambda) + newCamPosition * (1-exp(-dampLambda));
+		camPosition = camPosition * exp(-dampLambda * deltaTime)  + newCamPosition * (1-exp(-dampLambda * deltaTime));
 
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 

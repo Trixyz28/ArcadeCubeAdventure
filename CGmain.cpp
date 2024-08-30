@@ -80,7 +80,7 @@ protected:
 	std::string cubeObj = "cube";
 
 	// Landscape drawing
-	std::vector<std::string> staticObj = { "plane", "room", "tb" };
+	std::vector<std::string> staticObj = { "floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", "diamond"};
 
 	CubeUniformBufferObject cubeUbo{};
 	UniformBufferObject staticUbo{};
@@ -240,7 +240,6 @@ protected:
 
 
 
-
 		std::cout << "Initialization completed!\n";
 		std::cout << "Uniform Blocks in the Pool  : " << uniformBlocksInPool << "\n";
 		std::cout << "Textures in the Pool        : " << texturesInPool << "\n";
@@ -343,6 +342,7 @@ protected:
 			if (!debounce) {
 				debounce = true;
 				currDebounce = GLFW_KEY_SPACE;
+				changeColor();
 				isJumping = true;
 				jumpSpeed = jumpForce;
 			}
@@ -438,7 +438,7 @@ protected:
 
 		const float fovY = glm::radians(90.0f);
 		const float nearPlane = 0.1f;
-		const float farPlane = 500.0f;
+		const float farPlane = 700.0f;
 
 		glm::mat4 prjMatrix = glm::mat4(1.0f / (Ar * glm::tan(fovY / 2.0f)), 0, 0, 0,
 			0, -1.0f / glm::tan(fovY / 2.0f), 0, 0,
@@ -494,27 +494,14 @@ protected:
 		gubo.cosIn = cos(0.4591524628390111f);
 		gubo.cosOut = cos(0.5401793718338013f);
 
-//		for(int i = 0; i < SC.InstanceCount; i++) {
-		if(currScene == 0) {
 
-
-			/*
-			for (std::vector<std::string>::iterator it = trkOpEl.begin(); it != trkOpEl.end(); it++) {
-				int i = SC.InstanceIds[it->c_str()];
-				ubo.mMat = glm::mat4(0);
-				ubo.mvpMat = glm::mat4(0);
-				ubo.nMat = glm::mat4(0);
-
-				SC.DS[i]->map(currentImage, &ubo, sizeof(ubo), 0);
-				SC.DS[i]->map(currentImage, &gubo, sizeof(gubo), 2);
-			}*/
-		} 
 
 		// Draw the landscape
 		for (std::vector<std::string>::iterator it = staticObj.begin(); it != staticObj.end(); it++) {
 			int i = SC.InstanceIds[it->c_str()];
 //std::cout << *it << " " << i << "\n";
 			// Product per transform matrix
+			// staticUbo.mMat = baseMatrix * SC.M[SC.I[i]->Mid]->Wm * SC.I[i]->Wm;
 			staticUbo.mMat = baseMatrix * SC.I[i]->Wm;
 			staticUbo.mvpMat = viewPrjMatrix * staticUbo.mMat;
 			staticUbo.nMat = glm::inverse(glm::transpose(staticUbo.mMat));
@@ -526,7 +513,6 @@ protected:
 		getJump();
 
 		if (isJumping) {
-			changeColor();
 			cubePosition.y += jumpSpeed;
 			jumpSpeed += gravity;
 

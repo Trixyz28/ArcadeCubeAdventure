@@ -1,17 +1,37 @@
 {
 	"models": [
 		{
-			"id": "plane",
-			"model": "models/LargePlane.obj",
+			"id": "floor",
+			"model": "models/floor.obj",
 			"format": "OBJ"
 		},
 		{
-			"id": "room",
-			"model": "models/arcadeRoom.obj",
+			"id": "ceiling",
+			"model": "models/ceiling.obj",
 			"format": "OBJ"
 		},
 		{
-			"id": "tb",
+			"id": "leftwall",
+			"model": "models/leftWall.obj",
+			"format": "OBJ"
+		},
+		{
+			"id": "rightwall",
+			"model": "models/rightWall.obj",
+			"format": "OBJ"
+		},
+		{
+			"id": "frontwall",
+			"model": "models/frontWall.obj",
+			"format": "OBJ"
+		},
+		{
+			"id": "backwall",
+			"model": "models/backWall.obj",
+			"format": "OBJ"
+		},
+		{
+			"id": "diamond",
 			"model": "models/Diamond_Blue.mgcg",
 			"format": "MGCG"
 		},
@@ -22,31 +42,81 @@
 		}
 	],
 	"textures": [
-		{"id": "t0", "texture": "textures/VehiclePack_BaseColor.png"},
-		{"id": "t1", "texture": "textures/textures.png"},
-		{"id": "t2", "texture": "textures/floor.png"},
-		{"id": "t3", "texture": "textures/Diamond_Blue_Albedo.png"}
+		{
+			"id": "tfloor",
+			"texture": "textures/floor.jpg"
+		},
+		{
+			"id": "tceil",
+			"texture": "textures/ceiling.jpg"
+		},
+		{
+			"id": "tlwall",
+			"texture": "textures/leftwall.jpg"
+		},
+		{
+			"id": "trwall",
+			"texture": "textures/rightwall.jpg"
+		},
+		{
+			"id": "tfwall",
+			"texture": "textures/frontwall.jpg"
+		},
+		{
+			"id": "tbwall",
+			"texture": "textures/backwall.jpg"
+		},
+		{
+			"id": "t0",
+			"texture": "textures/Diamond_Blue_Albedo.png"
+		}
 	],
 	"instances": [
 		{"pipeline":  "P", "elements": [
-			{"id": "plane",   "model": "plane",   "texture": ["t2"],
-				"transform": [10, 0, 0, 0,
-					   0,10, 0, -0.1,
-					   0, 0,10, 0,
+			{"id": "floor",   "model": "floor",   "texture": ["tfloor"],
+				"transform": [12, 0, 0, 0,
+					   0, 12, 0, 0,
+					   0, 0, 12, 0,
 					   0, 0, 0, 1]},
-			{"id": "room",   "model": "room",   "texture": ["t0"],
-				"transform": [2.0, 0, 0,   0,
-					   0, 2.0,-0.03, 0,
-					   0, 0.03, 2.0,   0,
+			{"id": "ceiling",   "model": "ceiling",   "texture": ["tceil"],
+				"transform": [12, 0, 0,   0,
+					   0, 12, 0, 160,
+					   0, 0, 12, 0,
 					   0, 0, 0, 1]},
-			{"id": "tb",   "model": "tb",   "texture": ["t3"],
-				"transform": [0.01, 0, 0, 1,
-					   0, 0.01, 0, 3,
-					   0, 0, 0.01, 2,
+			{"id": "leftwall",   "model": "leftwall",   "texture": ["tlwall"],
+				"transform": [5, 0, 0, 0,
+					   0, 5, 0, 0,
+					   0, 0, 5, 0,
+					   0, 0, 0, 1]},
+
+		 	{"id": "rightwall",   "model": "rightwall",   "texture": ["trwall"],
+				"transform": [5, 0, 0, 0,
+					   0, 5, 0, 0,
+					   0, 0, 5, 0,
+					   0, 0, 0, 1]},
+
+			{"id": "backwall",   "model": "backwall",   "texture": ["tbwall"],
+				"transform": [5, 0, 0, 0,
+					   0, 5, 0, 0,
+					   0, 0, 5, 0,
+					   0, 0, 0, 1]},
+
+			{"id": "frontwall",   "model": "frontwall",   "texture": ["tfwall"],
+				"transform": [5, 0, 0, 0,
+					   0, 5, 0, 0,
+					   0, 0, 5, 0,
+					   0, 0, 0, 1]},
+
+			{"id": "diamond",   "model": "diamond",   "texture": ["t0"],
+				"transform": [0.2, 0, 0, 7,
+					   0, 0.2, 0, 5,
+					   0, 0, 0.2, 10,
 					   0, 0, 0, 1]}
-		 ]},
+		 ]
+
+		},
 		{"pipeline":  "PBlinn", "elements": [
-			 {"id": "cube",   "model": "cube",   "texture": ["t3"],
+			 {"id": "cube",   "model": "cube",   "texture": ["t0"],
 				"transform": [10, 0, 0, 0,
 					   0, 10, 0, 0,
 					   0, 0, 10, 0,

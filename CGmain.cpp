@@ -19,6 +19,13 @@ struct UniformBufferObject {
 	alignas(16) glm::mat4 nMat;
 };
 
+struct CubeUniformBufferObject {
+	alignas(16) glm::mat4 mvpMat;
+	alignas(16) glm::mat4 mMat;
+	alignas(16) glm::mat4 nMat;
+	alignas(16) glm::vec3 col;
+};
+
 struct GlobalUniformBufferObject {
 	/*
 	alignas(16) glm::vec3 lightDir;
@@ -75,7 +82,7 @@ protected:
 	// Landscape drawing
 	std::vector<std::string> staticObj = { "plane", "room", "tb" };
 
-	UniformBufferObject cubeUbo{};
+	CubeUniformBufferObject cubeUbo{};
 	UniformBufferObject staticUbo{};
 
 	// Aspect ratio
@@ -116,6 +123,7 @@ protected:
 
 
 	glm::vec3 cubePosition;
+	glm::vec3 cubeColor;
 	float cubeRotAngle;
 	float cubeMovSpeed, cubeRotSpeed;
 
@@ -152,7 +160,7 @@ protected:
 			});
 
 		DSLcube.init(this, {
-					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(UniformBufferObject)},
+					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(CubeUniformBufferObject)},
 					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
 					{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(GlobalUniformBufferObject)}
 			});
@@ -173,7 +181,7 @@ protected:
 		P.init(this, &VD, "shaders/Vert.spv", "shaders/PhongFrag.spv", { &DSL });
 		P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
 			VK_CULL_MODE_NONE, false);
-		Pcube.init(this, &VD, "shaders/Vert.spv", "shaders/BlinnFrag.spv", { &DSLcube });
+		Pcube.init(this, &VD, "shaders/CubeVert.spv", "shaders/CubeFrag.spv", { &DSLcube });
 
 
 		PRs.resize(2);
@@ -207,6 +215,7 @@ protected:
 		cubeRotAngle = 0.0f;
 		cubeMovSpeed = 0.02f;
 		cubeRotSpeed = 0.2f;
+		cubeColor = glm::vec3(0.0f, 0.0f, 0.0f);
 
 
 		camPosition = cubePosition;
@@ -404,6 +413,17 @@ protected:
 	}
 
 
+	// Change Cube's color
+	void changeColor() {
+		float r = (rand() % 100 + 1) / 100.0f;
+		float g = (rand() % 100 + 1) / 100.0f;
+		float b = (rand() % 100 + 1) / 100.0f;
+		glm::vec3 col = glm::vec3(r, g, b);
+		std::cout << "color: " << r << ", " << g << ", " << b << ".\n";
+		cubeColor = col;
+	}
+
+
 
 	// Here is where you update the uniforms.
 	// Very likely this will be where you will be writing the logic of your application.
@@ -498,7 +518,7 @@ protected:
 			staticUbo.mMat = baseMatrix * SC.I[i]->Wm;
 			staticUbo.mvpMat = viewPrjMatrix * staticUbo.mMat;
 			staticUbo.nMat = glm::inverse(glm::transpose(staticUbo.mMat));
-
+			cubeUbo.col = cubeColor;
 			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
 			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
@@ -506,6 +526,7 @@ protected:
 		getJump();
 
 		if (isJumping) {
+			changeColor();
 			cubePosition.y += jumpSpeed;
 			jumpSpeed += gravity;
 

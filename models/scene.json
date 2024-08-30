@@ -36,13 +36,38 @@
 			"format": "MGCG"
 		},
 		{
-			"id": "ballgame",
-			"model": "models/ballGame.mgcg",
+			"id": "blackmachine",
+			"model": "models/blackMachine.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "hockeytable",
+			"model": "models/hockeyTable.mgcg",
 			"format": "MGCG"
 		},
 		{
 			"id": "dancemachine",
 			"model": "models/danceMachine.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "doublemachine",
+			"model": "models/doubleMachine.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "pooltable",
+			"model": "models/poolTable.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "popcornmachine",
+			"model": "models/popcornMachine.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "vendingmachine",
+			"model": "models/vendingMachine.mgcg",
 			"format": "MGCG"
 		},
 		{
@@ -146,9 +171,9 @@
 					   0, 0, 40, -225,
 					   0, 0, 0, 1]},
 
-			{"id": "ballgame",   "model": "ballgame",   "texture": ["tfurniture"],
+			{"id": "hockeytable",   "model": "hockeytable",   "texture": ["tfurniture"],
 				"transform": [40, 0, 0, 30,
-					   0, 30, 0, 0,
+					   0, 40, 0, 0,
 					   0, 0, 40, 50,
 					   0, 0, 0, 1]},
 
@@ -164,6 +189,50 @@
 					   0, 0, -40, 210,
 					   0, 0, 0, 1]},
 
+			{"id": "pooltable",   "model": "pooltable",   "texture": ["tfurniture"],
+				"transform": [0, 0, 40, 120,
+					   0, 40, 0, 0,
+					   40, 0, 0, 160,
+					   0, 0, 0, 1]},
+			{"id": "blackmachine1",   "model": "blackmachine",   "texture": ["tfurniture"],
+				"transform": [40, 0, 0, 210,
+					   0, 40, 0, 0,
+					   0, 0, 40, -225,
+					   0, 0, 0, 1]},
+			{"id": "blackmachine2",   "model": "blackmachine",   "texture": ["tfurniture"],
+				"transform": [40, 0, 0, 165,
+					   0, 40, 0, 0,
+					   0, 0, 40, -225,
+					   0, 0, 0, 1]},
+
+			{"id": "blackmachine3",   "model": "blackmachine",   "texture": ["tfurniture"],
+				"transform": [40, 0, 0, 120,
+					   0, 40, 0, 0,
+					   0, 0, 40, -225,
+					   0, 0, 0, 1]},
+			{"id": "doublemachine1",   "model": "doublemachine",   "texture": ["tfurniture"],
+				"transform": [0, 0, 40, 0,
+					   0, 40, 0, 40,
+					   40, 0, 0, -150,
+					   0, 0, 0, 1]},
+
+			{"id": "doublemachine2",   "model": "doublemachine",   "texture": ["tfurniture"],
+				"transform": [0, 0, 40, 0,
+					   0, 40, 0, 40,
+					   40, 0, 0, -200,
+					   0, 0, 0, 1]},
+
+			{"id": "vendingmachine",   "model": "vendingmachine",   "texture": ["tfurniture"],
+				"transform": [0, 0, 50, -227,
+					   0, 50, 0, 0,
+					   50, 0, 0, 10,
+					   0, 0, 0, 1]},
+
+			{"id": "popcornmachine",   "model": "popcornmachine",   "texture": ["tfurniture"],
+				"transform": [0, 0, -50, -227,
+					   0, 50, 0, 0,
+					   -50, 0, 0, -50,
+					   0, 0, 0, 1]},
 			{"id": "diamond",   "model": "diamond",   "texture": ["t0"],
 				"transform": [1.0, 0, 0, 7,
 					   0, 1.0, 0, 5,

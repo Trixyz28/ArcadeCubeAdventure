@@ -82,8 +82,10 @@ protected:
 	// Landscape drawing
 	std::vector<std::string> staticObj = { 
 		"floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", 
-		"redmachine1", "redmachine2", "redmachine3",
-		"ballgame", "dancemachine1", "dancemachine2"};
+		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "dancemachine1", "dancemachine2",
+		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
+		"vendingmachine", "popcornmachine"
+	};
 	std::vector<std::string> gadgetObj = { "diamond" };
 
 	CubeUniformBufferObject cubeUbo{};
@@ -228,12 +230,12 @@ protected:
 		camRotSpeed = 0.1f;
 		camDistance = 2.0f;
 		minCamDistance = 1.0f;
-		maxCamDistance = 3.0f;
+		maxCamDistance = 4.0f;
 
 		jumpSpeed = 0.0f;
 		isJumping = false;
-		gravity = -0.0008f;
-		jumpForce = 0.2f;
+		gravity = -0.001f;
+		jumpForce = 0.3f;
 		groundLevel = 0.0f;
 		camNFSpeed = 0.003f;
 

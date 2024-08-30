@@ -328,7 +328,7 @@ protected:
 			(currentTime - startTime).count();
 		float deltaT = time - lastTime;
 		lastTime = time;
-		deltaT = deltaT * 1e6;
+		deltaT = deltaT * 1e3;
 
 		return deltaT;
 	}
@@ -449,6 +449,7 @@ protected:
 		glm::mat4 worldMatrix;
 		glm::mat4 viewPrjMatrix = prjMatrix * viewMatrix;
 
+		deltaTime = getTime();
 
 
 		if(glfwGetKey(window, GLFW_KEY_V)) {

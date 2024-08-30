@@ -35,16 +35,16 @@ struct GlobalUniformBufferObject {
 	*/
 	struct {
 		alignas(16) glm::vec3 v;
-	} lightDir[2];
+	} lightDir[3];
 	struct {
 		alignas(16) glm::vec3 v;
-	} lightPos[2];
-	alignas(16) glm::vec4 lightColor[2];
+	} lightPos[3];
+	alignas(16) glm::vec4 lightColor[3];
 	alignas(4) float cosIn;
 	alignas(4) float cosOut;
 	alignas(16) glm::vec3 eyePos;
 	alignas(16) glm::vec4 eyeDir;
-	alignas(16) glm::vec2 lightOn;
+	alignas(16) glm::vec3 lightOn;
 };
 
 
@@ -149,9 +149,11 @@ protected:
 	bool debounce;
 	int currDebounce;
 
-
-
-
+	glm::vec3 lPos[3];
+	glm::vec3 lDir[3];
+	glm::vec4 lCol[3];
+	int n_lights;
+	
 
 
 	// Here you load and setup all your Vulkan Models and Texutures.
@@ -244,7 +246,30 @@ protected:
 
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 
+		// lights
+		nlohmann::json js;
+		std::ifstream ifs("models/Lights.json");
+		if (!ifs.is_open()) {
+			std::cout << "Error! Lights file not found!";
+			exit(-1);
+		}
 
+		try {
+			std::cout << "Parsing JSON\n";
+			ifs >> js;
+			ifs.close();
+			nlohmann::json ns = js["nodes"];
+			nlohmann::json ld = js["lights"];
+			n_lights = ld.size();
+			for (int i = 0; i < ld.size(); i++) {
+				lPos[i] = glm::vec3(ns[i]["position"][0], ns[i]["position"][1], ns[i]["position"][2]);
+				//lDir[i] = glm::vec3(ns[i]["direction"][0], ns[i]["direction"][1], ns[i]["direction"][2]);
+				lCol[i] = glm::vec4(ld[i]["color"][0], ld[i]["color"][1], ld[i]["color"][2], ld[i]["intensity"]);
+			}
+		}
+		catch (const nlohmann::json::exception& e) {
+			std::cout << e.what() << '\n';
+		}
 
 		std::cout << "Initialization completed!\n";
 		std::cout << "Uniform Blocks in the Pool  : " << uniformBlocksInPool << "\n";
@@ -456,8 +481,8 @@ protected:
 		deltaTime = getTime();
 
 
-		if(glfwGetKey(window, GLFW_KEY_V)) {
-			if(!debounce) {
+		if (glfwGetKey(window, GLFW_KEY_V)) {
+			if (!debounce) {
 				debounce = true;
 				currDebounce = GLFW_KEY_V;
 
@@ -465,14 +490,15 @@ protected:
 				printFloat("DeltaTime", deltaTime);
 
 			}
-		} else {
-			if((currDebounce == GLFW_KEY_V) && debounce) {
+		}
+		else {
+			if ((currDebounce == GLFW_KEY_V) && debounce) {
 				debounce = false;
 				currDebounce = 0;
 			}
 		}
-		
-					
+
+
 		// Here is where you actually update your uniforms
 		/*
 		// updates global uniforms
@@ -486,16 +512,31 @@ protected:
 
 		GlobalUniformBufferObject gubo{};
 
-		gubo.lightDir[0].v = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
-		gubo.lightPos[0].v = glm::vec3(1.0f);
-		gubo.lightColor[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		gubo.lightDir[1].v = glm::normalize(glm::vec3(camPosition.x- cubePosition.x, 0.0f, camPosition.z - cubePosition.z));
+		for (int i = 0; i < n_lights; i++) {
+			gubo.lightDir[i].v = lDir[i];
+			gubo.lightPos[i].v = lPos[i];
+			gubo.lightColor[i] = lCol[i];
+		}
+
+		// cube light
+		gubo.lightDir[n_lights].v = glm::normalize(glm::vec3(camPosition.x - cubePosition.x, 0.0f, camPosition.z - cubePosition.z));
+		gubo.lightPos[n_lights].v = cubePosition;
+		gubo.lightColor[n_lights] = glm::vec4(cubeColor, 15.0f);
+		
+		/*
+		gubo.lightDir[1].v = glm::normalize(glm::vec3(camPosition.x - cubePosition.x, 0.0f, camPosition.z - cubePosition.z));
 		gubo.lightPos[1].v = cubePosition;
-		gubo.lightColor[1] = glm::vec4(1.0f, 1.0f, 1.0f, 20.0f);
+		gubo.lightColor[1] = glm::vec4(cubeColor, 15.0f);
+		gubo.lightDir[2].v = glm::vec3(0.0f, 1.0f, 0.0f);
+		gubo.lightPos[2].v = glm::vec3(0.0f, 160.0f, 0.0f);
+		gubo.lightColor[2] = glm::vec4(1.0f, 0.0f, 1.0f, 50.0f);
+		*/
+		
+
 		gubo.eyePos = camPosition;
 		gubo.eyeDir = glm::vec4(0);
 		gubo.eyeDir.w = 1.0;
-		gubo.lightOn = glm::vec2(1.0f,1.0f);
+		gubo.lightOn = glm::vec3(0.0f, 1.0f, 1.0f);
 		gubo.cosIn = cos(0.4591524628390111f);
 		gubo.cosOut = cos(0.5401793718338013f);
 
@@ -510,7 +551,7 @@ protected:
 			staticUbo.mMat = baseMatrix * SC.I[i]->Wm;
 			staticUbo.mvpMat = viewPrjMatrix * staticUbo.mMat;
 			staticUbo.nMat = glm::inverse(glm::transpose(staticUbo.mMat));
-			cubeUbo.col = cubeColor;
+			
 			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
 			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
@@ -522,7 +563,7 @@ protected:
 			staticUbo.mMat = baseMatrix * SC.I[i]->Wm * SC.M[SC.I[i]->Mid]->Wm;
 			staticUbo.mvpMat = viewPrjMatrix * staticUbo.mMat;
 			staticUbo.nMat = glm::inverse(glm::transpose(staticUbo.mMat));
-			cubeUbo.col = cubeColor;
+
 			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
 			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
@@ -573,6 +614,7 @@ protected:
 		cubeUbo.mMat = baseMatrix * worldMatrix * SC.M[SC.I[i]->Mid]->Wm * SC.I[i]->Wm;
 		cubeUbo.mvpMat = viewPrjMatrix * cubeUbo.mMat;
 		cubeUbo.nMat = glm::inverse(glm::transpose(cubeUbo.mMat));
+		cubeUbo.col = cubeColor;
 
 		SC.I[i]->DS[0]->map(currentImage, &cubeUbo, sizeof(cubeUbo), 0);
 		SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);

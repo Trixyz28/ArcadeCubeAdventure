@@ -80,7 +80,11 @@ protected:
 	std::string cubeObj = "cube";
 
 	// Landscape drawing
-	std::vector<std::string> staticObj = { "floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", "diamond"};
+	std::vector<std::string> staticObj = { 
+		"floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", 
+		"redmachine1", "redmachine2", "redmachine3",
+		"ballgame", "dancemachine1", "dancemachine2"};
+	std::vector<std::string> gadgetObj = { "diamond" };
 
 	CubeUniformBufferObject cubeUbo{};
 	UniformBufferObject staticUbo{};
@@ -228,7 +232,7 @@ protected:
 
 		jumpSpeed = 0.0f;
 		isJumping = false;
-		gravity = -0.001f;
+		gravity = -0.0008f;
 		jumpForce = 0.2f;
 		groundLevel = 0.5f;
 		camNFSpeed = 0.003f;
@@ -487,7 +491,7 @@ protected:
 		gubo.lightColor[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		gubo.lightDir[1].v = glm::normalize(glm::vec3(camPosition.x- cubePosition.x, 0.0f, camPosition.z - cubePosition.z));
 		gubo.lightPos[1].v = cubePosition;
-		gubo.lightColor[1] = glm::vec4(0.0f, 0.5f, 1.0f, 5.0f);
+		gubo.lightColor[1] = glm::vec4(1.0f, 1.0f, 1.0f, 20.0f);
 		gubo.eyePos = camPosition;
 		gubo.eyeDir = glm::vec4(0);
 		gubo.eyeDir.w = 1.0;
@@ -502,8 +506,20 @@ protected:
 			int i = SC.InstanceIds[it->c_str()];
 //std::cout << *it << " " << i << "\n";
 			// Product per transform matrix
-			// staticUbo.mMat = baseMatrix * SC.M[SC.I[i]->Mid]->Wm * SC.I[i]->Wm;
+			// staticUbo.mMat = baseMatrix * SC.I[i]->Wm * SC.M[SC.I[i]->Mid]->Wm;
 			staticUbo.mMat = baseMatrix * SC.I[i]->Wm;
+			staticUbo.mvpMat = viewPrjMatrix * staticUbo.mMat;
+			staticUbo.nMat = glm::inverse(glm::transpose(staticUbo.mMat));
+			cubeUbo.col = cubeColor;
+			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
+			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
+		}
+
+		for (std::vector<std::string>::iterator it = gadgetObj.begin(); it != gadgetObj.end(); it++) {
+			int i = SC.InstanceIds[it->c_str()];
+			//std::cout << *it << " " << i << "\n";
+						// Product per transform matrix
+			staticUbo.mMat = baseMatrix * SC.I[i]->Wm * SC.M[SC.I[i]->Mid]->Wm;
 			staticUbo.mvpMat = viewPrjMatrix * staticUbo.mMat;
 			staticUbo.nMat = glm::inverse(glm::transpose(staticUbo.mMat));
 			cubeUbo.col = cubeColor;
@@ -534,6 +550,11 @@ protected:
 			glm::vec3(0.0f, 1.0f, 0.0f));
 
 		getActions();
+
+		cubePosition.x = glm::clamp(cubePosition.x, -238.0f, 238.0f);
+		cubePosition.z = glm::clamp(cubePosition.z, -238.0f, 238.0f);
+		cubePosition.y = glm::clamp(cubePosition.y, 0.0f, 160.0f);
+
 		camDistance = glm::clamp(camDistance, minCamDistance, maxCamDistance);
 		camRotation.y = glm::clamp(camRotation.y, 0.0f, 85.0f);
 

@@ -73,7 +73,7 @@ protected:
 	std::string cubeObj = "cube";
 
 	// Landscape drawing
-	std::vector<std::string> staticObj = { "pln", "prm", "tb" };
+	std::vector<std::string> staticObj = { "plane", "room", "tb" };
 
 	UniformBufferObject cubeUbo{};
 	UniformBufferObject staticUbo{};
@@ -125,11 +125,13 @@ protected:
 	float minCamDistance, maxCamDistance;
 	glm::mat4 viewMatrix;
 
-	float jumpSpeed = 0.0f;
-	bool isJumping = false;
-	float gravity = -0.0005f;
-	float jumpForce = 0.2f;
-	float groundLevel = 0.5f;
+	float jumpSpeed;
+	bool isJumping;
+	float gravity;
+	float jumpForce;
+	float groundLevel;
+
+	float deltaTime;
 
 	bool debounce;
 	int currDebounce;
@@ -203,19 +205,27 @@ protected:
 		// Init local variables
 		cubePosition = glm::vec3(0.0f, 0.5f, 0.0f);
 		cubeRotAngle = 0.0f;
-		cubeMovSpeed = 0.01f;
+		cubeMovSpeed = 0.02f;
 		cubeRotSpeed = 0.2f;
 
 
-		camPosition = cubePosition + glm::vec3(3.0f, 2.5f, 3.0f);
+		camPosition = cubePosition;
 		camRotation = glm::vec3(0.0f);
 		camRotSpeed = 0.1f;
 		camDistance = 2.0f;
 		minCamDistance = 1.0f;
 		maxCamDistance = 3.0f;
 
+		jumpSpeed = 0.0f;
+		isJumping = false;
+		gravity = -0.0005f;
+		jumpForce = 0.2f;
+		groundLevel = 0.5f;
+
 		debounce = false;
 		currDebounce = 0;
+
+		deltaTime = getTime();
 
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -299,17 +309,17 @@ protected:
 	}
 
 
-	void getTime(float& deltaT) {
+	float getTime() {
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		static float lastTime = 0.0f;
 
 		auto currentTime = std::chrono::high_resolution_clock::now();
 		float time = std::chrono::duration<float, std::chrono::seconds::period>
 			(currentTime - startTime).count();
-		deltaT = time - lastTime;
+		float deltaT = time - lastTime;
 		lastTime = time;
 
-
+		return deltaT;
 	}
 
 	void scroll_callback(double xoffset, double yoffset)
@@ -420,33 +430,22 @@ protected:
 		glm::mat4 viewPrjMatrix = prjMatrix * viewMatrix;
 
 
-		// Time control
-		float deltaT;
-		getTime(deltaT);
 
-
-		/*
 		if(glfwGetKey(window, GLFW_KEY_V)) {
 			if(!debounce) {
 				debounce = true;
-				curDebounce = GLFW_KEY_V;
+				currDebounce = GLFW_KEY_V;
 
-				printVec3("Pos = ", cubePosition);
-				std::cout << "Yaw         = " << Yaw         << ";\n";
-				std::cout << "CamPitch    = " << cameraPitch    << ";\n";
-				std::cout << "CamYaw      = " << cameraYaw      << ";\n";
-				std::cout << "CamRoll     = " << cameraRoll     << ";\n";
-				std::cout << "CamDist     = " << cameraDistance     << ";\n";
-				std::cout << "SteeringAng = " << rotationAngle << ";\n";
+				printVec3("Cube position", cubePosition);
+				printFloat("DeltaTime", deltaTime);
 
 			}
 		} else {
-			if((curDebounce == GLFW_KEY_V) && debounce) {
+			if((currDebounce == GLFW_KEY_V) && debounce) {
 				debounce = false;
-				curDebounce = 0;
+				currDebounce = 0;
 			}
 		}
-		*/
 		
 					
 		// Here is where you actually update your uniforms
@@ -521,16 +520,20 @@ protected:
 
 		}
 
-
-		getActions();
 		
 		worldMatrix = glm::translate(glm::mat4(1.0f), cubePosition);
 		worldMatrix *= glm::rotate(glm::mat4(1.0f), glm::radians(cubeRotAngle),
 			glm::vec3(0.0f, 1.0f, 0.0f));
 
-		camPosition = glm::normalize(glm::vec3(sin(glm::radians(cubeRotAngle)) * 0.5f,
+		getActions();
+
+		glm::vec3 newCamPosition = glm::normalize(glm::vec3(sin(glm::radians(cubeRotAngle)),
 			sin(glm::radians(camRotation.y)),
-			cos(glm::radians(cubeRotAngle)) *0.5f)) * camDistance + cubePosition;
+			cos(glm::radians(cubeRotAngle)))) * camDistance + cubePosition;
+
+		float dampLambda = 10.0f;
+
+		camPosition = camPosition * exp(-dampLambda) + newCamPosition * (1-exp(-dampLambda));
 
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -543,7 +546,7 @@ protected:
 		SC.I[i]->DS[0]->map(currentImage, &cubeUbo, sizeof(cubeUbo), 0);
 		SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 
-
+		camPosition = newCamPosition;
 	}
 };
 

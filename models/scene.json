@@ -1,14 +1,14 @@
 {
 	"models": [
 		{
-			"id": "pln",
+			"id": "plane",
 			"model": "models/LargePlane.obj",
 			"format": "OBJ"
 		},
 		{
-			"id": "prm",
-			"model": "models/City_6_Industrial.gltf",
-			"format": "GLTF"
+			"id": "room",
+			"model": "models/arcadeRoom.obj",
+			"format": "OBJ"
 		},
 		{
 			"id": "tb",
@@ -24,20 +24,20 @@
 	"textures": [
 		{"id": "t0", "texture": "textures/VehiclePack_BaseColor.png"},
 		{"id": "t1", "texture": "textures/textures.png"},
-		{"id": "t2", "texture": "textures/Porto.png"},
+		{"id": "t2", "texture": "textures/floor.png"},
 		{"id": "t3", "texture": "textures/Diamond_Blue_Albedo.png"}
 	],
 	"instances": [
 		{"pipeline":  "P", "elements": [
-			{"id": "pln",   "model": "pln",   "texture": ["t2"],
-				"transform": [20, 0, 0, 0,
-					   0,20, 0, -0.1,
-					   0, 0,20, 0,
+			{"id": "plane",   "model": "plane",   "texture": ["t2"],
+				"transform": [10, 0, 0, 0,
+					   0,10, 0, -0.1,
+					   0, 0,10, 0,
 					   0, 0, 0, 1]},
-			{"id": "prm",   "model": "prm",   "texture": ["t1"],
-				"transform": [0.03, 0, 0,   200,
-					   0, 0,-0.03, 0.3,
-					   0, 0.03, 0,   120,
+			{"id": "room",   "model": "room",   "texture": ["t0"],
+				"transform": [2.0, 0, 0,   0,
+					   0, 2.0,-0.03, 0,
+					   0, 0.03, 2.0,   0,
 					   0, 0, 0, 1]},
 			{"id": "tb",   "model": "tb",   "texture": ["t3"],
 				"transform": [0.01, 0, 0, 1,

@@ -31,6 +31,21 @@
 			"format": "OBJ"
 		},
 		{
+			"id": "redmachine",
+			"model": "models/redMachine.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "ballgame",
+			"model": "models/ballGame.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "dancemachine",
+			"model": "models/danceMachine.mgcg",
+			"format": "MGCG"
+		},
+		{
 			"id": "diamond",
 			"model": "models/Diamond_Blue.mgcg",
 			"format": "MGCG"
@@ -65,6 +80,14 @@
 		{
 			"id": "tbwall",
 			"texture": "textures/backwall.jpg"
+		},
+		{
+			"id": "tfurniture",
+			"texture": "textures/Textures_Forniture.png"
+		},
+		{
+			"id": "tcube",
+			"texture": "textures/plastic.jpg"
 		},
 		{
 			"id": "t0",
@@ -106,17 +129,51 @@
 					   0, 5, 0, 0,
 					   0, 0, 5, 0,
 					   0, 0, 0, 1]},
+			{"id": "redmachine1",   "model": "redmachine",   "texture": ["tfurniture"],
+				"transform": [40, 0, 0, -210,
+					   0, 40, 0, 0,
+					   0, 0, 40, -225,
+					   0, 0, 0, 1]},
+			{"id": "redmachine2",   "model": "redmachine",   "texture": ["tfurniture"],
+				"transform": [40, 0, 0, -170,
+					   0, 40, 0, 0,
+					   0, 0, 40, -225,
+					   0, 0, 0, 1]},
+
+			{"id": "redmachine3",   "model": "redmachine",   "texture": ["tfurniture"],
+				"transform": [40, 0, 0, -130,
+					   0, 40, 0, 0,
+					   0, 0, 40, -225,
+					   0, 0, 0, 1]},
+
+			{"id": "ballgame",   "model": "ballgame",   "texture": ["tfurniture"],
+				"transform": [40, 0, 0, 30,
+					   0, 30, 0, 0,
+					   0, 0, 40, 50,
+					   0, 0, 0, 1]},
+
+			{"id": "dancemachine1",   "model": "dancemachine",   "texture": ["tfurniture"],
+				"transform": [-40, 0, 0, -121,
+					   0, 40, 0, -2,
+					   0, 0, -40, 210,
+					   0, 0, 0, 1]},
+
+			{"id": "dancemachine2",   "model": "dancemachine",   "texture": ["tfurniture"],
+				"transform": [-40, 0, 0, -190,
+					   0, 40, 0, -2,
+					   0, 0, -40, 210,
+					   0, 0, 0, 1]},
 
 			{"id": "diamond",   "model": "diamond",   "texture": ["t0"],
-				"transform": [0.2, 0, 0, 7,
-					   0, 0.2, 0, 5,
-					   0, 0, 0.2, 10,
+				"transform": [1.0, 0, 0, 7,
+					   0, 1.0, 0, 5,
+					   0, 0, 1.0, 10,
 					   0, 0, 0, 1]}
 		 ]
 
 		},
 		{"pipeline":  "PBlinn", "elements": [
-			 {"id": "cube",   "model": "cube",   "texture": ["t0"],
+			 {"id": "cube",   "model": "cube",   "texture": ["tcube"],
 				"transform": [10, 0, 0, 0,
 					   0, 10, 0, 0,
 					   0, 0, 10, 0,

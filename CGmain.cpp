@@ -228,8 +228,8 @@ protected:
 
 		jumpSpeed = 0.0f;
 		isJumping = false;
-		gravity = -0.0005f;
-		jumpForce = 0.35f;
+		gravity = -0.001f;
+		jumpForce = 0.2f;
 		groundLevel = 0.5f;
 		camNFSpeed = 0.003f;
 
@@ -514,7 +514,7 @@ protected:
 
 		if (isJumping) {
 			cubePosition.y += jumpSpeed * deltaTime;
-			jumpSpeed += gravity;
+			jumpSpeed += gravity * deltaTime;
 
 			if (cubePosition.y <= groundLevel) {
 				cubePosition.y = groundLevel;

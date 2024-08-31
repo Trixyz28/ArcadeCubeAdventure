@@ -158,7 +158,7 @@ protected:
 	float groundLevel;
 
 	// Maximum abs coordinate of the map (for both x and z axis)
-	const float mapLimit = 239.4f;
+	const float mapLimit = 23.94f;
 
 	// Time offset to compensate different device performance
 	float deltaTime;
@@ -244,19 +244,19 @@ protected:
 		cubeColor = glm::vec3(0.0f, 0.0f, 0.0f);
 
 
-		camPosition = cubePosition + glm::vec3(0.0f, 0.5f, 0.0f);
+		camPosition = cubePosition + glm::vec3(0.0f, 0.06f, 0.0f);
 		camRotation = glm::vec3(0.0f, 0.0f, 0.0f);
 		camRotSpeed = 0.1f;
-		camDistance = 3.0f;
-		minCamDistance = 1.5f;
-		maxCamDistance = 7.0f;
+		camDistance = 0.4f;
+		minCamDistance = 0.22f;
+		maxCamDistance = 0.7f;
 
 		jumpSpeed = 0.0f;
 		isJumping = false;
-		gravity = -0.001f;
-		jumpForce = 0.4f;
+		gravity = -0.0001f;
+		jumpForce = 0.04f;
 		groundLevel = 0.0f;
-		camNFSpeed = 0.003f;
+		camNFSpeed = 0.0003f;
 
 		cubeCollider.center = cubePosition;
 		cubeCollider.length = 100.0f;
@@ -544,8 +544,8 @@ protected:
 
 
 		const float fovY = glm::radians(90.0f);
-		const float nearPlane = 0.1f;
-		const float farPlane = 700.0f;
+		const float nearPlane = 0.01f;
+		const float farPlane = 100.0f;
 
 		glm::mat4 prjMatrix = glm::mat4(1.0f / (Ar * glm::tan(fovY / 2.0f)), 0, 0, 0,
 			0, -1.0f / glm::tan(fovY / 2.0f), 0, 0,
@@ -770,29 +770,29 @@ protected:
 
 		cubePosition.x = glm::clamp(cubePosition.x, -mapLimit, mapLimit);
 		cubePosition.z = glm::clamp(cubePosition.z, -mapLimit, mapLimit);
-		cubePosition.y = glm::clamp(cubePosition.y, 0.0f, 160.0f);
+		cubePosition.y = glm::clamp(cubePosition.y, 0.0f, 16.0f);
 
 		camDistance = glm::clamp(camDistance, minCamDistance, maxCamDistance);
 		camRotation.y = glm::clamp(camRotation.y, 0.0f, 89.0f);
 
 		glm::vec3 newCamPosition = glm::normalize(glm::vec3(sin(glm::radians(cubeRotAngle)),
 			sin(glm::radians(camRotation.y)),
-			cos(glm::radians(cubeRotAngle)))) * camDistance + cubePosition + glm::vec3(0.0f, 0.5f, 0.0f);
+			cos(glm::radians(cubeRotAngle)))) * camDistance + cubePosition + glm::vec3(0.0f, 0.06f, 0.0f);
 
 		float oldCamRoty = camRotation.y;
 
 		float dampLambda = 10.0f;
 
-		if (abs(newCamPosition.x) > mapLimit - 0.1f || abs(newCamPosition.z) > mapLimit - 0.1f) {
+		if (abs(newCamPosition.x) > mapLimit - 0.01f || abs(newCamPosition.z) > mapLimit - 0.01f) {
 			camRotation.y = camRotation.y * exp(-dampLambda * deltaTime) + 30.0f * (1 - exp(-dampLambda * deltaTime));
 		}
 		else {
 			camRotation.y = oldCamRoty;
 		}
 
-		newCamPosition.x = glm::clamp(newCamPosition.x, -mapLimit + 0.2f, mapLimit-0.2f);
-		newCamPosition.z = glm::clamp(newCamPosition.z, -mapLimit + 0.2f, mapLimit-0.2f);
-		newCamPosition.y = glm::clamp(newCamPosition.y, 0.5f, 160.0f);
+		newCamPosition.x = glm::clamp(newCamPosition.x, -mapLimit + 0.02f, mapLimit-0.02f);
+		newCamPosition.z = glm::clamp(newCamPosition.z, -mapLimit + 0.02f, mapLimit-0.02f);
+		newCamPosition.y = glm::clamp(newCamPosition.y, 0.06f, 16.0f);
 
 
 

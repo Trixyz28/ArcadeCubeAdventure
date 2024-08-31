@@ -71,6 +71,11 @@
 			"format": "MGCG"
 		},
 		{
+			"id": "sign24h",
+			"model": "models/sign_neon_24h.obj",
+			"format": "OBJ"
+		},
+		{
 			"id": "diamond",
 			"model": "models/Diamond_Blue.mgcg",
 			"format": "MGCG"
@@ -113,6 +118,10 @@
 		{
 			"id": "tcube",
 			"texture": "textures/plastic.jpg"
+		},
+		{
+			"id": "t24h",
+			"texture": "textures/sign24h.png"
 		},
 		{
 			"id": "t0",
@@ -233,6 +242,13 @@
 					   0, 50, 0, 0,
 					   -50, 0, 0, -50,
 					   0, 0, 0, 1]},
+			{"id": "sign24h",   "model": "sign24h",   "texture": ["t24h"],
+				"transform": [0, 0, 1, 0,
+					   0, 1, 0, 95,
+					   1, 0, 0, 232,
+					   0, 0, 0, 1]},
+
+
 			{"id": "diamond",   "model": "diamond",   "texture": ["t0"],
 				"transform": [1.0, 0, 0, 7,
 					   0, 1.0, 0, 5,

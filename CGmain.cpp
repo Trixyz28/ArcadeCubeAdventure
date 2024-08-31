@@ -5,7 +5,7 @@
 #include "modules/TextMaker.hpp"
 
 
-
+// Vector of text
 std::vector<SingleText> outText = {
 	{1, {"Third Person", ":)", "", ""}, 0, 0},
 };
@@ -19,6 +19,7 @@ struct UniformBufferObject {
 	alignas(16) glm::mat4 nMat;
 };
 
+// UBO for the cube
 struct CubeUniformBufferObject {
 	alignas(16) glm::mat4 mvpMat;
 	alignas(16) glm::mat4 mMat;
@@ -26,6 +27,7 @@ struct CubeUniformBufferObject {
 	alignas(16) glm::vec3 col;
 };
 
+// GUBO
 struct GlobalUniformBufferObject {
 	/*
 	alignas(16) glm::vec3 lightDir;
@@ -49,7 +51,7 @@ struct GlobalUniformBufferObject {
 
 
 
-// The vertices data structures
+// Data structure for the vertices
 struct Vertex {
 	glm::vec3 pos;
 	glm::vec2 UV;
@@ -58,6 +60,7 @@ struct Vertex {
 
 
 #include "modules/Scene.hpp"
+
 
 // MAIN ! 
 class CGmain : public BaseProject {
@@ -72,6 +75,7 @@ protected:
 	// Pipelines [Shader couples]
 	Pipeline P, Pcube;
 
+	// Scene
 	Scene SC;
 	std::vector<PipelineRef> PRs;
 
@@ -79,7 +83,7 @@ protected:
 
 	std::string cubeObj = "cube";
 
-	// Landscape drawing
+	// Static elements of the scene to draw
 	std::vector<std::string> staticObj = { 
 		"floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", 
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
@@ -87,33 +91,30 @@ protected:
 		"vendingmachine", "popcornmachine", "sign24h", "paintpacman", "sofa", "coffeetable",
 		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
+
+	// Reward gadgets to draw
 	std::vector<std::string> gadgetObj = { "diamond" };
 
 	CubeUniformBufferObject cubeUbo{};
 	UniformBufferObject staticUbo{};
 
-	// Aspect ratio
+
+	// Aspect ratio of the application window
 	float Ar;
 
 	// Main application parameters
 	void setWindowParameters() {
-		// window size, title and initial background
+
+		// Window size, title and initial background
 		windowWidth = 1920;
 		windowHeight = 1080;
 		windowTitle = "CG - Project";
 		windowResizable = GLFW_TRUE;
-		initialBackgroundColor = { 0.0f, 0.85f, 1.0f, 1.0f };
-
-		/*
-		// Descriptor pool sizes
-		uniformBlocksInPool = 19 * 2 + 2;
-		texturesInPool = 19 + 1;
-		setsInPool = 19 + 1;
-		*/
-
+		initialBackgroundColor = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 		Ar = (float)windowWidth / (float)windowHeight;
 	}
+
 
 	// What to do when the window changes size
 	void onWindowResize(int w, int h) {
@@ -124,34 +125,40 @@ protected:
 
 	// Other application parameters
 
-	// currScene = 0: third person view, currScene = 1: first person view
+	// currScene = 0: third person view
 	int currScene = 0;
 
-
-
+	// Position and color of the cube
 	glm::vec3 cubePosition;
 	glm::vec3 cubeColor;
-	float cubeRotAngle;
-	float cubeMovSpeed, cubeRotSpeed;
 
+	// Moving speed, rotation speed and angle of the cube
+	float cubeRotAngle, cubeMovSpeed, cubeRotSpeed;
+
+	// Position and rotation of the camera
 	glm::vec3 camPosition, camRotation;
-	float camRotSpeed;
-	float camDistance;
-	float minCamDistance, maxCamDistance;
-	float camNFSpeed;
-	glm::mat4 viewMatrix;
-
-	float jumpSpeed;
+	// Rotation speed and the forward / backward speed of the camera
+	float camRotSpeed, camNFSpeed;
+	// Camera distance and constraints
+	float camDistance, minCamDistance, maxCamDistance;
+	
+	// Jumping speed, initial acceleration, and in-air deceleration of the cube
+	float jumpSpeed, jumpForce, gravity;
+	// Jumping status of the cube
 	bool isJumping;
-	float gravity;
-	float jumpForce;
+	// Ground level of the position
 	float groundLevel;
 
+	// Maximum abs coordinate of the map (for both x and z axis)
+	const float mapLimit = 239.4f;
+
+	// Time offset to compensate different device performance
 	float deltaTime;
-	float mapLimit;
 
 	bool debounce;
 	int currDebounce;
+
+	glm::mat4 viewMatrix;
 
 	glm::vec3 lPos[3];
 	glm::vec3 lDir[3];
@@ -242,8 +249,6 @@ protected:
 		jumpForce = 0.4f;
 		groundLevel = 0.0f;
 		camNFSpeed = 0.003f;
-
-		mapLimit = 237.8f;
 
 		debounce = false;
 		currDebounce = 0;

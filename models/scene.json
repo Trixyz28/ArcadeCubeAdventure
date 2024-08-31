@@ -81,6 +81,42 @@
 			"format": "MGCG"
 		},
 		{
+			"id": "coffeetable",
+			"model": "models/coffeeTable.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "bluepouf",
+			"model": "models/bluePouf.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "brownpouf",
+			"model": "models/brownPouf.mgcg",
+			"format": "MGCG"
+		},
+
+		{
+			"id": "yellowpouf",
+			"model": "models/yellowPouf.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "frenchchips",
+			"model": "models/frenchChips.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "macaron",
+			"model": "models/macaron.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "drink",
+			"model": "models/drink.mgcg",
+			"format": "MGCG"
+		},
+		{
 			"id": "sign24h",
 			"model": "models/sign_neon_24h.obj",
 			"format": "OBJ"
@@ -213,7 +249,7 @@
 
 
 			{"id": "dancemachine1",   "model": "dancemachine",   "texture": ["tfurniture"],
-				"transform": [-40, 0, 0, -121,
+				"transform": [-40, 0, 0, -120,
 					   0, 40, 0, -2,
 					   0, 0, -40, 210,
 					   0, 0, 0, 1]},
@@ -274,6 +310,60 @@
 					   -50, 0, 0, -50,
 					   0, 0, 0, 1]},
 
+			{"id": "coffeetable",   "model": "coffeetable",   "texture": ["tfurniture"],
+				"transform": [40, 0, 0, -90,
+					   0, 40, 0, 0,
+					   0, 0, 40, 40,
+					   0, 0, 0, 1]},
+			
+			{"id": "frenchchips",   "model": "frenchchips",   "texture": ["tfurniture"],
+				"transform": [0, 0, 45, -95,
+					   0, 45, 0, 11.5,
+					   45, 0, 0, 50,
+					   0, 0, 0, 1]},
+
+			{"id": "macaron",   "model": "macaron",   "texture": ["tfurniture"],
+				"transform": [50, 0, 0, -90,
+					   0, 50, 0, 11.5,
+					   0, 0, 50, 40,
+					   0, 0, 0, 1]},
+
+			{"id": "drink1",   "model": "drink",   "texture": ["tfurniture"],
+				"transform": [40, 0, 0, -80,
+					   0, 40, 0, 11.5,
+					   0, 0, 40, 40,
+					   0, 0, 0, 1]},
+
+			{"id": "drink2",   "model": "drink",   "texture": ["tfurniture"],
+				"transform": [0, 0, 40, -100,
+					   0, 40, 0, 11.5,
+					   40, 0, 0, 55,
+					   0, 0, 0, 1]},
+
+			{"id": "drink3",   "model": "drink",   "texture": ["tfurniture"],
+				"transform": [0, 0, 40, -80,
+					   0, 40, 0, 11.5,
+					   -40, 0, 0, 30,
+					   0, 0, 0, 1]},
+
+
+			{"id": "bluepouf",   "model": "bluepouf",   "texture": ["tfurniture"],
+				"transform": [30, 0, 0, -80,
+					   0, 20, 0, 0,
+					   0, 0, 30, 0,
+					   0, 0, 0, 1]},
+
+			{"id": "brownpouf",   "model": "brownpouf",   "texture": ["tfurniture"],
+				"transform": [30, 0, 0, -120,
+					   0, 30, 0, 0,
+					   0, 0, 30, 80,
+					   0, 0, 0, 1]},
+
+			{"id": "yellowpouf",   "model": "yellowpouf",   "texture": ["tfurniture"],
+				"transform": [30, 0, 0, -55,
+					   0, 30, 0, 0,
+					   0, 0, 30, 60,
+					   0, 0, 0, 1]},
 
 			{"id": "sign24h",   "model": "sign24h",   "texture": ["t24h"],
 				"transform": [0, 0, 1, 0,

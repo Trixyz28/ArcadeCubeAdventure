@@ -84,7 +84,8 @@ protected:
 		"floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", 
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
-		"vendingmachine", "popcornmachine", "sign24h", "paintpacman", "sofa", 
+		"vendingmachine", "popcornmachine", "sign24h", "paintpacman", "sofa", "coffeetable",
+		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
 	std::vector<std::string> gadgetObj = { "diamond" };
 

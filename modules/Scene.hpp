@@ -46,6 +46,8 @@ class Scene {
 	int ModelCount = 0;
 	Model **M;
 	std::unordered_map<std::string, int> MeshIds;
+	std::unordered_map<std::string, std::vector<glm::vec3>> vecMap;
+	std::unordered_map<std::string, BoundingBox> bbMap;
 
 	// Textures
 	int TextureCount = 0;
@@ -93,7 +95,8 @@ class Scene {
 				std::string MT = ms[k]["format"].template get<std::string>();
 				M[k] = new Model();
 
-				M[k]->init(BP, VD, ms[k]["model"], (MT[0] == 'O') ? OBJ : ((MT[0] == 'G') ? GLTF : MGCG));
+				M[k]->init(BP, VD, ms[k]["model"], (MT[0] == 'O') ? OBJ : ((MT[0] == 'G') ? GLTF : MGCG), ms[k]["id"], vecMap);
+				std::cout << "\n\nTHE ID IS:" << ms[k]["id"] << "\n\n";
 			}
 			
 			// TEXTURES

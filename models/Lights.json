@@ -8,39 +8,56 @@
       ],
       "intensity": 1.0,
       "type": "direct",
-      "name": "Sun"
-    },
-    {
-      "color": [
-        1.0,
-        0.0,
-        1.0
-      ],
-      "intensity": 50.0,
-      "type": "point",
-      "name": "Light"
-    }
-  ],
-
-  "nodes": [
-    {
-      "light_id": 0,
       "name": "Sun",
       "position": [
-        1.0, 1.0, 1.0
+        1.0,
+        1.0,
+        1.0
       ],
       "direction": [
-        -0.7071067812, 0.7071067812, 0
+        -0.7071067812,
+        0.7071067812,
+        0
       ]
     },
     {
-      "light_id": 1,
-      "name": "Light_1",
+      "color": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "intensity": 20.0,
+      "type": "point",
+      "name": "Light",
       "position": [
-        0.0, 160.0, 0.0
+        0.0,
+        160.0,
+        0.0
       ],
       "direction": [
-        0.0, 1.0, 0.0
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "color": [
+        0.2,
+        0.7,
+        1.0
+      ],
+      "intensity": 10.0,
+      "type": "point",
+      "name": "Light_24h",
+      "position": [
+        -2.0,
+        95.0,
+        238
+      ],
+      "direction": [
+        0.0,
+        0.0,
+        0.0
       ]
     }
   ]

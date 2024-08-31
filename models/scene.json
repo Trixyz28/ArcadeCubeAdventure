@@ -76,6 +76,11 @@
 			"format": "OBJ"
 		},
 		{
+			"id": "light",
+			"model": "models/light.obj",
+			"format": "OBJ"
+		},
+		{
 			"id": "diamond",
 			"model": "models/Diamond_Blue.mgcg",
 			"format": "MGCG"
@@ -122,6 +127,14 @@
 		{
 			"id": "t24h",
 			"texture": "textures/sign24h.png"
+		},
+		{
+			"id": "t24h_m",
+			"texture": "textures/neon_signs_unique_m.png"
+		},
+		{
+			"id": "tlight",
+			"texture": "textures/light.jpg"
 		},
 		{
 			"id": "t0",
@@ -242,11 +255,7 @@
 					   0, 50, 0, 0,
 					   -50, 0, 0, -50,
 					   0, 0, 0, 1]},
-			{"id": "sign24h",   "model": "sign24h",   "texture": ["t24h"],
-				"transform": [0, 0, 1, 0,
-					   0, 1, 0, 95,
-					   1, 0, 0, 232,
-					   0, 0, 0, 1]},
+			
 
 
 			{"id": "diamond",   "model": "diamond",   "texture": ["t0"],
@@ -254,14 +263,30 @@
 					   0, 1.0, 0, 5,
 					   0, 0, 1.0, 10,
 					   0, 0, 0, 1]}
+
 		 ]
 
 		},
+
+			
 		{"pipeline":  "PBlinn", "elements": [
 			 {"id": "cube",   "model": "cube",   "texture": ["tcube"],
 				"transform": [10, 0, 0, 0,
 					   0, 10, 0, 0,
 					   0, 0, 10, 0,
+					   0, 0, 0, 1]}
+		]},
+		{"pipeline":  "PLight", "elements": [
+			 {"id": "light",   "model": "light",   "texture": ["tlight", "tlight"],
+				"transform": [1, 0, 0, 0,
+					   0, 0.5, 0, 155,
+					   0, 0, 1, 0,
+					   0, 0, 0, 1]}
+		 ,
+			 {"id": "sign24h",   "model": "sign24h",   "texture": ["t24h","t24h_m"],
+				"transform": [0, 0, 1, 0,
+					   0, 1, 0, 95,
+					   1, 0, 0, 232,
 					   0, 0, 0, 1]}
 		]}
 	]

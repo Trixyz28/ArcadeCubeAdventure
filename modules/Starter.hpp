@@ -89,6 +89,14 @@ struct SwapChainSupportDetails {
 	std::vector<VkPresentModeKHR> presentModes;
 };
 
+enum CollisionType { COLLECTIBLE = 0, OBJECT = 1 };
+
+struct BoundingBox {
+	glm::vec3 min;
+	glm::vec3 max;
+	CollisionType cType;
+};
+
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
 			const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
@@ -238,12 +246,14 @@ class Model {
 	glm::mat4 Wm;
 	std::vector<unsigned char> vertices{};
 	std::vector<uint32_t> indices{};
-	void loadModelOBJ(std::string file);
-	void loadModelGLTF(std::string file, bool encoded);
+	void loadModelOBJ(std::string file, std::string id,
+					  std::unordered_map<std::string, std::vector<glm::vec3>> &vecMap);
+	void loadModelGLTF(std::string file, bool encoded, std::string id,
+					   std::unordered_map<std::string, std::vector<glm::vec3>> &vecMap);
 	void createIndexBuffer();
 	void createVertexBuffer();
 
-	void init(BaseProject *bp, VertexDescriptor *VD, std::string file, ModelType MT);
+	void init(BaseProject *bp, VertexDescriptor *VD, std::string file, ModelType MT, std::string id, std::unordered_map<std::string, std::vector<glm::vec3>> &vecMap);		
 	void initMesh(BaseProject *bp, VertexDescriptor *VD);
 	void cleanup();
   	void bind(VkCommandBuffer commandBuffer);
@@ -2471,8 +2481,10 @@ std::vector<VkVertexInputAttributeDescription> VertexDescriptor::getAttributeDes
 
 
 
-void Model::loadModelOBJ(std::string file) {
+void Model::loadModelOBJ(std::string file, std::string id, std::unordered_map<std::string, std::vector<glm::vec3>> &vecMap) {
+	// positions, normals, texture coords, colors
 	tinyobj::attrib_t attrib;
+	// face indices 
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
 	std::string warn, err;
@@ -2484,23 +2496,38 @@ void Model::loadModelOBJ(std::string file) {
 	}
 	
 	std::cout << "Building\n";	
-//	std::cout << "Position " << VD->Position.hasIt << "," << VD->Position.offset << "\n";	
-//	std::cout << "UV " << VD->UV.hasIt << "," << VD->UV.offset << "\n";	
-//	std::cout << "Normal " << VD->Normal.hasIt << "," << VD->Normal.offset << "\n";
+	std::cout << "Position " << VD->Position.hasIt << "," << VD->Position.offset << "\n";	
+	std::cout << "UV " << VD->UV.hasIt << "," << VD->UV.offset << "\n";	
+	std::cout << "Normal " << VD->Normal.hasIt << "," << VD->Normal.offset << "\n";
+
+	//the total size of a single vertex in bytes
 	int mainStride = VD->Bindings[0].stride;
+	std::vector<glm::vec3> itemVertices;
+
+	
 	for (const auto& shape : shapes) {
 		for (const auto& index : shape.mesh.indices) {
+
+			
+			// vector of size "mainStride" filled with 0
 			std::vector<unsigned char> vertex(mainStride, 0);
+
+			// position calculation and storage
 			glm::vec3 pos = {
+				// access x,y,z components of vertex position
 				attrib.vertices[3 * index.vertex_index + 0],
 				attrib.vertices[3 * index.vertex_index + 1],
 				attrib.vertices[3 * index.vertex_index + 2]
 			};
+
+			itemVertices.push_back(pos);
+
 			if(VD->Position.hasIt) {
 				glm::vec3 *o = (glm::vec3 *)((char*)(&vertex[0]) + VD->Position.offset);
 				*o = pos;
 			}
 			
+			// Color Calculation and Storage
 			glm::vec3 color = {
 				attrib.colors[3 * index.vertex_index + 0],
 				attrib.colors[3 * index.vertex_index + 1],
@@ -2511,6 +2538,7 @@ void Model::loadModelOBJ(std::string file) {
 				*o = color;
 			}
 			
+			//Texture Coordinate Calculation and Storage
 			glm::vec2 texCoord = {
 				attrib.texcoords[2 * index.texcoord_index + 0],
 				1 - attrib.texcoords[2 * index.texcoord_index + 1] 
@@ -2536,10 +2564,13 @@ void Model::loadModelOBJ(std::string file) {
 	}
 	std::cout << "[OBJ] Vertices: "<< vertices.size() << "\n";
 	std::cout << "Indices: "<< indices.size() << "\n";
-	
+
+	std::cout << "\n\n" << itemVertices.size() << " VS " << indices.size() << "\n\n";
+
+	vecMap[id] = itemVertices;
 }
 
-void Model::loadModelGLTF(std::string file, bool encoded) {
+void Model::loadModelGLTF(std::string file, bool encoded, std::string id, std::unordered_map<std::string, std::vector<glm::vec3>> &vecMap) {
 	tinygltf::Model model;
 	tinygltf::TinyGLTF loader;
 	std::string warn, err;
@@ -2664,6 +2695,7 @@ void Model::loadModelGLTF(std::string file, bool encoded) {
 
 			int mainStride = VD->Bindings[0].stride;
 //std::cout << "making vertex array. Stride:" << mainStride << "\n";
+			std::vector<glm::vec3> itemVertices;
 			for(int i = 0; i < cntTot; i++) {
 				std::vector<unsigned char> vertex(mainStride, 0);
 //std::cout << vertices.size() << "," << vertex.size() << "," << &vertex << " " << &vertex[0] << " ";
@@ -2675,11 +2707,13 @@ void Model::loadModelGLTF(std::string file, bool encoded) {
 						bufferPos[3 * i + 1],
 						bufferPos[3 * i + 2]
 					};
+					
 //std::cout << "Pos: " <<	VD->Position.offset << "\n";
 					glm::vec3 *o = (glm::vec3 *)((char*)(&vertex[0]) + VD->Position.offset);
 //std::cout << "at: " << o << "\n";
 					*o = pos;
 //std::cout << "Copied: " << o->x << "\n";
+					itemVertices.push_back(pos);
 				}
 				if((i < cntNorm) && meshHasNorm && VD->Normal.hasIt) {
 					glm::vec3 normal = {
@@ -2718,6 +2752,7 @@ void Model::loadModelGLTF(std::string file, bool encoded) {
 				vertices.insert(vertices.end(), vertex.begin(), vertex.end());
 //std::cout << vertices.size() << " Inserted\n";
 			} 
+			vecMap[id] = itemVertices;
 
 			const tinygltf::Accessor &accessor = model.accessors[primitive.indices];
 			const tinygltf::BufferView &bufferView = model.bufferViews[accessor.bufferView];
@@ -2837,16 +2872,16 @@ void Model::initMesh(BaseProject *bp, VertexDescriptor *vd) {
 	Wm = glm::mat4(1);
 }
 
-void Model::init(BaseProject *bp, VertexDescriptor *vd, std::string file, ModelType MT) {
+void Model::init(BaseProject *bp, VertexDescriptor *vd, std::string file, ModelType MT, std::string id, std::unordered_map<std::string, std::vector<glm::vec3>> &vecMap) {
 	BP = bp;
 	VD = vd;
 	Wm = glm::mat4(1);
 	if(MT == OBJ) {
-		loadModelOBJ(file);
+		loadModelOBJ(file, id, vecMap);
 	} else if(MT == GLTF) {
-		loadModelGLTF(file, false);
+		loadModelGLTF(file, false, id, vecMap);
 	} else if(MT == MGCG) {
-		loadModelGLTF(file, true);
+		loadModelGLTF(file, true, id, vecMap);
 	}
 	
 	createVertexBuffer();

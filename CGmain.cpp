@@ -64,6 +64,11 @@ struct Vertex {
 	glm::vec3 norm;
 };
 
+struct CubeCollider {
+	glm::vec3 center;
+	float length;
+};
+
 
 #include "modules/Scene.hpp"
 
@@ -140,9 +145,12 @@ protected:
 	// Position and color of the cube
 	glm::vec3 cubePosition;
 	glm::vec3 cubeColor;
+	//for collision management
+	CubeCollider cubeCollider;
 
 	// Moving speed, rotation speed and angle of the cube
-	float cubeRotAngle, cubeMovSpeed, cubeRotSpeed;
+	float cubeRotAngle, cubeRotSpeed;
+	glm::vec3 cubeMovSpeed;
 
 	// Position and rotation of the camera
 	glm::vec3 camPosition, camRotation;
@@ -245,7 +253,7 @@ protected:
 		// Init local variables
 		cubePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 		cubeRotAngle = 0.0f;
-		cubeMovSpeed = 0.002f;
+		cubeMovSpeed = glm::vec3(0.02f,0.02f,0.02f);
 		cubeRotSpeed = 0.2f;
 		cubeColor = glm::vec3(0.0f, 0.0f, 0.0f);
 
@@ -263,6 +271,9 @@ protected:
 		jumpForce = 0.04f;
 		groundLevel = 0.0f;
 		camNFSpeed = 0.0003f;
+
+		cubeCollider.center = cubePosition;
+		cubeCollider.length = 100.0f;
 
 		debounce = false;
 		currDebounce = 0;
@@ -295,6 +306,7 @@ protected:
 		catch (const nlohmann::json::exception& e) {
 			std::cout << e.what() << '\n';
 		}
+
 
 		std::cout << "Initialization completed!\n";
 		std::cout << "Uniform Blocks in the Pool  : " << uniformBlocksInPool << "\n";
@@ -377,6 +389,58 @@ protected:
 	}
 
 
+	// //function for collision check
+	// bool checkCollision(const CubeCollider& cube, const BoundingBox& box){
+	// 	bool overlapX = cube.center.x >= box.min.x && cube.center.x <= box.max.x;
+	// 	bool overlapY = cube.center.x >= box.min.y && cube.center.x <= box.max.y;
+	// 	bool overlapZ = cube.center.z >= box.min.z && cube.center.x <= box.max.z;
+
+	// 	std::cout << "cube "  << cube.center.x << " " << cube.center.y << " " << cube.center.z << "\n";
+	// 	std::cout << "bbox min: "  << box.min.x << " " << box.min.y << " " << box.min.z << "\n";
+	// 	std::cout << "bbox max: "  << box.max.x << " " << box.max.y << " " << box.max.z << "\n";
+
+	// 	return overlapX && overlapY && overlapZ;
+	// }
+
+	bool checkCollision(const BoundingBox& box){
+		bool overlapX = cubePosition.x >= box.min.x && cubePosition.x <= box.max.x;
+		bool overlapY = cubePosition.y >= box.min.y && cubePosition.y <= box.max.y;
+		bool overlapZ = cubePosition.z >= box.min.z && cubePosition.z <= box.max.z;
+
+		std::cout << "Overlapping: "  << overlapX << " " << overlapY << " " << overlapZ << "\n";
+		std::cout << "cube: "  << cubePosition.x << " " << cubePosition.y << " " << cubePosition.z << "\n";
+		std::cout << "bbox min: "  << box.min.x << " " << box.min.y << " " << box.min.z << "\n";
+		std::cout << "bbox max: "  << box.max.x << " " << box.max.y << " " << box.max.z << "\n";
+
+		return overlapX && overlapY && overlapZ;
+	}
+
+
+	// place a bouding box on scene
+	// TODO
+	void placeBB(std::string mId, std::string iId, glm::mat4& World, std::unordered_map<std::string, BoundingBox>& bbMap){
+
+		if(bbMap.find(iId) == bbMap.end()){
+			BoundingBox bb;
+			glm::vec4 homogeneousPoint;
+
+			bb.min = glm::vec3(std::numeric_limits<float>::max());
+			bb.max = glm::vec3(std::numeric_limits<float>::min());
+			for(int j=0; j<SC.vecMap[mId].size(); j++){
+				glm::vec3 vert = SC.vecMap[mId][j];
+				glm::vec4 newVert = World * glm::vec4(vert,1.0f); 
+				
+				bb.min = glm::min(bb.min, glm::vec3(newVert));
+				bb.max = glm::max(bb.max, glm::vec3(newVert));
+			}
+			bb.max = glm::round(bb.max * 100.0f) / 100.0f;
+			bb.min = glm::round(bb.min * 100.0f) / 100.0f;
+			(mId.substr(0, 4) == "coin") ? bb.cType = COLLECTIBLE
+										 : bb.cType = OBJECT;
+			bbMap[iId] = bb;
+		}
+	}
+
 	float getTime() {
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		static float lastTime = 0.0f;
@@ -419,26 +483,26 @@ protected:
 		
 		// Forward
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-			cubePosition.x += cubeMovSpeed * glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
-			cubePosition.z += cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
+			cubePosition.x += cubeMovSpeed.x * glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
+			cubePosition.z += cubeMovSpeed.z * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
 		}
 
 		// Backward
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-			cubePosition.x -= cubeMovSpeed * glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
-			cubePosition.z -= cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
+			cubePosition.x -= cubeMovSpeed.x * glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
+			cubePosition.z -= cubeMovSpeed.z * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
 		}
 
 		// Left 
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-			cubePosition.x -= cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
-			cubePosition.z -= cubeMovSpeed * -glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
+			cubePosition.x -= cubeMovSpeed.x * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
+			cubePosition.z -= cubeMovSpeed.z * -glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
 		}
 
 		// Right
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-			cubePosition.x += cubeMovSpeed * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
-			cubePosition.z += cubeMovSpeed * -glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
+			cubePosition.x += cubeMovSpeed.x * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
+			cubePosition.z += cubeMovSpeed.z * -glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
 		}
 
 		/*
@@ -471,10 +535,19 @@ protected:
 		float g = (rand() % 100 + 1) / 100.0f;
 		float b = (rand() % 100 + 1) / 100.0f;
 		glm::vec3 col = glm::vec3(r, g, b);
-		std::cout << "color: " << r << ", " << g << ", " << b << ".\n";
+		// std::cout << "color: " << r << ", " << g << ", " << b << ".\n";
 		cubeColor = col;
 	}
 
+	// Function to print a glm::mat4 matrix
+	void printMatrix(const glm::mat4& matrix) {
+		for (int i = 0; i < 4; ++i) { // Loop through rows
+			for (int j = 0; j < 4; ++j) { // Loop through columns
+				std::cout << matrix[i][j] << " "; // Access and print each element
+			}
+			std::cout << std::endl; // Newline after each row
+		}
+	}
 
 
 	// Here is where you update the uniforms.
@@ -502,6 +575,97 @@ protected:
 		glm::mat4 viewPrjMatrix = prjMatrix * viewMatrix;
 
 		deltaTime = getTime();
+
+		// Need to check collisions first
+		bool isCollision = false;
+		std::string collisionId;
+		for(auto bb : SC.bbMap) {
+			// std::cout << "checking collision: " << bb.first << " "<< "\n";
+			if(checkCollision(bb.second)) {
+				isCollision = true;
+				// Grab key of colliding object
+				collisionId = bb.first;
+				//std::cout << "\n\n" << "collision with" << collisionId << "\n";
+				break;
+			}
+		}
+
+
+		glm::vec3 cubeHalfSize = glm::vec3(0.5f,0.5f,0.5f);
+
+		cubeMovSpeed = glm::vec3(0.01f,0.01f,0.01f);
+
+		if(isCollision) {
+			std::cout << "isCollision = " << isCollision << ";\n";
+
+			switch(SC.bbMap[collisionId].cType){
+				case OBJECT: {
+
+					glm::vec3 cubeMin = cubePosition - cubeHalfSize;
+					glm::vec3 cubeMax = cubePosition + cubeHalfSize;
+
+					glm::vec3 closestPoint = glm::clamp(cubePosition, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
+
+					glm::vec3 difference = cubePosition - closestPoint;
+					std::cout << "closest point: " << closestPoint.x <<" "<< closestPoint.y <<" "<< closestPoint.z << "\n";
+					std::cout << "Cube position: " << cubePosition.x <<" "<< cubePosition.y <<" "<< cubePosition.z << "\n";
+					std::cout << "difference of point: " << difference.x <<" "<< difference.y <<" "<< difference.z << "\n";
+
+					float distance = glm::length(difference);
+            		std::cout << "distance: " << distance << "\n";
+
+					glm::vec3 normal = glm::normalize(difference);
+
+					// Instead of moving the cube directly based on the normal, let's handle each axis separately
+					glm::vec3 overlap(0.0f);
+
+					if (cubeMax.x > SC.bbMap[collisionId].min.x && cubeMin.x < SC.bbMap[collisionId].max.x) {
+						// Calculate overlap on the x-axis
+						float overlapX1 = cubeMax.x - SC.bbMap[collisionId].min.x;
+						float overlapX2 = SC.bbMap[collisionId].max.x - cubeMin.x;
+						overlap.x = (overlapX1 < overlapX2) ? -overlapX1 : overlapX2;
+					}
+
+					if (cubeMax.y > SC.bbMap[collisionId].min.y && cubeMin.y < SC.bbMap[collisionId].max.y) {
+						// Calculate overlap on the y-axis
+						float overlapY1 = cubeMax.y - SC.bbMap[collisionId].min.y;
+						float overlapY2 = SC.bbMap[collisionId].max.y - cubeMin.y;
+						overlap.y = (overlapY1 < overlapY2) ? -overlapY1 : overlapY2;
+					}
+
+					if (cubeMax.z > SC.bbMap[collisionId].min.z && cubeMin.z < SC.bbMap[collisionId].max.z) {
+						// Calculate overlap on the z-axis
+						float overlapZ1 = cubeMax.z - SC.bbMap[collisionId].min.z;
+						float overlapZ2 = SC.bbMap[collisionId].max.z - cubeMin.z;
+						overlap.z = (overlapZ1 < overlapZ2) ? -overlapZ1 : overlapZ2;
+					}
+
+					// Resolve collision based on the smallest overlap axis
+					if (std::abs(overlap.x) < std::abs(overlap.y) && std::abs(overlap.x) < std::abs(overlap.z)) {
+						cubePosition.x += overlap.x;
+						cubeMovSpeed.x = 0; // Reset the speed along the x-axis
+					} else if (std::abs(overlap.y) < std::abs(overlap.x) && std::abs(overlap.y) < std::abs(overlap.z)) {
+						cubePosition.y += overlap.y;
+						cubeMovSpeed.y = 0; // Reset the speed along the y-axis
+					} else {
+						cubePosition.z += overlap.z;
+						cubeMovSpeed.z = 0; // Reset the speed along the z-axis
+					}
+
+					std::cout << "cubePosition = " << cubePosition.x << " " << cubePosition.y << " " << cubePosition.z << ";\n";
+					std::cout << "cubeMovSpeed = " << cubeMovSpeed.x << " " << cubeMovSpeed.y << " " << cubeMovSpeed.z << ";\n";
+
+					break;
+				}
+
+				case COLLECTIBLE: {
+
+				}
+			}
+
+
+
+		}
 
 
 		if (glfwGetKey(window, GLFW_KEY_V)) {
@@ -568,12 +732,13 @@ protected:
 		// Draw the landscape
 		for (std::vector<std::string>::iterator it = staticObj.begin(); it != staticObj.end(); it++) {
 			int i = SC.InstanceIds[it->c_str()];
-//std::cout << *it << " " << i << "\n";
 			// Product per transform matrix
 			// staticUbo.mMat = baseMatrix * SC.I[i]->Wm * SC.M[SC.I[i]->Mid]->Wm;
 			staticUbo.mMat = baseMatrix * SC.I[i]->Wm;
 			staticUbo.mvpMat = viewPrjMatrix * staticUbo.mMat;
 			staticUbo.nMat = glm::inverse(glm::transpose(staticUbo.mMat));
+      
+			// placeBB(it->c_str(), it->c_str(), SC.I[i]->Wm, SC.bbMap);
 			
 			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
 			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
@@ -604,10 +769,16 @@ protected:
 			staticUbo.mMat = baseMatrix * SC.I[i]->Wm * SC.M[SC.I[i]->Mid]->Wm;
 			staticUbo.mvpMat = viewPrjMatrix * staticUbo.mMat;
 			staticUbo.nMat = glm::inverse(glm::transpose(staticUbo.mMat));
-
 			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
 			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
+
+		// TODO: try above to use placeBB and try collision
+		// std::string obj_id = "cube2";
+		// placeBB("cube2", "cube2", SC.I[SC.InstanceIds[obj_id]]->Wm, SC.bbMap);
+		// Print the matrix
+    	// std::cout << "Matrix: " << std::endl;
+    	// printMatrix(SC.I[SC.InstanceIds[obj_id]]->Wm);
 
 		getJump();
 

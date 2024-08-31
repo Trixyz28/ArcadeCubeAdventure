@@ -140,6 +140,21 @@
 			"id": "cube",
 			"model": "models/rubik_cube.obj",
 			"format": "OBJ"
+		},
+		{
+			"id": "park8",
+			"model": "models/park_008.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "park10",
+			"model": "models/park_010.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "cont",
+			"model": "models/container_008.mgcg",
+			"format": "MGCG"
 		}
 	],
 	"textures": [

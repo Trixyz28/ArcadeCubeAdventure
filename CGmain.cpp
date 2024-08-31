@@ -599,68 +599,70 @@ protected:
 			std::cout << "isCollision = " << isCollision << ";\n";
 
 			switch(SC.bbMap[collisionId].cType){
-				case OBJECT: {
+			case OBJECT: {
 
-					glm::vec3 cubeMin = cubePosition - cubeHalfSize;
-					glm::vec3 cubeMax = cubePosition + cubeHalfSize;
+				glm::vec3 cubeMin = cubePosition - cubeHalfSize;
+				glm::vec3 cubeMax = cubePosition + cubeHalfSize;
 
-					glm::vec3 closestPoint = glm::clamp(cubePosition, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
+				glm::vec3 closestPoint = glm::clamp(cubePosition, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
 
-					glm::vec3 difference = cubePosition - closestPoint;
-					std::cout << "closest point: " << closestPoint.x <<" "<< closestPoint.y <<" "<< closestPoint.z << "\n";
-					std::cout << "Cube position: " << cubePosition.x <<" "<< cubePosition.y <<" "<< cubePosition.z << "\n";
-					std::cout << "difference of point: " << difference.x <<" "<< difference.y <<" "<< difference.z << "\n";
+				glm::vec3 difference = cubePosition - closestPoint;
+				std::cout << "closest point: " << closestPoint.x << " " << closestPoint.y << " " << closestPoint.z << "\n";
+				std::cout << "Cube position: " << cubePosition.x << " " << cubePosition.y << " " << cubePosition.z << "\n";
+				std::cout << "difference of point: " << difference.x << " " << difference.y << " " << difference.z << "\n";
 
-					float distance = glm::length(difference);
-            		std::cout << "distance: " << distance << "\n";
+				float distance = glm::length(difference);
+				std::cout << "distance: " << distance << "\n";
 
-					glm::vec3 normal = glm::normalize(difference);
+				glm::vec3 normal = glm::normalize(difference);
 
-					// Instead of moving the cube directly based on the normal, let's handle each axis separately
-					glm::vec3 overlap(0.0f);
+				// Instead of moving the cube directly based on the normal, let's handle each axis separately
+				glm::vec3 overlap(0.0f);
 
-					if (cubeMax.x > SC.bbMap[collisionId].min.x && cubeMin.x < SC.bbMap[collisionId].max.x) {
-						// Calculate overlap on the x-axis
-						float overlapX1 = cubeMax.x - SC.bbMap[collisionId].min.x;
-						float overlapX2 = SC.bbMap[collisionId].max.x - cubeMin.x;
-						overlap.x = (overlapX1 < overlapX2) ? -overlapX1 : overlapX2;
-					}
-
-					if (cubeMax.y > SC.bbMap[collisionId].min.y && cubeMin.y < SC.bbMap[collisionId].max.y) {
-						// Calculate overlap on the y-axis
-						float overlapY1 = cubeMax.y - SC.bbMap[collisionId].min.y;
-						float overlapY2 = SC.bbMap[collisionId].max.y - cubeMin.y;
-						overlap.y = (overlapY1 < overlapY2) ? -overlapY1 : overlapY2;
-					}
-
-					if (cubeMax.z > SC.bbMap[collisionId].min.z && cubeMin.z < SC.bbMap[collisionId].max.z) {
-						// Calculate overlap on the z-axis
-						float overlapZ1 = cubeMax.z - SC.bbMap[collisionId].min.z;
-						float overlapZ2 = SC.bbMap[collisionId].max.z - cubeMin.z;
-						overlap.z = (overlapZ1 < overlapZ2) ? -overlapZ1 : overlapZ2;
-					}
-
-					// Resolve collision based on the smallest overlap axis
-					if (std::abs(overlap.x) < std::abs(overlap.y) && std::abs(overlap.x) < std::abs(overlap.z)) {
-						cubePosition.x += overlap.x;
-						cubeMovSpeed.x = 0; // Reset the speed along the x-axis
-					} else if (std::abs(overlap.y) < std::abs(overlap.x) && std::abs(overlap.y) < std::abs(overlap.z)) {
-						cubePosition.y += overlap.y;
-						cubeMovSpeed.y = 0; // Reset the speed along the y-axis
-					} else {
-						cubePosition.z += overlap.z;
-						cubeMovSpeed.z = 0; // Reset the speed along the z-axis
-					}
-
-					std::cout << "cubePosition = " << cubePosition.x << " " << cubePosition.y << " " << cubePosition.z << ";\n";
-					std::cout << "cubeMovSpeed = " << cubeMovSpeed.x << " " << cubeMovSpeed.y << " " << cubeMovSpeed.z << ";\n";
-
-					break;
+				if (cubeMax.x > SC.bbMap[collisionId].min.x && cubeMin.x < SC.bbMap[collisionId].max.x) {
+					// Calculate overlap on the x-axis
+					float overlapX1 = cubeMax.x - SC.bbMap[collisionId].min.x;
+					float overlapX2 = SC.bbMap[collisionId].max.x - cubeMin.x;
+					overlap.x = (overlapX1 < overlapX2) ? -overlapX1 : overlapX2;
 				}
 
+				if (cubeMax.y > SC.bbMap[collisionId].min.y && cubeMin.y < SC.bbMap[collisionId].max.y) {
+					// Calculate overlap on the y-axis
+					float overlapY1 = cubeMax.y - SC.bbMap[collisionId].min.y;
+					float overlapY2 = SC.bbMap[collisionId].max.y - cubeMin.y;
+					overlap.y = (overlapY1 < overlapY2) ? -overlapY1 : overlapY2;
+				}
+
+				if (cubeMax.z > SC.bbMap[collisionId].min.z && cubeMin.z < SC.bbMap[collisionId].max.z) {
+					// Calculate overlap on the z-axis
+					float overlapZ1 = cubeMax.z - SC.bbMap[collisionId].min.z;
+					float overlapZ2 = SC.bbMap[collisionId].max.z - cubeMin.z;
+					overlap.z = (overlapZ1 < overlapZ2) ? -overlapZ1 : overlapZ2;
+				}
+
+				// Resolve collision based on the smallest overlap axis
+				if (std::abs(overlap.x) < std::abs(overlap.y) && std::abs(overlap.x) < std::abs(overlap.z)) {
+					cubePosition.x += overlap.x;
+					cubeMovSpeed.x = 0; // Reset the speed along the x-axis
+				}
+				else if (std::abs(overlap.y) < std::abs(overlap.x) && std::abs(overlap.y) < std::abs(overlap.z)) {
+					cubePosition.y += overlap.y;
+					cubeMovSpeed.y = 0; // Reset the speed along the y-axis
+				}
+				else {
+					cubePosition.z += overlap.z;
+					cubeMovSpeed.z = 0; // Reset the speed along the z-axis
+				}
+
+				std::cout << "cubePosition = " << cubePosition.x << " " << cubePosition.y << " " << cubePosition.z << ";\n";
+				std::cout << "cubeMovSpeed = " << cubeMovSpeed.x << " " << cubeMovSpeed.y << " " << cubeMovSpeed.z << ";\n";
+
+				break;
+			}
+				/*
 				case COLLECTIBLE: {
-
-				}
+					;
+				}*/
 			}
 
 

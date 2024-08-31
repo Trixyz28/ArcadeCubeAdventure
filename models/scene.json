@@ -61,6 +61,11 @@
 			"format": "MGCG"
 		},
 		{
+			"id": "poolsticks",
+			"model": "models/poolSticks.mgcg",
+			"format": "MGCG"
+		},
+		{
 			"id": "popcornmachine",
 			"model": "models/popcornMachine.mgcg",
 			"format": "MGCG"
@@ -71,8 +76,18 @@
 			"format": "MGCG"
 		},
 		{
+			"id": "sofa",
+			"model": "models/sofa.mgcg",
+			"format": "MGCG"
+		},
+		{
 			"id": "sign24h",
 			"model": "models/sign_neon_24h.obj",
+			"format": "OBJ"
+		},
+		{
+			"id": "paint16x10",
+			"model": "models/paint16x10.obj",
 			"format": "OBJ"
 		},
 		{
@@ -122,6 +137,10 @@
 		{
 			"id": "t24h",
 			"texture": "textures/sign24h.png"
+		},
+		{
+			"id": "tpacman",
+			"texture": "textures/pacman.jpg"
 		},
 		{
 			"id": "t0",
@@ -181,10 +200,17 @@
 					   0, 0, 0, 1]},
 
 			{"id": "hockeytable",   "model": "hockeytable",   "texture": ["tfurniture"],
-				"transform": [40, 0, 0, 30,
+				"transform": [0, 0, 40, 150,
 					   0, 40, 0, 0,
-					   0, 0, 40, 50,
+					   40, 0, 0, -50,
 					   0, 0, 0, 1]},
+
+			{"id": "sofa",   "model": "sofa",   "texture": ["tfurniture"],
+				"transform": [0, 0, -50, 220,
+					   0, 50, 0, 0,
+					   -50, 0, 0, 60,
+					   0, 0, 0, 1]},
+
 
 			{"id": "dancemachine1",   "model": "dancemachine",   "texture": ["tfurniture"],
 				"transform": [-40, 0, 0, -121,
@@ -202,6 +228,11 @@
 				"transform": [0, 0, 40, 120,
 					   0, 40, 0, 0,
 					   40, 0, 0, 160,
+					   0, 0, 0, 1]},
+			{"id": "poolsticks",   "model": "poolsticks",   "texture": ["tfurniture"],
+				"transform": [-40, 0, 0, 195,
+					   0, 40, 0, 45,
+					   0, 0, -40, 235,
 					   0, 0, 0, 1]},
 			{"id": "blackmachine1",   "model": "blackmachine",   "texture": ["tfurniture"],
 				"transform": [40, 0, 0, 210,
@@ -242,10 +273,18 @@
 					   0, 50, 0, 0,
 					   -50, 0, 0, -50,
 					   0, 0, 0, 1]},
+
+
 			{"id": "sign24h",   "model": "sign24h",   "texture": ["t24h"],
 				"transform": [0, 0, 1, 0,
 					   0, 1, 0, 95,
 					   1, 0, 0, 232,
+					   0, 0, 0, 1]},
+
+			{"id": "paintpacman",   "model": "paint16x10",   "texture": ["tpacman"],
+				"transform": [1, 0, 0, 238.2,
+					   0, 0, -4, 95,
+					   0, -12, 0, 20,
 					   0, 0, 0, 1]},
 
 
@@ -259,9 +298,9 @@
 		},
 		{"pipeline":  "PBlinn", "elements": [
 			 {"id": "cube",   "model": "cube",   "texture": ["tcube"],
-				"transform": [10, 0, 0, 0,
-					   0, 10, 0, 0,
-					   0, 0, 10, 0,
+				"transform": [15, 0, 0, 0,
+					   0, 15, 0, 0,
+					   0, 0, 15, 0,
 					   0, 0, 0, 1]}
 		]}
 	]

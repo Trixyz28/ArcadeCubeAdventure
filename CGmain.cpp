@@ -82,9 +82,9 @@ protected:
 	// Landscape drawing
 	std::vector<std::string> staticObj = { 
 		"floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", 
-		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "dancemachine1", "dancemachine2",
+		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
-		"vendingmachine", "popcornmachine", "sign24h"
+		"vendingmachine", "popcornmachine", "sign24h", "paintpacman", "sofa", 
 	};
 	std::vector<std::string> gadgetObj = { "diamond" };
 
@@ -147,6 +147,7 @@ protected:
 	float groundLevel;
 
 	float deltaTime;
+	float mapLimit;
 
 	bool debounce;
 	int currDebounce;
@@ -230,16 +231,18 @@ protected:
 		camPosition = cubePosition + glm::vec3(0.0f, 0.5f, 0.0f);
 		camRotation = glm::vec3(0.0f, 0.0f, 0.0f);
 		camRotSpeed = 0.1f;
-		camDistance = 2.0f;
-		minCamDistance = 1.0f;
-		maxCamDistance = 4.0f;
+		camDistance = 3.0f;
+		minCamDistance = 1.5f;
+		maxCamDistance = 7.0f;
 
 		jumpSpeed = 0.0f;
 		isJumping = false;
 		gravity = -0.001f;
-		jumpForce = 0.3f;
+		jumpForce = 0.4f;
 		groundLevel = 0.0f;
 		camNFSpeed = 0.003f;
+
+		mapLimit = 237.8f;
 
 		debounce = false;
 		currDebounce = 0;
@@ -362,12 +365,6 @@ protected:
 		deltaT = deltaT * 1e3;
 
 		return deltaT;
-	}
-
-	void scroll_callback(double xoffset, double yoffset)
-	{
-		camDistance -= (float)yoffset;
-		camDistance = glm::clamp(camDistance, minCamDistance, maxCamDistance);
 	}
 
 
@@ -594,22 +591,33 @@ protected:
 
 		getActions();
 
-		cubePosition.x = glm::clamp(cubePosition.x, -238.0f, 238.0f);
-		cubePosition.z = glm::clamp(cubePosition.z, -238.0f, 238.0f);
+		cubePosition.x = glm::clamp(cubePosition.x, -mapLimit, mapLimit);
+		cubePosition.z = glm::clamp(cubePosition.z, -mapLimit, mapLimit);
 		cubePosition.y = glm::clamp(cubePosition.y, 0.0f, 160.0f);
 
 		camDistance = glm::clamp(camDistance, minCamDistance, maxCamDistance);
-		camRotation.y = glm::clamp(camRotation.y, 0.0f, 85.0f);
+		camRotation.y = glm::clamp(camRotation.y, 0.0f, 89.0f);
 
 		glm::vec3 newCamPosition = glm::normalize(glm::vec3(sin(glm::radians(cubeRotAngle)),
 			sin(glm::radians(camRotation.y)),
 			cos(glm::radians(cubeRotAngle)))) * camDistance + cubePosition + glm::vec3(0.0f, 0.5f, 0.0f);
 
-		newCamPosition.x = glm::clamp(newCamPosition.x, -237.5f, 237.5f);
-		newCamPosition.z = glm::clamp(newCamPosition.z, -237.5f, 237.5f);
-		newCamPosition.y = glm::clamp(newCamPosition.y, 0.5f, 160.0f);
+		float oldCamRoty = camRotation.y;
 
 		float dampLambda = 10.0f;
+
+		if (abs(newCamPosition.x) > mapLimit - 0.1f || abs(newCamPosition.z) > mapLimit - 0.1f) {
+			camRotation.y = camRotation.y * exp(-dampLambda * deltaTime) + 30.0f * (1 - exp(-dampLambda * deltaTime));
+		}
+		else {
+			camRotation.y = oldCamRoty;
+		}
+
+		newCamPosition.x = glm::clamp(newCamPosition.x, -mapLimit + 0.2f, mapLimit-0.2f);
+		newCamPosition.z = glm::clamp(newCamPosition.z, -mapLimit + 0.2f, mapLimit-0.2f);
+		newCamPosition.y = glm::clamp(newCamPosition.y, 0.5f, 160.0f);
+
+
 
 		camPosition = camPosition * exp(-dampLambda * deltaTime)  + newCamPosition * (1-exp(-dampLambda * deltaTime));
 

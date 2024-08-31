@@ -19,20 +19,36 @@
 			"id": "cube",
 			"model": "models/rubik_cube.obj",
 			"format": "OBJ"
+		},
+		{
+			"id": "park8",
+			"model": "models/park_008.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "park10",
+			"model": "models/park_010.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "cont",
+			"model": "models/container_008.mgcg",
+			"format": "MGCG"
 		}
 	],
 	"textures": [
 		{"id": "t0", "texture": "textures/VehiclePack_BaseColor.png"},
 		{"id": "t1", "texture": "textures/textures.png"},
 		{"id": "t2", "texture": "textures/Porto.png"},
-		{"id": "t3", "texture": "textures/Diamond_Blue_Albedo.png"}
+		{"id": "t3", "texture": "textures/Diamond_Blue_Albedo.png"},
+		{"id": "t4", "texture": "textures/Textures_City.png"}
 	],
 	"instances": [
 		{"pipeline":  "P", "elements": [
-			{"id": "pln",   "model": "pln",   "texture": ["t2"],
-				"transform": [20, 0, 0, 0,
-					   0,20, 0, -0.1,
-					   0, 0,20, 0,
+			{"id": "pln",   "model": "pln",   "texture": ["t1"],
+				"transform": [10, 0, 0, 0,
+					   0,10, 0, -0.1,
+					   0, 0,10, 0,
 					   0, 0, 0, 1]},
 			{"id": "prm",   "model": "prm",   "texture": ["t1"],
 				"transform": [0.03, 0, 0,   200,
@@ -43,7 +59,28 @@
 				"transform": [0.01, 0, 0, 1,
 					   0, 0.01, 0, 3,
 					   0, 0, 0.01, 2,
+					   0, 0, 0, 1]},
+			{"id": "park8",   "model": "park8",   "texture": ["t4"],
+				"transform": [10, 0, 0, 0,
+					   0, 10, 0, 0,
+					   0, 0, 10, 150,
+					   0, 0, 0, 1]},
+			{"id": "park10",   "model": "park10",   "texture": ["t4"],
+				"transform": [10, 0, 0, 0,
+					   0, 10, 0, 0,
+					   0, 0, 10, 0,
+					   0, 0, 0, 1]},
+			{"id": "cont",   "model": "cont",   "texture": ["t4"],
+				"transform": [3, 0, 0, 0,
+					   0, 3, 0, 0,
+					   0, 0, 3, 0,
+					   0, 0, 0, 1]},
+			{"id": "tile",   "model": "tile",   "texture": ["t4"],
+				"transform": [1, 0, 0, 0,
+					   0, 1, 0, 100,
+					   0, 0, 1, 0,
 					   0, 0, 0, 1]}
+					   
 		 ]},
 		{"pipeline":  "PBlinn", "elements": [
 			 {"id": "cube",   "model": "cube",   "texture": ["t3"],

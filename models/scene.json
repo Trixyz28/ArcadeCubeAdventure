@@ -61,6 +61,11 @@
 			"format": "MGCG"
 		},
 		{
+			"id": "poolsticks",
+			"model": "models/poolSticks.mgcg",
+			"format": "MGCG"
+		},
+		{
 			"id": "popcornmachine",
 			"model": "models/popcornMachine.mgcg",
 			"format": "MGCG"
@@ -71,6 +76,47 @@
 			"format": "MGCG"
 		},
 		{
+			"id": "sofa",
+			"model": "models/sofa.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "coffeetable",
+			"model": "models/coffeeTable.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "bluepouf",
+			"model": "models/bluePouf.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "brownpouf",
+			"model": "models/brownPouf.mgcg",
+			"format": "MGCG"
+		},
+
+		{
+			"id": "yellowpouf",
+			"model": "models/yellowPouf.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "frenchchips",
+			"model": "models/frenchChips.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "macaron",
+			"model": "models/macaron.mgcg",
+			"format": "MGCG"
+		},
+		{
+			"id": "drink",
+			"model": "models/drink.mgcg",
+			"format": "MGCG"
+		},
+		{
 			"id": "sign24h",
 			"model": "models/sign_neon_24h.obj",
 			"format": "OBJ"
@@ -78,6 +124,11 @@
 		{
 			"id": "light",
 			"model": "models/light.obj",
+			"format": "OBJ"
+		},
+		{
+			"id": "paint16x10",
+			"model": "models/paint16x10.obj",
 			"format": "OBJ"
 		},
 		{
@@ -137,6 +188,10 @@
 			"texture": "textures/light.jpg"
 		},
 		{
+			"id": "tpacman",
+			"texture": "textures/pacman.jpg"
+		},
+		{
 			"id": "t0",
 			"texture": "textures/Diamond_Blue_Albedo.png"
 		}
@@ -144,149 +199,218 @@
 	"instances": [
 		{"pipeline":  "P", "elements": [
 			{"id": "floor",   "model": "floor",   "texture": ["tfloor"],
-				"transform": [12, 0, 0, 0,
-					   0, 12, 0, 0,
-					   0, 0, 12, 0,
+				"transform": [1.2, 0, 0, 0,
+					   0, 1.2, 0, 0,
+					   0, 0, 1.2, 0,
 					   0, 0, 0, 1]},
 			{"id": "ceiling",   "model": "ceiling",   "texture": ["tceil"],
-				"transform": [12, 0, 0,   0,
-					   0, 12, 0, 160,
-					   0, 0, 12, 0,
+				"transform": [1.2, 0, 0,   0,
+					   0, 1.2, 0, 16,
+					   0, 0, 1.2, 0,
 					   0, 0, 0, 1]},
 			{"id": "leftwall",   "model": "leftwall",   "texture": ["tlwall"],
-				"transform": [5, 0, 0, 0,
-					   0, 5, 0, 0,
-					   0, 0, 5, 0,
+				"transform": [0.5, 0, 0, 0,
+					   0, 0.5, 0, 0,
+					   0, 0, 0.5, 0,
 					   0, 0, 0, 1]},
 
 		 	{"id": "rightwall",   "model": "rightwall",   "texture": ["trwall"],
-				"transform": [5, 0, 0, 0,
-					   0, 5, 0, 0,
-					   0, 0, 5, 0,
+				"transform": [0.5, 0, 0, 0,
+					   0, 0.5, 0, 0,
+					   0, 0, 0.5, 0,
 					   0, 0, 0, 1]},
 
 			{"id": "backwall",   "model": "backwall",   "texture": ["tbwall"],
-				"transform": [5, 0, 0, 0,
-					   0, 5, 0, 0,
-					   0, 0, 5, 0,
+				"transform": [0.5, 0, 0, 0,
+					   0, 0.5, 0, 0,
+					   0, 0, 0.5, 0,
 					   0, 0, 0, 1]},
 
 			{"id": "frontwall",   "model": "frontwall",   "texture": ["tfwall"],
-				"transform": [5, 0, 0, 0,
-					   0, 5, 0, 0,
-					   0, 0, 5, 0,
+				"transform": [0.5, 0, 0, 0,
+					   0, 0.5, 0, 0,
+					   0, 0, 0.5, 0,
 					   0, 0, 0, 1]},
 			{"id": "redmachine1",   "model": "redmachine",   "texture": ["tfurniture"],
-				"transform": [40, 0, 0, -210,
-					   0, 40, 0, 0,
-					   0, 0, 40, -225,
+				"transform": [4, 0, 0, -21,
+					   0, 4, 0, 0,
+					   0, 0, 4, -22.5,
 					   0, 0, 0, 1]},
 			{"id": "redmachine2",   "model": "redmachine",   "texture": ["tfurniture"],
-				"transform": [40, 0, 0, -170,
-					   0, 40, 0, 0,
-					   0, 0, 40, -225,
+				"transform": [4, 0, 0, -17,
+					   0, 4, 0, 0,
+					   0, 0, 4, -22.5,
 					   0, 0, 0, 1]},
 
 			{"id": "redmachine3",   "model": "redmachine",   "texture": ["tfurniture"],
-				"transform": [40, 0, 0, -130,
-					   0, 40, 0, 0,
-					   0, 0, 40, -225,
+				"transform": [4, 0, 0, -13,
+					   0, 4, 0, 0,
+					   0, 0, 4, -22.5,
 					   0, 0, 0, 1]},
 
 			{"id": "hockeytable",   "model": "hockeytable",   "texture": ["tfurniture"],
-				"transform": [40, 0, 0, 30,
-					   0, 40, 0, 0,
-					   0, 0, 40, 50,
+				"transform": [0, 0, 4, 15,
+					   0, 4, 0, 0,
+					   4, 0, 0, -5,
 					   0, 0, 0, 1]},
 
+			{"id": "sofa",   "model": "sofa",   "texture": ["tfurniture"],
+				"transform": [0, 0, -5, 22,
+					   0, 5, 0, 0,
+					   -5, 0, 0, 6,
+					   0, 0, 0, 1]},
+
+
 			{"id": "dancemachine1",   "model": "dancemachine",   "texture": ["tfurniture"],
-				"transform": [-40, 0, 0, -121,
-					   0, 40, 0, -2,
-					   0, 0, -40, 210,
+				"transform": [-4, 0, 0, -12,
+					   0, 4, 0, -0.2,
+					   0, 0, -4, 21,
 					   0, 0, 0, 1]},
 
 			{"id": "dancemachine2",   "model": "dancemachine",   "texture": ["tfurniture"],
-				"transform": [-40, 0, 0, -190,
-					   0, 40, 0, -2,
-					   0, 0, -40, 210,
+				"transform": [-4, 0, 0, -19,
+					   0, 4, 0, -0.2,
+					   0, 0, -4, 21,
 					   0, 0, 0, 1]},
 
 			{"id": "pooltable",   "model": "pooltable",   "texture": ["tfurniture"],
-				"transform": [0, 0, 40, 120,
-					   0, 40, 0, 0,
-					   40, 0, 0, 160,
+				"transform": [0, 0, 4, 12,
+					   0, 4, 0, 0,
+					   4, 0, 0, 16,
+					   0, 0, 0, 1]},
+			{"id": "poolsticks",   "model": "poolsticks",   "texture": ["tfurniture"],
+				"transform": [-4, 0, 0, 19.5,
+					   0, 4, 0, 4.5,
+					   0, 0, -4, 23.5,
 					   0, 0, 0, 1]},
 			{"id": "blackmachine1",   "model": "blackmachine",   "texture": ["tfurniture"],
-				"transform": [40, 0, 0, 210,
-					   0, 40, 0, 0,
-					   0, 0, 40, -225,
+				"transform": [4, 0, 0, 21,
+					   0, 4, 0, 0,
+					   0, 0, 4, -22.5,
 					   0, 0, 0, 1]},
 			{"id": "blackmachine2",   "model": "blackmachine",   "texture": ["tfurniture"],
-				"transform": [40, 0, 0, 165,
-					   0, 40, 0, 0,
-					   0, 0, 40, -225,
+				"transform": [4, 0, 0, 16.5,
+					   0, 4, 0, 0,
+					   0, 0, 4, -22.5,
 					   0, 0, 0, 1]},
 
 			{"id": "blackmachine3",   "model": "blackmachine",   "texture": ["tfurniture"],
-				"transform": [40, 0, 0, 120,
-					   0, 40, 0, 0,
-					   0, 0, 40, -225,
+				"transform": [4, 0, 0, 12,
+					   0, 4, 0, 0,
+					   0, 0, 4, -22.5,
 					   0, 0, 0, 1]},
 			{"id": "doublemachine1",   "model": "doublemachine",   "texture": ["tfurniture"],
-				"transform": [0, 0, 40, 0,
-					   0, 40, 0, 40,
-					   40, 0, 0, -150,
+				"transform": [0, 0, 4, 0,
+					   0, 4, 0, 4,
+					   4, 0, 0, -15,
 					   0, 0, 0, 1]},
 
 			{"id": "doublemachine2",   "model": "doublemachine",   "texture": ["tfurniture"],
-				"transform": [0, 0, 40, 0,
-					   0, 40, 0, 40,
-					   40, 0, 0, -200,
+				"transform": [0, 0, 4, 0,
+					   0, 4, 0, 4,
+					   4, 0, 0, -20,
 					   0, 0, 0, 1]},
 
 			{"id": "vendingmachine",   "model": "vendingmachine",   "texture": ["tfurniture"],
-				"transform": [0, 0, 50, -227,
-					   0, 50, 0, 0,
-					   50, 0, 0, 10,
+				"transform": [0, 0, 5, -22.7,
+					   0, 5, 0, 0,
+					   5, 0, 0, 1,
 					   0, 0, 0, 1]},
 
 			{"id": "popcornmachine",   "model": "popcornmachine",   "texture": ["tfurniture"],
-				"transform": [0, 0, -50, -227,
-					   0, 50, 0, 0,
-					   -50, 0, 0, -50,
+				"transform": [0, 0, -5, -22.7,
+					   0, 5, 0, 0,
+					   -5, 0, 0, -5,
+					   0, 0, 0, 1]},
+
+			{"id": "coffeetable",   "model": "coffeetable",   "texture": ["tfurniture"],
+				"transform": [4, 0, 0, -9,
+					   0, 4, 0, 0,
+					   0, 0, 4, 4,
 					   0, 0, 0, 1]},
 			
+			{"id": "frenchchips",   "model": "frenchchips",   "texture": ["tfurniture"],
+				"transform": [0, 0, 4.5, -9.5,
+					   0, 4, 0, 1.15,
+					   4, 0, 0, 5,
+					   0, 0, 0, 1]},
+
+			{"id": "macaron",   "model": "macaron",   "texture": ["tfurniture"],
+				"transform": [5, 0, 0, -9,
+					   0, 5, 0, 1.15,
+					   0, 0, 5, 4,
+					   0, 0, 0, 1]},
+
+			{"id": "drink1",   "model": "drink",   "texture": ["tfurniture"],
+				"transform": [4, 0, 0, -8,
+					   0, 4, 0, 1.15,
+					   0, 0, 4, 4,
+					   0, 0, 0, 1]},
+
+			{"id": "drink2",   "model": "drink",   "texture": ["tfurniture"],
+				"transform": [0, 0, 4, -10,
+					   0, 4, 0, 1.15,
+					   4, 0, 0, 5.5,
+					   0, 0, 0, 1]},
+
+			{"id": "drink3",   "model": "drink",   "texture": ["tfurniture"],
+				"transform": [0, 0, 4, -8,
+					   0, 4, 0, 1.15,
+					   -4, 0, 0, 3,
+					   0, 0, 0, 1]},
+
+
+			{"id": "bluepouf",   "model": "bluepouf",   "texture": ["tfurniture"],
+				"transform": [3, 0, 0, -8,
+					   0, 2, 0, 0,
+					   0, 0, 3, 0,
+					   0, 0, 0, 1]},
+
+			{"id": "brownpouf",   "model": "brownpouf",   "texture": ["tfurniture"],
+				"transform": [3, 0, 0, -12,
+					   0, 3, 0, 0,
+					   0, 0, 3, 8,
+					   0, 0, 0, 1]},
+
+			{"id": "yellowpouf",   "model": "yellowpouf",   "texture": ["tfurniture"],
+				"transform": [3, 0, 0, -5.5,
+					   0, 3, 0, 0,
+					   0, 0, 3, 6,
+					   0, 0, 0, 1]},
+
+			{"id": "paintpacman",   "model": "paint16x10",   "texture": ["tpacman"],
+				"transform": [1, 0, 0, 23.82,
+					   0, 0, -0.4, 9.5,
+					   0, -1.2, 0, 2,
+					   0, 0, 0, 1]},
 
 
 			{"id": "diamond",   "model": "diamond",   "texture": ["t0"],
-				"transform": [1.0, 0, 0, 7,
-					   0, 1.0, 0, 5,
-					   0, 0, 1.0, 10,
+				"transform": [0.2, 0, 0, 0.7,
+					   0, 0.2, 0, 0.5,
+					   0, 0, 0.2, 1,
 					   0, 0, 0, 1]}
-
 		 ]
 
 		},
-
-			
 		{"pipeline":  "PBlinn", "elements": [
 			 {"id": "cube",   "model": "cube",   "texture": ["tcube"],
-				"transform": [10, 0, 0, 0,
-					   0, 10, 0, 0,
-					   0, 0, 10, 0,
+				"transform": [1.5, 0, 0, 0,
+					   0, 1.5, 0, 0,
+					   0, 0, 1.5, 0,
 					   0, 0, 0, 1]}
 		]},
 		{"pipeline":  "PLight", "elements": [
 			 {"id": "light",   "model": "light",   "texture": ["tlight", "tlight"],
-				"transform": [1, 0, 0, 0,
-					   0, 0.5, 0, 155,
-					   0, 0, 1, 0,
+				"transform": [0.1, 0, 0, 0,
+					   0, 0.05, 0, 15.5,
+					   0, 0, 0.1, 0,
 					   0, 0, 0, 1]}
 		 ,
 			 {"id": "sign24h",   "model": "sign24h",   "texture": ["t24h","t24h_m"],
-				"transform": [0, 0, 1, 0,
-					   0, 1, 0, 95,
-					   1, 0, 0, 232,
+				"transform": [0, 0, 0.1, 0,
+					   0, 0.1, 0, 9.5,
+					   0.1, 0, 0, 23.2,
 					   0, 0, 0, 1]}
 		]}
 	]

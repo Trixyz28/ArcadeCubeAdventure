@@ -5,7 +5,7 @@
 #include "modules/TextMaker.hpp"
 
 
-
+// Vector of text
 std::vector<SingleText> outText = {
 	{1, {"Third Person", ":)", "", ""}, 0, 0},
 };
@@ -19,6 +19,7 @@ struct UniformBufferObject {
 	alignas(16) glm::mat4 nMat;
 };
 
+// UBO for the cube
 struct CubeUniformBufferObject {
 	alignas(16) glm::mat4 mvpMat;
 	alignas(16) glm::mat4 mMat;
@@ -56,7 +57,7 @@ struct GlobalUniformBufferObject {
 
 
 
-// The vertices data structures
+// Data structure for the vertices
 struct Vertex {
 	glm::vec3 pos;
 	glm::vec2 UV;
@@ -65,6 +66,7 @@ struct Vertex {
 
 
 #include "modules/Scene.hpp"
+
 
 // MAIN ! 
 class CGmain : public BaseProject {
@@ -79,6 +81,7 @@ protected:
 	// Pipelines [Shader couples]
 	Pipeline P, Pcube, Plight;
 
+	// Scene
 	Scene SC;
 	std::vector<PipelineRef> PRs;
 
@@ -86,13 +89,16 @@ protected:
 
 	std::string cubeObj = "cube";
 
-	// Landscape drawing
+	// Static elements of the scene to draw
 	std::vector<std::string> staticObj = { 
 		"floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", 
-		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "dancemachine1", "dancemachine2",
+		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
-		"vendingmachine", "popcornmachine"
+		"vendingmachine", "popcornmachine", "sign24h", "paintpacman", "sofa", "coffeetable",
+		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
+
+	// Reward gadgets to draw
 	std::vector<std::string> gadgetObj = { "diamond" };
 
 	std::vector<std::string> lightObj = {  "light", "sign24h" };
@@ -101,28 +107,23 @@ protected:
 	UniformBufferObject staticUbo{};
 	LightUniformBufferObject lightUbo{};
 
-	// Aspect ratio
+
+	// Aspect ratio of the application window
 	float Ar;
 
 	// Main application parameters
 	void setWindowParameters() {
-		// window size, title and initial background
+
+		// Window size, title and initial background
 		windowWidth = 1920;
 		windowHeight = 1080;
 		windowTitle = "CG - Project";
 		windowResizable = GLFW_TRUE;
-		initialBackgroundColor = { 0.0f, 0.85f, 1.0f, 1.0f };
-
-		/*
-		// Descriptor pool sizes
-		uniformBlocksInPool = 19 * 2 + 2;
-		texturesInPool = 19 + 1;
-		setsInPool = 19 + 1;
-		*/
-
+		initialBackgroundColor = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 		Ar = (float)windowWidth / (float)windowHeight;
 	}
+
 
 	// What to do when the window changes size
 	void onWindowResize(int w, int h) {
@@ -133,34 +134,39 @@ protected:
 
 	// Other application parameters
 
-	// currScene = 0: third person view, currScene = 1: first person view
+	// currScene = 0: third person view
 	int currScene = 0;
 
-
-
+	// Position and color of the cube
 	glm::vec3 cubePosition;
 	glm::vec3 cubeColor;
-	float cubeRotAngle;
-	float cubeMovSpeed, cubeRotSpeed;
 
+	// Moving speed, rotation speed and angle of the cube
+	float cubeRotAngle, cubeMovSpeed, cubeRotSpeed;
+
+	// Position and rotation of the camera
 	glm::vec3 camPosition, camRotation;
-	float camRotSpeed;
-	float camDistance;
-	float minCamDistance, maxCamDistance;
-	float camNFSpeed;
-	glm::mat4 viewMatrix;
-
-	float jumpSpeed;
+	// Rotation speed and the forward / backward speed of the camera
+	float camRotSpeed, camNFSpeed;
+	// Camera distance and constraints
+	float camDistance, minCamDistance, maxCamDistance;
+	
+	// Jumping speed, initial acceleration, and in-air deceleration of the cube
+	float jumpSpeed, jumpForce, gravity;
+	// Jumping status of the cube
 	bool isJumping;
-	float gravity;
-	float jumpForce;
+	// Ground level of the position
 	float groundLevel;
 
+	// Maximum abs coordinate of the map (for both x and z axis)
+	const float mapLimit = 23.94f;
+
+	// Time offset to compensate different device performance
 	float deltaTime;
 
 	bool debounce;
 	int currDebounce;
-
+	glm::mat4 viewMatrix;
 	glm::vec3 lPos[4];
 	glm::vec3 lDir[4];
 	glm::vec4 lCol[4];
@@ -239,24 +245,24 @@ protected:
 		// Init local variables
 		cubePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 		cubeRotAngle = 0.0f;
-		cubeMovSpeed = 0.02f;
+		cubeMovSpeed = 0.002f;
 		cubeRotSpeed = 0.2f;
 		cubeColor = glm::vec3(0.0f, 0.0f, 0.0f);
 
 
-		camPosition = cubePosition + glm::vec3(0.0f, 0.5f, 0.0f);
+		camPosition = cubePosition + glm::vec3(0.0f, 0.06f, 0.0f);
 		camRotation = glm::vec3(0.0f, 0.0f, 0.0f);
 		camRotSpeed = 0.1f;
-		camDistance = 2.0f;
-		minCamDistance = 1.0f;
-		maxCamDistance = 4.0f;
+		camDistance = 0.4f;
+		minCamDistance = 0.22f;
+		maxCamDistance = 0.7f;
 
 		jumpSpeed = 0.0f;
 		isJumping = false;
-		gravity = -0.001f;
-		jumpForce = 0.3f;
+		gravity = -0.0001f;
+		jumpForce = 0.04f;
 		groundLevel = 0.0f;
-		camNFSpeed = 0.003f;
+		camNFSpeed = 0.0003f;
 
 		debounce = false;
 		currDebounce = 0;
@@ -385,12 +391,6 @@ protected:
 		return deltaT;
 	}
 
-	void scroll_callback(double xoffset, double yoffset)
-	{
-		camDistance -= (float)yoffset;
-		camDistance = glm::clamp(camDistance, minCamDistance, maxCamDistance);
-	}
-
 
 	void getJump() {
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !isJumping) {
@@ -489,8 +489,8 @@ protected:
 
 
 		const float fovY = glm::radians(90.0f);
-		const float nearPlane = 0.1f;
-		const float farPlane = 700.0f;
+		const float nearPlane = 0.01f;
+		const float farPlane = 100.0f;
 
 		glm::mat4 prjMatrix = glm::mat4(1.0f / (Ar * glm::tan(fovY / 2.0f)), 0, 0, 0,
 			0, -1.0f / glm::tan(fovY / 2.0f), 0, 0,
@@ -633,22 +633,33 @@ protected:
 
 		getActions();
 
-		cubePosition.x = glm::clamp(cubePosition.x, -238.0f, 238.0f);
-		cubePosition.z = glm::clamp(cubePosition.z, -238.0f, 238.0f);
-		cubePosition.y = glm::clamp(cubePosition.y, 0.0f, 160.0f);
+		cubePosition.x = glm::clamp(cubePosition.x, -mapLimit, mapLimit);
+		cubePosition.z = glm::clamp(cubePosition.z, -mapLimit, mapLimit);
+		cubePosition.y = glm::clamp(cubePosition.y, 0.0f, 16.0f);
 
 		camDistance = glm::clamp(camDistance, minCamDistance, maxCamDistance);
-		camRotation.y = glm::clamp(camRotation.y, 0.0f, 85.0f);
+		camRotation.y = glm::clamp(camRotation.y, 0.0f, 89.0f);
 
 		glm::vec3 newCamPosition = glm::normalize(glm::vec3(sin(glm::radians(cubeRotAngle)),
 			sin(glm::radians(camRotation.y)),
-			cos(glm::radians(cubeRotAngle)))) * camDistance + cubePosition + glm::vec3(0.0f, 0.5f, 0.0f);
+			cos(glm::radians(cubeRotAngle)))) * camDistance + cubePosition + glm::vec3(0.0f, 0.06f, 0.0f);
 
-		newCamPosition.x = glm::clamp(newCamPosition.x, -237.5f, 237.5f);
-		newCamPosition.z = glm::clamp(newCamPosition.z, -237.5f, 237.5f);
-		newCamPosition.y = glm::clamp(newCamPosition.y, 0.5f, 160.0f);
+		float oldCamRoty = camRotation.y;
 
 		float dampLambda = 10.0f;
+
+		if (abs(newCamPosition.x) > mapLimit - 0.01f || abs(newCamPosition.z) > mapLimit - 0.01f) {
+			camRotation.y = camRotation.y * exp(-dampLambda * deltaTime) + 30.0f * (1 - exp(-dampLambda * deltaTime));
+		}
+		else {
+			camRotation.y = oldCamRoty;
+		}
+
+		newCamPosition.x = glm::clamp(newCamPosition.x, -mapLimit + 0.02f, mapLimit-0.02f);
+		newCamPosition.z = glm::clamp(newCamPosition.z, -mapLimit + 0.02f, mapLimit-0.02f);
+		newCamPosition.y = glm::clamp(newCamPosition.y, 0.06f, 16.0f);
+
+
 
 		camPosition = camPosition * exp(-dampLambda * deltaTime)  + newCamPosition * (1-exp(-dampLambda * deltaTime));
 

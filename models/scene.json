@@ -122,6 +122,11 @@
 			"format": "OBJ"
 		},
 		{
+			"id": "light",
+			"model": "models/light.obj",
+			"format": "OBJ"
+		},
+		{
 			"id": "paint16x10",
 			"model": "models/paint16x10.obj",
 			"format": "OBJ"
@@ -135,21 +140,6 @@
 			"id": "cube",
 			"model": "models/rubik_cube.obj",
 			"format": "OBJ"
-		},
-		{
-			"id": "park8",
-			"model": "models/park_008.mgcg",
-			"format": "MGCG"
-		},
-		{
-			"id": "park10",
-			"model": "models/park_010.mgcg",
-			"format": "MGCG"
-		},
-		{
-			"id": "cont",
-			"model": "models/container_008.mgcg",
-			"format": "MGCG"
 		}
 	],
 	"textures": [
@@ -188,6 +178,14 @@
 		{
 			"id": "t24h",
 			"texture": "textures/sign24h.png"
+		},
+		{
+			"id": "t24h_m",
+			"texture": "textures/neon_signs_unique_m.png"
+		},
+		{
+			"id": "tlight",
+			"texture": "textures/light.jpg"
 		},
 		{
 			"id": "tpacman",
@@ -380,12 +378,6 @@
 					   0, 0, 3, 6,
 					   0, 0, 0, 1]},
 
-			{"id": "sign24h",   "model": "sign24h",   "texture": ["t24h"],
-				"transform": [0, 0, 0.1, 0,
-					   0, 0.1, 0, 9.5,
-					   0.1, 0, 0, 23.2,
-					   0, 0, 0, 1]},
-
 			{"id": "paintpacman",   "model": "paint16x10",   "texture": ["tpacman"],
 				"transform": [1, 0, 0, 23.82,
 					   0, 0, -0.4, 9.5,
@@ -406,6 +398,19 @@
 				"transform": [1.5, 0, 0, 0,
 					   0, 1.5, 0, 0,
 					   0, 0, 1.5, 0,
+					   0, 0, 0, 1]}
+		]},
+		{"pipeline":  "PLight", "elements": [
+			 {"id": "light",   "model": "light",   "texture": ["tlight", "tlight"],
+				"transform": [0.1, 0, 0, 0,
+					   0, 0.05, 0, 15.5,
+					   0, 0, 0.1, 0,
+					   0, 0, 0, 1]}
+		 ,
+			 {"id": "sign24h",   "model": "sign24h",   "texture": ["t24h","t24h_m"],
+				"transform": [0, 0, 0.1, 0,
+					   0, 0.1, 0, 9.5,
+					   0.1, 0, 0, 23.2,
 					   0, 0, 0, 1]}
 		]}
 	]

@@ -27,7 +27,13 @@ struct CubeUniformBufferObject {
 	alignas(16) glm::vec3 col;
 };
 
-// GUBO
+struct LightUniformBufferObject {
+	alignas(16) glm::mat4 mvpMat;
+	alignas(16) glm::mat4 mMat;
+	alignas(16) glm::mat4 nMat;
+	alignas(4) float id;
+};
+
 struct GlobalUniformBufferObject {
 	/*
 	alignas(16) glm::vec3 lightDir;
@@ -37,11 +43,11 @@ struct GlobalUniformBufferObject {
 	*/
 	struct {
 		alignas(16) glm::vec3 v;
-	} lightDir[3];
+	} lightDir[4];
 	struct {
 		alignas(16) glm::vec3 v;
-	} lightPos[3];
-	alignas(16) glm::vec4 lightColor[3];
+	} lightPos[4];
+	alignas(16) glm::vec4 lightColor[4];
 	alignas(4) float cosIn;
 	alignas(4) float cosOut;
 	alignas(16) glm::vec3 eyePos;
@@ -72,13 +78,13 @@ class CGmain : public BaseProject {
 protected:
 
 	// Descriptor Layouts ["classes" of what will be passed to the shaders]
-	DescriptorSetLayout DSL, DSLcube;
+	DescriptorSetLayout DSL, DSLcube, DSLlight;
 
 	// Vertex formats
 	VertexDescriptor VD;
 
 	// Pipelines [Shader couples]
-	Pipeline P, Pcube;
+	Pipeline P, Pcube, Plight;
 
 	// Scene
 	Scene SC;
@@ -110,8 +116,11 @@ protected:
 	// Reward gadgets to draw
 	std::vector<std::string> gadgetObj = { "diamond" };
 
+	std::vector<std::string> lightObj = {  "light", "sign24h" };
+
 	CubeUniformBufferObject cubeUbo{};
 	UniformBufferObject staticUbo{};
+	LightUniformBufferObject lightUbo{};
 
 
 	// Aspect ratio of the application window
@@ -177,12 +186,10 @@ protected:
 
 	bool debounce;
 	int currDebounce;
-
 	glm::mat4 viewMatrix;
-
-	glm::vec3 lPos[3];
-	glm::vec3 lDir[3];
-	glm::vec4 lCol[3];
+	glm::vec3 lPos[4];
+	glm::vec3 lDir[4];
+	glm::vec4 lCol[4];
 	int n_lights;
 	
 
@@ -203,6 +210,13 @@ protected:
 					{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(GlobalUniformBufferObject)}
 			});
 
+		DSLlight.init(this, {
+					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(LightUniformBufferObject)},
+					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
+					{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(GlobalUniformBufferObject)},
+					{3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1}
+			});
+
 		// Vertex descriptors
 		VD.init(this, {
 				  {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
@@ -220,12 +234,12 @@ protected:
 		P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
 			VK_CULL_MODE_NONE, false);
 		Pcube.init(this, &VD, "shaders/CubeVert.spv", "shaders/CubeFrag.spv", { &DSLcube });
+		Plight.init(this, &VD, "shaders/LightVert.spv", "shaders/LightFrag.spv", { &DSLlight });
 
-
-		PRs.resize(2);
+		PRs.resize(3);
 		PRs[0].init("P", &P, &VD);
 		PRs[1].init("PBlinn", &Pcube, &VD);
-
+		PRs[2].init("PLight", &Plight, &VD);
 
 		// Models, textures and Descriptors (values assigned to the uniforms)
 /*		std::vector<Vertex> vertices = {
@@ -243,7 +257,7 @@ protected:
 		setsInPool = 0;
 
 		// Load Scene: the models are stored in json
-		SC.init(this, &VD, DSL, PRs, "models/scene.json");
+		SC.init(this, &VD, PRs, "models/scene.json");
 
 		// Updates the text
 		txt.init(this, &outText);
@@ -295,12 +309,12 @@ protected:
 			std::cout << "Parsing JSON\n";
 			ifs >> js;
 			ifs.close();
-			nlohmann::json ns = js["nodes"];
 			nlohmann::json ld = js["lights"];
 			n_lights = ld.size();
+			std::cout << "There are " << n_lights << " lights.\n";
 			for (int i = 0; i < ld.size(); i++) {
-				lPos[i] = glm::vec3(ns[i]["position"][0], ns[i]["position"][1], ns[i]["position"][2]);
-				//lDir[i] = glm::vec3(ns[i]["direction"][0], ns[i]["direction"][1], ns[i]["direction"][2]);
+				lPos[i] = glm::vec3(ld[i]["position"][0], ld[i]["position"][1], ld[i]["position"][2]);
+				lDir[i] = glm::vec3(ld[i]["direction"][0], ld[i]["direction"][1], ld[i]["direction"][2]);
 				lCol[i] = glm::vec4(ld[i]["color"][0], ld[i]["color"][1], ld[i]["color"][2], ld[i]["intensity"]);
 			}
 		}
@@ -320,9 +334,10 @@ protected:
 		// This creates a new pipeline (with the current surface), using its shaders
 		P.create();
 		Pcube.create();
+		Plight.create();
 
 		// Here you define the data set
-		SC.pipelinesAndDescriptorSetsInit(DSL);
+		SC.pipelinesAndDescriptorSetsInit();
 		txt.pipelinesAndDescriptorSetsInit();
 	}
 
@@ -332,6 +347,7 @@ protected:
 		// Cleanup pipelines
 		P.cleanup();
 		Pcube.cleanup();
+		Plight.cleanup();
 
 		SC.pipelinesAndDescriptorSetsCleanup();
 		txt.pipelinesAndDescriptorSetsCleanup();
@@ -351,10 +367,12 @@ protected:
 		// Cleanup descriptor set layouts
 		DSL.cleanup();
 		DSLcube.cleanup();
+		DSLlight.cleanup();
 
 		// Destroies the pipelines
 		P.destroy();
 		Pcube.destroy();
+		Plight.destroy();
 
 		SC.localCleanup();
 		txt.localCleanup();
@@ -623,6 +641,7 @@ protected:
 			// std::cout << "isCollision = " << isCollision << ";\n";
 
 			switch(SC.bbMap[collisionId].cType){
+          
 				case OBJECT: {
 
 					glm::vec3 closestPoint = glm::clamp(cubePosition, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
@@ -668,6 +687,7 @@ protected:
 					
 					break;
 				}
+
 			}
 
 		}
@@ -712,7 +732,7 @@ protected:
 		// cube light
 		gubo.lightDir[n_lights].v = glm::normalize(glm::vec3(camPosition.x - cubePosition.x, 0.0f, camPosition.z - cubePosition.z));
 		gubo.lightPos[n_lights].v = cubePosition;
-		gubo.lightColor[n_lights] = glm::vec4(cubeColor, 15.0f);
+		gubo.lightColor[n_lights] = glm::vec4(cubeColor, 10.0f);
 		
 		/*
 		gubo.lightDir[1].v = glm::normalize(glm::vec3(camPosition.x - cubePosition.x, 0.0f, camPosition.z - cubePosition.z));
@@ -747,9 +767,27 @@ protected:
 			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
 			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
+		std::vector<std::string>::iterator it;
+		int k;
+		/* k = 1 starts from first point light */
+		for (it = lightObj.begin(),  k = 1; it != lightObj.end(); it++, k++) {
+			int i = SC.InstanceIds[it->c_str()];
+			//std::cout << *it << " " << i << "\n";
+						// Product per transform matrix
+			
+			lightUbo.mMat = baseMatrix * SC.I[i]->Wm;
+			lightUbo.mvpMat = viewPrjMatrix * lightUbo.mMat;
+			lightUbo.nMat = glm::inverse(glm::transpose(lightUbo.mMat));
+			// Light id
+			lightUbo.id = k;
+
+			SC.I[i]->DS[0]->map(currentImage, &lightUbo, sizeof(lightUbo), 0);
+			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
+		}
 
 		for (std::vector<std::string>::iterator it = gadgetObj.begin(); it != gadgetObj.end(); it++) {
 			int i = SC.InstanceIds[it->c_str()];
+			
 			//std::cout << *it << " " << i << "\n";
 						// Product per transform matrix
 			staticUbo.mMat = baseMatrix * SC.I[i]->Wm * SC.M[SC.I[i]->Mid]->Wm;

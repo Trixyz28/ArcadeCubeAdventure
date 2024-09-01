@@ -63,7 +63,7 @@ class Scene {
 	int PipelineInstanceCount = 0;
 	PipelineInstances* PI;
 
-	void init(BaseProject *_BP, VertexDescriptor *VD, DescriptorSetLayout &DSL, 
+	void init(BaseProject *_BP, VertexDescriptor *VD,
 		std::vector<PipelineRef>& PRs, std::string file) {
 		BP = _BP;
 
@@ -189,7 +189,7 @@ class Scene {
 	}
 
 
-	void pipelinesAndDescriptorSetsInit(DescriptorSetLayout &DSL) {
+	void pipelinesAndDescriptorSetsInit() {
 		std::cout << "Scene DS init\n";
 		for(int i = 0; i < InstanceCount; i++) {
 			std::cout << "I: " << i << ", NTx: " << I[i]->NTx << ", NDs: " << I[i]->NDs << "\n";

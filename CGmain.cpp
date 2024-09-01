@@ -158,6 +158,9 @@ protected:
 	float camRotSpeed, camNFSpeed;
 	// Camera distance and constraints
 	float camDistance, minCamDistance, maxCamDistance;
+	// Minimum y-level of camera
+	const float camMinHeight = 0.1f;
+
 	
 	// Jumping speed, initial acceleration, and in-air deceleration of the cube
 	float jumpSpeed, jumpForce, gravity;
@@ -174,6 +177,7 @@ protected:
 
 	bool debounce;
 	int currDebounce;
+
 	glm::mat4 viewMatrix;
 	glm::vec3 lPos[4];
 	glm::vec3 lDir[4];
@@ -253,24 +257,24 @@ protected:
 		// Init local variables
 		cubePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 		cubeRotAngle = 0.0f;
-		cubeMovSpeed = glm::vec3(0.02f,0.02f,0.02f);
-		cubeRotSpeed = 0.2f;
+		cubeMovSpeed = glm::vec3(0.05f, 0.05f, 0.05f);
+		cubeRotSpeed = 0.8f;
 		cubeColor = glm::vec3(0.0f, 0.0f, 0.0f);
 
 
-		camPosition = cubePosition + glm::vec3(0.0f, 0.06f, 0.0f);
+		camPosition = cubePosition + glm::vec3(0.0f, camMinHeight, 0.0f);
 		camRotation = glm::vec3(0.0f, 0.0f, 0.0f);
-		camRotSpeed = 0.1f;
+		camRotSpeed = 1.5f;
 		camDistance = 0.4f;
 		minCamDistance = 0.22f;
 		maxCamDistance = 0.7f;
 
 		jumpSpeed = 0.0f;
 		isJumping = false;
-		gravity = -0.0001f;
-		jumpForce = 0.04f;
+		gravity = -0.001f;
+		jumpForce = 0.05f;
 		groundLevel = 0.0f;
-		camNFSpeed = 0.0003f;
+		camNFSpeed = 0.003f;
 
 		cubeCollider.center = cubePosition;
 		cubeCollider.length = 100.0f;
@@ -450,7 +454,7 @@ protected:
 			(currentTime - startTime).count();
 		float deltaT = time - lastTime;
 		lastTime = time;
-		deltaT = deltaT * 1e3;
+		deltaT = deltaT * 1e2;
 
 		return deltaT;
 	}
@@ -593,7 +597,6 @@ protected:
 
 		glm::vec3 cubeHalfSize = glm::vec3(0.5f,0.5f,0.5f);
 
-		cubeMovSpeed = glm::vec3(0.01f,0.01f,0.01f);
 
 		if(isCollision) {
 			std::cout << "isCollision = " << isCollision << ";\n";
@@ -676,6 +679,7 @@ protected:
 				currDebounce = GLFW_KEY_V;
 
 				printVec3("Cube position", cubePosition);
+				printVec3("Camera position", camPosition);
 				printFloat("DeltaTime", deltaTime);
 
 			}
@@ -745,6 +749,8 @@ protected:
 			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
 			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
+
+
 		std::vector<std::string>::iterator it;
 		int k;
 		/* k = 1 starts from first point light */
@@ -762,6 +768,7 @@ protected:
 			SC.I[i]->DS[0]->map(currentImage, &lightUbo, sizeof(lightUbo), 0);
 			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
+
 
 		for (std::vector<std::string>::iterator it = gadgetObj.begin(); it != gadgetObj.end(); it++) {
 			int i = SC.InstanceIds[it->c_str()];
@@ -815,7 +822,7 @@ protected:
 
 		glm::vec3 newCamPosition = glm::normalize(glm::vec3(sin(glm::radians(cubeRotAngle)),
 			sin(glm::radians(camRotation.y)),
-			cos(glm::radians(cubeRotAngle)))) * camDistance + cubePosition + glm::vec3(0.0f, 0.06f, 0.0f);
+			cos(glm::radians(cubeRotAngle)))) * camDistance + cubePosition + glm::vec3(0.0f, camMinHeight, 0.0f);
 
 		float oldCamRoty = camRotation.y;
 
@@ -830,12 +837,11 @@ protected:
 
 		newCamPosition.x = glm::clamp(newCamPosition.x, -mapLimit + 0.02f, mapLimit-0.02f);
 		newCamPosition.z = glm::clamp(newCamPosition.z, -mapLimit + 0.02f, mapLimit-0.02f);
-		newCamPosition.y = glm::clamp(newCamPosition.y, 0.06f, 16.0f);
+		newCamPosition.y = glm::clamp(newCamPosition.y, camMinHeight, 16.0f);
 
 
 
 		camPosition = camPosition * exp(-dampLambda * deltaTime)  + newCamPosition * (1-exp(-dampLambda * deltaTime));
-
 
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -850,8 +856,12 @@ protected:
 		SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 
 		camPosition = newCamPosition;
-	}
+	
+}
+
 };
+
+
 
 // The main function of the application, do not touch
 int main() {

@@ -27,6 +27,7 @@ struct CubeUniformBufferObject {
 	alignas(16) glm::vec3 col;
 };
 
+// UBO for the lights
 struct LightUniformBufferObject {
 	alignas(16) glm::mat4 mvpMat;
 	alignas(16) glm::mat4 mMat;
@@ -34,6 +35,7 @@ struct LightUniformBufferObject {
 	alignas(4) float id;
 };
 
+// GUBO
 struct GlobalUniformBufferObject {
 	/*
 	alignas(16) glm::vec3 lightDir;
@@ -64,6 +66,7 @@ struct Vertex {
 	glm::vec3 norm;
 };
 
+// Structure to handle the collision machanism
 struct CubeCollider {
 	glm::vec3 center;
 	float length;
@@ -99,24 +102,24 @@ protected:
 		"floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", 
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
-		"vendingmachine", "popcornmachine", "sign24h", "paintpacman", "sofa", "coffeetable",
+		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable",
 		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
 
+	// Elements with bounding box around
 	std::vector<std::string> BBObj = { 
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
-		//"vendingmachine", 
-		//"popcornmachine", 
-		"sofa", 
-		//"coffeetable",
+		"vendingmachine", "popcornmachine", "sofa", "coffeetable",
 		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
 
 	// Reward gadgets to draw
 	std::vector<std::string> gadgetObj = { "diamond" };
 
+	// Lights to draw
 	std::vector<std::string> lightObj = {  "light", "sign24h" };
+
 
 	CubeUniformBufferObject cubeUbo{};
 	UniformBufferObject staticUbo{};
@@ -187,8 +190,10 @@ protected:
 	// Time offset to compensate different device performance
 	float deltaTime;
 
+	// Variables to block simultaneous activations of the same command
 	bool debounce;
 	int currDebounce;
+
 
 	glm::mat4 viewMatrix;
 	glm::vec3 lPos[4];
@@ -198,9 +203,10 @@ protected:
 	
 
 
-	// Here you load and setup all your Vulkan Models and Texutures.
-	// Here you also create your Descriptor set layouts and load the shaders for the pipelines
+	// Here the Vulkan Models and Textures are loaded and set up
+	// Also the Descriptor Set Layouts are created, and the shaders for the pipelines are loaded
 	void localInit() {
+
 		// Descriptor Layouts [what will be passed to the shaders]
 		DSL.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS, sizeof(UniformBufferObject)},
@@ -221,6 +227,7 @@ protected:
 					{3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1}
 			});
 
+
 		// Vertex descriptors
 		VD.init(this, {
 				  {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
@@ -233,8 +240,11 @@ protected:
 					 sizeof(glm::vec3), NORMAL}
 			});
 
+
 		// Pipelines [Shader couples]
 		P.init(this, &VD, "shaders/Vert.spv", "shaders/PhongFrag.spv", { &DSL });
+		
+		// VK_POLYGON_MODE_FILL for normal view, VK_POLYGON_MODE_LINE for meshes
 		P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
 			VK_CULL_MODE_NONE, false);
 		Pcube.init(this, &VD, "shaders/CubeVert.spv", "shaders/CubeFrag.spv", { &DSLcube });
@@ -244,6 +254,7 @@ protected:
 		PRs[0].init("P", &P, &VD);
 		PRs[1].init("PBlinn", &Pcube, &VD);
 		PRs[2].init("PLight", &Plight, &VD);
+
 
 		// Models, textures and Descriptors (values assigned to the uniforms)
 /*		std::vector<Vertex> vertices = {
@@ -256,6 +267,7 @@ protected:
 		M1.indices = {0, 1, 2,    1, 3, 2};
 		M1.initMesh(this, &VD); */
 
+		// Initialize pools
 		uniformBlocksInPool = 0;
 		texturesInPool = 0;
 		setsInPool = 0;
@@ -263,16 +275,16 @@ protected:
 		// Load Scene: the models are stored in json
 		SC.init(this, &VD, PRs, "models/scene.json");
 
-		// Updates the text
+		// Update the text
 		txt.init(this, &outText);
 
-		// Init local variables
+		// Initialize local variables
 		cubePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 		cubeRotAngle = 0.0f;
-		cubeDefMovSpeed = glm::vec3(0.002f,0.002f,0.002f);
+		cubeDefMovSpeed = glm::vec3(0.02f,0.02f,0.02f);
 		// cubeMovSpeed = glm::vec3(0.0f,0.0f,0.0f);
 		cubeMovSpeed = cubeDefMovSpeed;
-		cubeRotSpeed = 0.2f;
+		cubeRotSpeed = 0.8f;
 		cubeColor = glm::vec3(0.0f, 0.0f, 0.0f);
 
 
@@ -286,8 +298,8 @@ protected:
 		jumpSpeed = 0.0f;
 		isJumping = false;
 		isCollision = false;
-		gravity = -0.0001f;
-		jumpForce = 0.15f;
+		gravity = -0.0007f;
+		jumpForce = 0.03f;
 		groundLevel = 0.0f;
 		camNFSpeed = 0.003f;
 
@@ -300,6 +312,13 @@ protected:
 		deltaTime = getTime();
 
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
+
+
+		for (std::vector<std::string>::iterator it = BBObj.begin(); it != BBObj.end(); it++) {
+			std::string obj_id = it->c_str();
+			int i = SC.InstanceIds[it->c_str()];
+			placeBB(obj_id, SC.I[i]->Wm, SC.bbMap);
+		}
 
 		// lights
 		nlohmann::json js;
@@ -410,7 +429,7 @@ protected:
 
 
 
-	float cubeHalfSize = 0.06f;
+	float cubeHalfSize = 0.01f;
 
 	bool checkCollision(const BoundingBox& box) {
 		float x = glm::max(box.min.x, glm::min(cubePosition.x, box.max.x));
@@ -437,23 +456,35 @@ protected:
 
 
 	// place a bouding box on scene
-	void placeBB(std::string mId, std::string iId, glm::mat4& World, std::unordered_map<std::string, BoundingBox>& bbMap){
+	void placeBB(std::string iId, glm::mat4& World, std::unordered_map<std::string, BoundingBox>& bbMap){
+
+		int i = SC.InstanceIds[iId];
+		int mId = SC.I[i]->Mid;
+		std::string mName;
+
+		for (std::unordered_map<std::string, int>::iterator it = SC.MeshIds.begin(); it != SC.MeshIds.end(); ++it) {
+			if (it->second == mId) {
+				mName = it->first;
+			} 
+		}
 
 		if(bbMap.find(iId) == bbMap.end()){
 			BoundingBox bb;
 
+
 			bb.min = glm::vec3(std::numeric_limits<float>::max());
-			bb.max = glm::vec3(std::numeric_limits<float>::min());
-			for(int j=0; j<SC.vecMap[mId].size(); j++){
-				glm::vec3 vert = SC.vecMap[mId][j];
-				glm::vec4 newVert = World * glm::vec4(vert,1.0f); 
-				
+			bb.max = glm::vec3(-std::numeric_limits<float>::max());
+			for(int j=0; j<SC.vecMap[mName].size(); j++){
+				glm::vec3 vert = SC.vecMap[mName][j];
+				// glm::vec4 newVert = World * SC.I[i]->Wm * glm::vec4(vert,1.0f);
+				glm::vec4 newVert = World * glm::vec4(vert, 1.0f);
+
 				bb.min = glm::min(bb.min, glm::vec3(newVert));
 				bb.max = glm::max(bb.max, glm::vec3(newVert));
 			}
-			bb.max = glm::round(bb.max * 100.0f) / 100.0f;
-			bb.min = glm::round(bb.min * 100.0f) / 100.0f;
-			(mId.substr(0, 4) == "coin") ? bb.cType = COLLECTIBLE
+			// bb.max = glm::round(bb.max * 100.0f) / 100.0f;
+			// bb.min = glm::round(bb.min * 100.0f) / 100.0f;
+			(mName.substr(0, 4) == "coin") ? bb.cType = COLLECTIBLE
 										 : bb.cType = OBJECT;
 			bbMap[iId] = bb;
 		}
@@ -627,7 +658,7 @@ protected:
 				isCollision = true;
 				// Grab key of colliding object
 				collisionId = bb.first;
-				//std::cout << "\n\n" << "collision with" << collisionId << "\n";
+				// std::cout << "\n\n" << "collision with" << collisionId << "\n";
 				break;
 			}
 		}
@@ -704,11 +735,28 @@ protected:
 				printVec3("Cube position", cubePosition);
 				printVec3("Camera position", camPosition);
 				printFloat("DeltaTime", deltaTime);
+			}
+		} else {
+			if ((currDebounce == GLFW_KEY_V) && debounce) {
+				debounce = false;
+				currDebounce = 0;
+			}
+		}
 
+		if (glfwGetKey(window, GLFW_KEY_B)) {
+			if (!debounce) {
+				debounce = true;
+				currDebounce = GLFW_KEY_B;
+
+				for (auto bb : SC.bbMap) {
+					std::cout << "Element: " << bb.first << " " << "\n";
+					printVec3("Min", bb.second.min);
+					printVec3("Max", bb.second.max);
+				}
 			}
 		}
 		else {
-			if ((currDebounce == GLFW_KEY_V) && debounce) {
+			if ((currDebounce == GLFW_KEY_B) && debounce) {
 				debounce = false;
 				currDebounce = 0;
 			}
@@ -805,11 +853,7 @@ protected:
 			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
 
-		for (std::vector<std::string>::iterator it = BBObj.begin(); it != BBObj.end(); it++) {
-			std::string obj_id = it->c_str();
-			int i = SC.InstanceIds[it->c_str()];
-			placeBB(obj_id,obj_id,SC.I[i]->Wm, SC.bbMap);
-		}
+
 
 		// TODO: try above to use placeBB and try collision
 		// placeBB("sofa", "sofa", SC.I[SC.InstanceIds[obj_id]]->Wm, SC.bbMap);

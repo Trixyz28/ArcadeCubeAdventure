@@ -110,7 +110,7 @@ protected:
 	std::vector<std::string> BBObj = { 
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
-		"vendingmachine", "popcornmachine", "sofa", "coffeetable",
+		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable",
 		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
 
@@ -615,6 +615,8 @@ protected:
 	// Control cube's movements
 	void getActions() {
 
+		glm::vec3 newPosition = cubePosition;
+
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 			cubeRotAngle += cubeRotSpeed * deltaTime;
 			camRotation.x += cubeRotSpeed * deltaTime;
@@ -627,7 +629,6 @@ protected:
 		// Forward
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
 
-			glm::vec3 newPosition = cubePosition;
 			newPosition.x = cubePosition.x + cubeMovSpeed.x * glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
 			newPosition.z = cubePosition.z + cubeMovSpeed.z * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
 
@@ -637,7 +638,6 @@ protected:
 		// Backward
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
 
-			glm::vec3 newPosition = cubePosition;
 			newPosition.x = cubePosition.x - cubeMovSpeed.x * glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
 			newPosition.z = cubePosition.z - cubeMovSpeed.z * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
 
@@ -647,7 +647,6 @@ protected:
 		// Left 
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
 
-			glm::vec3 newPosition = cubePosition;
 			newPosition.x = cubePosition.x - cubeMovSpeed.x * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
 			newPosition.z = cubePosition.z - cubeMovSpeed.z * -glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
 
@@ -658,7 +657,6 @@ protected:
 		// Right
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
 
-			glm::vec3 newPosition = cubePosition;
 			newPosition.x = cubePosition.x + cubeMovSpeed.x * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
 			newPosition.z = cubePosition.z + cubeMovSpeed.z * -glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
 

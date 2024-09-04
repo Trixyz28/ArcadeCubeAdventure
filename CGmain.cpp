@@ -485,7 +485,6 @@ protected:
 				isCollisionXZ = true;			
 			}
 
-
 			if (checkBBCollision(bb.second, newPos)) {
 				isCollision = true;
 				// Grab key of colliding object
@@ -506,49 +505,60 @@ protected:
 
 			switch (SC.bbMap[collisionId].cType) {
 
-			case OBJECT: {
+				case OBJECT: {
 
-				glm::vec3 closestPoint = glm::clamp(newPos, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
+					glm::vec3 closestPoint = glm::clamp(newPos, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
 
-				glm::vec3 difference = newPos - closestPoint;
-				// std::cout << "closest point: " << closestPoint.x <<" "<< closestPoint.y <<" "<< closestPoint.z << "\n";
-				// std::cout << "Cube position: " << cubePosition.x <<" "<< cubePosition.y <<" "<< cubePosition.z << "\n";
-				// std::cout << "difference of point: " << difference.x <<" "<< difference.y <<" "<< difference.z << "\n";
+					glm::vec3 difference = newPos - closestPoint;
+					// std::cout << "closest point: " << closestPoint.x <<" "<< closestPoint.y <<" "<< closestPoint.z << "\n";
+					// std::cout << "Cube position: " << cubePosition.x <<" "<< cubePosition.y <<" "<< cubePosition.z << "\n";
+					// std::cout << "difference of point: " << difference.x <<" "<< difference.y <<" "<< difference.z << "\n";
 
-				float distance = glm::length(difference);
-				// std::cout << "distance: " << distance << "\n";
+					float distance = glm::length(difference);
+					// std::cout << "distance: " << distance << "\n";
 
-				// the normalized vector (unit vector) pointing from the closest point on the AABB to the rocket's center
-				// This vector represents the direction of the collision response.
-				glm::vec3 normal = glm::normalize(difference);
-				// std::cout << "normal         = " << normal.x << " " <<  normal.y << " " << normal.z   << ";\n";
+					// the normalized vector (unit vector) pointing from the closest point on the AABB to the rocket's center
+					// This vector represents the direction of the collision response.
+					glm::vec3 normal = glm::normalize(difference);
+					// std::cout << "normal         = " << normal.x << " " <<  normal.y << " " << normal.z   << ";\n";
 
-				//if collision is from y 
-				if (newPos.y <= SC.bbMap[collisionId].max.y + cubeHalfSize &&  // If the collision is coming from above
-					!(std::abs(normal.x) > 0.5f || std::abs(normal.z) > 0.5f) &&	 // Not from the side
-					normal.y != -1.0f && !glm::any(glm::isnan(normal))) {
+					//if collision is from y 
+					if (newPos.y <= SC.bbMap[collisionId].max.y + cubeHalfSize &&  // If the collision is coming from above
+						!(std::abs(normal.x) > 0.5f || std::abs(normal.z) > 0.5f) &&	 // Not from the side
+						normal.y != -1.0f && !glm::any(glm::isnan(normal))) {
 
-					groundLevel = newPos.y;
+						groundLevel = newPos.y;
 
-					// cubePosition.y = SC.bbMap[collisionId].max.y + cubeHalfSize;
-					isJumping = false;
+						// cubePosition.y = SC.bbMap[collisionId].max.y + cubeHalfSize;
+						isJumping = false;
 
 
-				}
-
-				//else collision from x and z
-				else {
-					// temporal adjustment for nan values
-					if (glm::any(glm::isnan(normal))) {
-						normal = glm::vec3(0.0f, 0.0f, 0.0f);
 					}
-					// Move the cube out of collision along the normal
-					newPos = closestPoint + normal * glm::vec3(cubeHalfSize);
-					// std::cout << "cubePosition         = " << cubePosition.x << " " <<  cubePosition.y << " " << cubePosition.z   << ";\n";
-				}
 
-				break;
-			}
+					//else collision from x and z
+					else {
+						// temporal adjustment for nan values
+						if (glm::any(glm::isnan(normal))) {
+							normal = glm::vec3(0.0f, 0.0f, 0.0f);
+						}
+						// Move the cube out of collision along the normal
+						newPos = closestPoint + normal * glm::vec3(cubeHalfSize);
+						// std::cout << "cubePosition         = " << cubePosition.x << " " <<  cubePosition.y << " " << cubePosition.z   << ";\n";
+					}
+
+					break;
+				}
+				case COLLECTIBLE: {
+					std::cout << "collision coin!\n";
+					if(collisionId == "coin" ){
+						coinLocationId = int(std::rand() % coinLocations.size());
+						// std::cout << coinLocation << " = coinlocation\n";
+						// std::cout << "position of coin: " << coinLocations[coinLocation].x << " " << coinLocations[coinLocation].y << " " << coinLocations[coinLocation].z << "\n";
+						coinPos = coinLocations[coinLocationId];
+					}
+					SC.bbMap.erase(collisionId);
+					break;
+				}
 
 			}
 
@@ -765,98 +775,98 @@ protected:
 
 		deltaTime = getTime();
 
-		// Need to check collisions first
-		bool isCollisionXZ = false;
-		isCollision = false;
-		std::string collisionId;
-		for(auto bb : SC.bbMap) {
-			// std::cout << "checking collision: " << bb.first << " "<< "\n";
-			if(checkCollisionXZ(bb.second)){
-				isCollisionXZ = true;
-			}
-			if(checkCollision(bb.second)) {
-				isCollision = true;
-				// Grab key of colliding object
-				collisionId = bb.first;
-				// std::cout << "\n\n" << "collision with" << collisionId << "\n";
-				break;
-			}
-		}
+		// // Need to check collisions first
+		// bool isCollisionXZ = false;
+		// isCollision = false;
+		// std::string collisionId;
+		// for(auto bb : SC.bbMap) {
+		// 	// std::cout << "checking collision: " << bb.first << " "<< "\n";
+		// 	if(checkCollisionXZ(bb.second)){
+		// 		isCollisionXZ = true;
+		// 	}
+		// 	if(checkCollision(bb.second)) {
+		// 		isCollision = true;
+		// 		// Grab key of colliding object
+		// 		collisionId = bb.first;
+		// 		// std::cout << "\n\n" << "collision with" << collisionId << "\n";
+		// 		break;
+		// 	}
+		// }
 
-		if(!isCollisionXZ){
-			if(groundLevel!=0.0f){
-				groundLevel	= 0.0f;
-				isJumping = 1;
-			}
-		}
+		// if(!isCollisionXZ){
+		// 	if(groundLevel!=0.0f){
+		// 		groundLevel	= 0.0f;
+		// 		isJumping = 1;
+		// 	}
+		// }
 
 
 
-		if(isCollision) {
-			// std::cout << "isCollision = " << isCollision << ";\n";
+		// if(isCollision) {
+		// 	// std::cout << "isCollision = " << isCollision << ";\n";
 
-			switch(SC.bbMap[collisionId].cType){
+		// 	switch(SC.bbMap[collisionId].cType){
           
-				case OBJECT: {
+		// 		case OBJECT: {
 
-					glm::vec3 closestPoint = glm::clamp(cubePosition, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
+		// 			glm::vec3 closestPoint = glm::clamp(cubePosition, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
 
-					glm::vec3 difference = cubePosition - closestPoint;
-					// std::cout << "closest point: " << closestPoint.x <<" "<< closestPoint.y <<" "<< closestPoint.z << "\n";
-					// std::cout << "Cube position: " << cubePosition.x <<" "<< cubePosition.y <<" "<< cubePosition.z << "\n";
-					// std::cout << "difference of point: " << difference.x <<" "<< difference.y <<" "<< difference.z << "\n";
+		// 			glm::vec3 difference = cubePosition - closestPoint;
+		// 			// std::cout << "closest point: " << closestPoint.x <<" "<< closestPoint.y <<" "<< closestPoint.z << "\n";
+		// 			// std::cout << "Cube position: " << cubePosition.x <<" "<< cubePosition.y <<" "<< cubePosition.z << "\n";
+		// 			// std::cout << "difference of point: " << difference.x <<" "<< difference.y <<" "<< difference.z << "\n";
 
-					float distance = glm::length(difference);
-					// std::cout << "distance: " << distance << "\n";
+		// 			float distance = glm::length(difference);
+		// 			// std::cout << "distance: " << distance << "\n";
 
-					// the normalized vector (unit vector) pointing from the closest point on the AABB to the rocket's center
-					// This vector represents the direction of the collision response.
-					glm::vec3 normal = glm::normalize(difference);
-					// std::cout << "normal         = " << normal.x << " " <<  normal.y << " " << normal.z   << ";\n";
+		// 			// the normalized vector (unit vector) pointing from the closest point on the AABB to the rocket's center
+		// 			// This vector represents the direction of the collision response.
+		// 			glm::vec3 normal = glm::normalize(difference);
+		// 			// std::cout << "normal         = " << normal.x << " " <<  normal.y << " " << normal.z   << ";\n";
 
-					//if collision is from y 
-					if(cubePosition.y <= SC.bbMap[collisionId].max.y+cubeHalfSize &&  // If the collision is coming from above
-					   !(std::abs(normal.x) > 0.5f || std::abs(normal.z) > 0.5f) &&	 // Not from the side
-					   normal.y != -1.0f && !glm::any(glm::isnan(normal))) {
-						cubePosition.y = SC.bbMap[collisionId].max.y+cubeHalfSize;
-						isJumping = false;
-						groundLevel = cubePosition.y;
-					}
+		// 			//if collision is from y 
+		// 			if(cubePosition.y <= SC.bbMap[collisionId].max.y+cubeHalfSize &&  // If the collision is coming from above
+		// 			   !(std::abs(normal.x) > 0.5f || std::abs(normal.z) > 0.5f) &&	 // Not from the side
+		// 			   normal.y != -1.0f && !glm::any(glm::isnan(normal))) {
+		// 				cubePosition.y = SC.bbMap[collisionId].max.y+cubeHalfSize;
+		// 				isJumping = false;
+		// 				groundLevel = cubePosition.y;
+		// 			}
 
-					//else collision from x and z
-					else{
-						// temporal adjustment for nan values
-						if(glm::any(glm::isnan(normal))){
-							normal = glm::vec3(0.0f,0.0f,0.0f);
-						}
-						// Move the cube out of collision along the normal
-						cubePosition = closestPoint + normal * glm::vec3(cubeHalfSize+0.01f);
-						// std::cout << "cubePosition         = " << cubePosition.x << " " <<  cubePosition.y << " " << cubePosition.z   << ";\n";
+		// 			//else collision from x and z
+		// 			else{
+		// 				// temporal adjustment for nan values
+		// 				if(glm::any(glm::isnan(normal))){
+		// 					normal = glm::vec3(0.0f,0.0f,0.0f);
+		// 				}
+		// 				// Move the cube out of collision along the normal
+		// 				cubePosition = closestPoint + normal * glm::vec3(cubeHalfSize+0.01f);
+		// 				// std::cout << "cubePosition         = " << cubePosition.x << " " <<  cubePosition.y << " " << cubePosition.z   << ";\n";
 
-						// Adjust the sphere's velocity to slide along the AABB surface
-						float dotProduct = glm::dot(cubeMovSpeed, normal);
-						glm::vec3 correction = normal * dotProduct;
-						cubeMovSpeed -= correction;
-						// std::cout << "cubeSpeed         = " << cubeMovSpeed.x << " " <<  cubeMovSpeed.y << " " << cubeMovSpeed.z   << ";\n";
-					}
+		// 				// Adjust the sphere's velocity to slide along the AABB surface
+		// 				float dotProduct = glm::dot(cubeMovSpeed, normal);
+		// 				glm::vec3 correction = normal * dotProduct;
+		// 				cubeMovSpeed -= correction;
+		// 				// std::cout << "cubeSpeed         = " << cubeMovSpeed.x << " " <<  cubeMovSpeed.y << " " << cubeMovSpeed.z   << ";\n";
+		// 			}
 					
-					break;
-				}
-				case COLLECTIBLE: {
-					std::cout << "collision coin!\n";
-					if(collisionId == "coin" ){
-						coinLocationId = int(std::rand() % coinLocations.size());
-						// std::cout << coinLocation << " = coinlocation\n";
-						// std::cout << "position of coin: " << coinLocations[coinLocation].x << " " << coinLocations[coinLocation].y << " " << coinLocations[coinLocation].z << "\n";
-						coinPos = coinLocations[coinLocationId];
-					}
-					SC.bbMap.erase(collisionId);
-					break;
-				}
+		// 			break;
+		// 		}
+		// 		case COLLECTIBLE: {
+		// 			std::cout << "collision coin!\n";
+		// 			if(collisionId == "coin" ){
+		// 				coinLocationId = int(std::rand() % coinLocations.size());
+		// 				// std::cout << coinLocation << " = coinlocation\n";
+		// 				// std::cout << "position of coin: " << coinLocations[coinLocation].x << " " << coinLocations[coinLocation].y << " " << coinLocations[coinLocation].z << "\n";
+		// 				coinPos = coinLocations[coinLocationId];
+		// 			}
+		// 			SC.bbMap.erase(collisionId);
+		// 			break;
+		// 		}
 
-			}
+		// 	}
 
-		}
+		// }
 
 		if (glfwGetKey(window, GLFW_KEY_V)) {
 			if (!debounce) {

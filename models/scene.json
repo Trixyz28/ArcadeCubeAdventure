@@ -140,6 +140,11 @@
 			"id": "cube",
 			"model": "models/rubik_cube.obj",
 			"format": "OBJ"
+		},
+		{
+			"id": "coin",
+			"model": "models/Coin_Gold.mgcg",
+			"format": "MGCG"
 		}
 	],
 	"textures": [
@@ -194,6 +199,10 @@
 		{
 			"id": "t0",
 			"texture": "textures/Diamond_Blue_Albedo.png"
+		},
+		{
+			"id": "tcoin",
+			"texture": "textures/Coin_Gold_Albedo.png"
 		}
 	],
 	"instances": [
@@ -389,6 +398,12 @@
 				"transform": [0.2, 0, 0, 0.7,
 					   0, 0.2, 0, 0.5,
 					   0, 0, 0.2, 1,
+					   0, 0, 0, 1]},
+
+			{"id": "coin",   "model": "coin",   "texture": ["tcoin"],
+				"transform": [1, 0, 0, 0,
+					   0, 1, 0, 0.5,
+					   0, 0, 1, 0,
 					   0, 0, 0, 1]}
 		 ]
 

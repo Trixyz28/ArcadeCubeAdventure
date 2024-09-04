@@ -160,6 +160,9 @@ protected:
 	// Position and color of the cube
 	glm::vec3 cubePosition;
 	glm::vec3 cubeColor;
+  const float cubeHalfSize = 0.1f;;
+
+	
 	//for collision management
 	// CubeCollider cubeCollider;
 
@@ -279,12 +282,6 @@ protected:
 		PRs[1].init("PBlinn", &Pcube, &VD);
 		PRs[2].init("PLight", &Plight, &VD);
 
-		std::cout<< "DEFAULT POS" << DEFAULT_POS.x << " "<< DEFAULT_POS.y << " "<< DEFAULT_POS.z << "\n";
-		std::cout<< "coinLocation 0 " << coinLocations[0].x << " "<< coinLocations[0].y << " "<< coinLocations[0].z << "\n";
-
-
-
-
 		// Models, textures and Descriptors (values assigned to the uniforms)
 /*		std::vector<Vertex> vertices = {
 					   {{-100.0,0.0f,-100.0}, {0.0f,0.0f}, {0.0f,1.0f,0.0f}},
@@ -310,8 +307,7 @@ protected:
 		// Initialize local variables
 		cubePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 		cubeRotAngle = 0.0f;
-		cubeDefMovSpeed = glm::vec3(0.02f,0.02f,0.02f);
-		// cubeMovSpeed = glm::vec3(0.0f,0.0f,0.0f);
+		cubeDefMovSpeed = glm::vec3(0.015f,0.015f,0.015f);
 		cubeMovSpeed = cubeDefMovSpeed;
 		cubeRotSpeed = 0.8f;
 		cubeColor = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -319,7 +315,7 @@ protected:
 
 		camPosition = cubePosition + glm::vec3(0.0f, camMinHeight, 0.0f);
 		camRotation = glm::vec3(0.0f, 0.0f, 0.0f);
-		camRotSpeed = 1.5f;
+		camRotSpeed = 1.2f;
 		camDistance = 0.4f;
 		minCamDistance = 0.22f;
 		maxCamDistance = 0.7f;
@@ -328,7 +324,7 @@ protected:
 		isJumping = false;
 		isCollision = false;
 		gravity = -0.0007f;
-		jumpForce = 0.03f;
+		jumpForce = 0.04f;
 		groundLevel = 0.0f;
 		camNFSpeed = 0.003f;
 
@@ -460,22 +456,111 @@ protected:
 		txt.populateCommandBuffer(commandBuffer, currentImage, currScene);
 	}
 
+	
+	// Check if the given position collides with a certain bounding box
+	bool checkBBCollision(const BoundingBox& box, glm::vec3 newPos) {
 
+		float x = glm::max(box.min.x, glm::min(newPos.x, box.max.x));
+		float y = glm::max(box.min.y, glm::min(newPos.y, box.max.y));
+		float z = glm::max(box.min.z, glm::min(newPos.z, box.max.z));
 
-
-	float cubeHalfSize = 0.1f;
-
-	bool checkCollision(const BoundingBox& box) {
-		float x = glm::max(box.min.x, glm::min(cubePosition.x, box.max.x));
-		float y = glm::max(box.min.y, glm::min(cubePosition.y, box.max.y));
-		float z = glm::max(box.min.z, glm::min(cubePosition.z, box.max.z));
-
-		float distance = glm::sqrt((x - cubePosition.x) * (x - cubePosition.x) +
-								   (y - cubePosition.y) * (y - cubePosition.y) +
-								   (z - cubePosition.z) * (z - cubePosition.z));
+		float distance = glm::sqrt((x - newPos.x) * (x - newPos.x) +
+								   (y - newPos.y) * (y - newPos.y) +
+								   (z - newPos.z) * (z - newPos.z));
 
 		return distance < cubeHalfSize;
 	}
+
+
+	void updateCubePosition(glm::vec3 newPos) {
+
+		bool isCollisionXZ = false;
+		isCollision = false;
+		std::string collisionId;
+		float dampLambda = 10.0f;
+
+		for (auto bb : SC.bbMap) {
+
+			if (checkCollisionXZ(bb.second)) {
+				isCollisionXZ = true;			
+			}
+
+
+			if (checkBBCollision(bb.second, newPos)) {
+				isCollision = true;
+				// Grab key of colliding object
+				collisionId = bb.first;
+				// std::cout << "\n\n" << "collision with" << collisionId << "\n";
+				break;
+			}
+		}
+
+		if (!isCollisionXZ) {
+			if (groundLevel != 0.0f) {
+				groundLevel = 0.0f;
+				isJumping = true;
+			}
+		}
+
+		if (isCollision) {
+
+			switch (SC.bbMap[collisionId].cType) {
+
+			case OBJECT: {
+
+				glm::vec3 closestPoint = glm::clamp(newPos, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
+
+				glm::vec3 difference = newPos - closestPoint;
+				// std::cout << "closest point: " << closestPoint.x <<" "<< closestPoint.y <<" "<< closestPoint.z << "\n";
+				// std::cout << "Cube position: " << cubePosition.x <<" "<< cubePosition.y <<" "<< cubePosition.z << "\n";
+				// std::cout << "difference of point: " << difference.x <<" "<< difference.y <<" "<< difference.z << "\n";
+
+				float distance = glm::length(difference);
+				// std::cout << "distance: " << distance << "\n";
+
+				// the normalized vector (unit vector) pointing from the closest point on the AABB to the rocket's center
+				// This vector represents the direction of the collision response.
+				glm::vec3 normal = glm::normalize(difference);
+				// std::cout << "normal         = " << normal.x << " " <<  normal.y << " " << normal.z   << ";\n";
+
+				//if collision is from y 
+				if (newPos.y <= SC.bbMap[collisionId].max.y + cubeHalfSize &&  // If the collision is coming from above
+					!(std::abs(normal.x) > 0.5f || std::abs(normal.z) > 0.5f) &&	 // Not from the side
+					normal.y != -1.0f && !glm::any(glm::isnan(normal))) {
+
+					groundLevel = newPos.y;
+
+					// cubePosition.y = SC.bbMap[collisionId].max.y + cubeHalfSize;
+					isJumping = false;
+
+
+				}
+
+				//else collision from x and z
+				else {
+					// temporal adjustment for nan values
+					if (glm::any(glm::isnan(normal))) {
+						normal = glm::vec3(0.0f, 0.0f, 0.0f);
+					}
+					// Move the cube out of collision along the normal
+					newPos = closestPoint + normal * glm::vec3(cubeHalfSize);
+					// std::cout << "cubePosition         = " << cubePosition.x << " " <<  cubePosition.y << " " << cubePosition.z   << ";\n";
+				}
+
+				break;
+			}
+
+			}
+
+		}
+
+		cubePosition.x = newPos.x;
+		cubePosition.z = newPos.z;
+		cubePosition.y = newPos.y;
+
+	}
+
+
 
 	// helper function for collision check on axis x and z
 	bool checkCollisionXZ(const BoundingBox& box) {
@@ -489,38 +574,39 @@ protected:
 	}
 
 
-	// place a bouding box on scene
-	void placeBB(std::string iId, glm::mat4& World, std::unordered_map<std::string, BoundingBox>& bbMap){
+	// Place a bounding box on scene
+	void placeBB(std::string instanceName, glm::mat4 &worldMatrix, std::unordered_map<std::string, BoundingBox> &bbMap){
 
-		int i = SC.InstanceIds[iId];
-		int mId = SC.I[i]->Mid;
-		std::string mName;
+		int instanceId = SC.InstanceIds[instanceName];
+		int modelId = SC.I[instanceId]->Mid;
 
+		std::string modelName = "";
 		for (std::unordered_map<std::string, int>::iterator it = SC.MeshIds.begin(); it != SC.MeshIds.end(); ++it) {
-			if (it->second == mId) {
-				mName = it->first;
+			if (it->second == modelId) {
+				modelName = it->first;
 			} 
 		}
 
-		// constantly update BB of coin
-		if(iId == "coin" || bbMap.find(iId) == bbMap.end()){
-			BoundingBox bb;
+		if (modelName != "") {
+			if (instanceName == "coin" || bbMap.find(instanceName) == bbMap.end()) {
+				BoundingBox bb;
 
-			bb.min = glm::vec3(std::numeric_limits<float>::max());
-			bb.max = glm::vec3(-std::numeric_limits<float>::max());
-			for(int j=0; j<SC.vecMap[mName].size(); j++){
-				glm::vec3 vert = SC.vecMap[mName][j];
-				// glm::vec4 newVert = World * SC.I[i]->Wm * glm::vec4(vert,1.0f);
-				glm::vec4 newVert = World * glm::vec4(vert, 1.0f);
+				bb.min = glm::vec3(std::numeric_limits<float>::max());
+				bb.max = glm::vec3(-std::numeric_limits<float>::max());
 
-				bb.min = glm::min(bb.min, glm::vec3(newVert));
-				bb.max = glm::max(bb.max, glm::vec3(newVert));
+				for (int j = 0; j < SC.vecMap[modelName].size(); j++) {
+					glm::vec3 vert = SC.vecMap[modelName][j];
+					glm::vec4 newVert = worldMatrix * glm::vec4(vert, 1.0f);
+
+					bb.min = glm::min(bb.min, glm::vec3(newVert));
+					bb.max = glm::max(bb.max, glm::vec3(newVert));
+				}
+				// bb.max = glm::round(bb.max * 100.0f) / 100.0f;
+				// bb.min = glm::round(bb.min * 100.0f) / 100.0f;
+				(modelName.substr(0, 4) == "coin") ? bb.cType = COLLECTIBLE
+					: bb.cType = OBJECT;
+				bbMap[instanceName] = bb;
 			}
-			// bb.max = glm::round(bb.max * 100.0f) / 100.0f;
-			// bb.min = glm::round(bb.min * 100.0f) / 100.0f;
-			(mName.substr(0, 4) == "coin") ? bb.cType = COLLECTIBLE
-										 : bb.cType = OBJECT;
-			bbMap[iId] = bb;
 		}
 	
 	}
@@ -558,56 +644,53 @@ protected:
 	void getActions() {
 
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-			if(!isCollision){
-				cubeMovSpeed.x = cubeDefMovSpeed.x;
-				cubeMovSpeed.z = cubeDefMovSpeed.z;
-			}
 			cubeRotAngle += cubeRotSpeed * deltaTime;
 			camRotation.x += cubeRotSpeed * deltaTime;
 		}
 		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-			if(!isCollision){
-				cubeMovSpeed.x = cubeDefMovSpeed.x;
-				cubeMovSpeed.z = cubeDefMovSpeed.z;
-			}
 			cubeRotAngle -= cubeRotSpeed * deltaTime;
 			camRotation.x -= cubeRotSpeed * deltaTime;
 		}
 		
 		// Forward
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-			if(!isCollision){
-				cubeMovSpeed.x = cubeDefMovSpeed.x;
-				cubeMovSpeed.z = cubeDefMovSpeed.z;
-			}
-			cubePosition.x += cubeMovSpeed.x * glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
-			cubePosition.z += cubeMovSpeed.z * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
+
+			glm::vec3 newPosition = cubePosition;
+			newPosition.x = cubePosition.x + cubeMovSpeed.x * glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
+			newPosition.z = cubePosition.z + cubeMovSpeed.z * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
+
+			updateCubePosition(newPosition);
 		}
 
 		// Backward
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-			cubePosition.x -= cubeMovSpeed.x * glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
-			cubePosition.z -= cubeMovSpeed.z * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
+
+			glm::vec3 newPosition = cubePosition;
+			newPosition.x = cubePosition.x - cubeMovSpeed.x * glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
+			newPosition.z = cubePosition.z - cubeMovSpeed.z * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
+
+			updateCubePosition(newPosition);
 		}
 
 		// Left 
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-			if(!isCollision){
-				cubeMovSpeed.x = cubeDefMovSpeed.x;
-				cubeMovSpeed.z = cubeDefMovSpeed.z;
-			}
-			cubePosition.x -= cubeMovSpeed.x * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
-			cubePosition.z -= cubeMovSpeed.z * -glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
+
+			glm::vec3 newPosition = cubePosition;
+			newPosition.x = cubePosition.x - cubeMovSpeed.x * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
+			newPosition.z = cubePosition.z - cubeMovSpeed.z * -glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
+
+			updateCubePosition(newPosition);
+
 		}
 
 		// Right
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-			if(!isCollision){
-				cubeMovSpeed.x = cubeDefMovSpeed.x;
-				cubeMovSpeed.z = cubeDefMovSpeed.z;
-			}
-			cubePosition.x += cubeMovSpeed.x * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
-			cubePosition.z += cubeMovSpeed.z * -glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
+
+			glm::vec3 newPosition = cubePosition;
+			newPosition.x = cubePosition.x + cubeMovSpeed.x * glm::cos(glm::radians(cubeRotAngle)) * deltaTime;
+			newPosition.z = cubePosition.z + cubeMovSpeed.z * -glm::sin(glm::radians(cubeRotAngle)) * deltaTime;
+
+			updateCubePosition(newPosition);
 		}
 
 		/*
@@ -913,9 +996,12 @@ protected:
 
 
 		if (isJumping) {
+			glm::vec3 newPosition = cubePosition;
 			// std::cout << "isjumping\n";
-			cubePosition.y += jumpSpeed;
+			newPosition.y += jumpSpeed;
 			jumpSpeed += gravity * deltaTime;
+
+			updateCubePosition(newPosition);
 
 			if (cubePosition.y <= groundLevel) {
 				cubePosition.y = groundLevel;
@@ -934,6 +1020,7 @@ protected:
 			glm::vec3(0.0f, 1.0f, 0.0f));
 
 		getActions();
+
 
 		cubePosition.x = glm::clamp(cubePosition.x, -mapLimit, mapLimit);
 		cubePosition.z = glm::clamp(cubePosition.z, -mapLimit, mapLimit);
@@ -981,6 +1068,7 @@ protected:
 
 		// coin position 
 		coinPos.y += coinMovSpeed;
+    // coin rotation
 		coinRot += COIN_ROT_SPEED * deltaTime;
 		if(coinRot > 360.0f) coinRot = 0.0f;
 
@@ -1001,7 +1089,6 @@ protected:
 		SC.I[i]->DS[0]->map(currentImage, &CoinUbo, sizeof(CoinUbo), 0);
 		SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 	
-
 }
 
 };

@@ -338,12 +338,6 @@
 					   -5, 0, 0, -9,
 					   0, 0, 0, 1]},
 
-			{"id": "window",   "model": "window",   "texture": ["tfurniture"],
-				"transform": [0, 0, 3, -23.7,
-					   0, 3, 0, 9,
-					   3, 0, 0, 9,
-					   0, 0, 0, 1]},
-
 			{"id": "coffeetable",   "model": "coffeetable",   "texture": ["tfurniture"],
 				"transform": [4, 0, 0, -9,
 					   0, 4, 0, 0,
@@ -428,6 +422,11 @@
 					   0, 0, 0, 1]}
 		]},
 		{"pipeline":  "PLight", "elements": [
+			 {"id": "window",   "model": "window",   "texture": ["tfurniture", "tfurniture"],
+				"transform": [0, 0, 3, -23.7,
+					   0, 3, 0, 9,
+					   3, 0, 0, 9,
+					   0, 0, 0, 1]},
 			 {"id": "light",   "model": "light",   "texture": ["tlight", "tlight"],
 				"transform": [0.1, 0, 0, 0,
 					   0, 0.05, 0, 15.5,

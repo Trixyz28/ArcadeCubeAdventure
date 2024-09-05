@@ -104,7 +104,7 @@ protected:
 		"floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", 
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
-		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable", "window",
+		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable",
 		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
 
@@ -112,7 +112,7 @@ protected:
 	std::vector<std::string> BBObj = { 
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
-		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable", "window",
+		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable", 
 		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
 
@@ -120,7 +120,7 @@ protected:
 	std::vector<std::string> gadgetObj = { "diamond" };
 
 	// Lights to draw
-	std::vector<std::string> lightObj = {  "light", "sign24h" };
+	std::vector<std::string> lightObj = { "window", "light", "sign24h" };
 
 
 	CubeUniformBufferObject cubeUbo{};
@@ -904,7 +904,7 @@ protected:
 		std::vector<std::string>::iterator it;
 		int k;
 		/* k = 1 starts from first point light */
-		for (it = lightObj.begin(),  k = 1; it != lightObj.end(); it++, k++) {
+		for (it = lightObj.begin(),  k = 0; it != lightObj.end(); it++, k++) {
 			int i = SC.InstanceIds[it->c_str()];
 			//std::cout << *it << " " << i << "\n";
 						// Product per transform matrix

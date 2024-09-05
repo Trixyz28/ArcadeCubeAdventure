@@ -7,7 +7,7 @@
 
 // Vector of text
 std::vector<SingleText> outText = {
-	{1, {"Third Person", ":)", "", ""}, 0, 0},
+	{1, {"Cube Arcade Adventure"}, 0, 0},
 };
 
 
@@ -104,7 +104,7 @@ protected:
 		"floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", 
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
-		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable",
+		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable", "window",
 		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
 
@@ -112,7 +112,7 @@ protected:
 	std::vector<std::string> BBObj = { 
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
-		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable",
+		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable", "window",
 		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
 
@@ -160,7 +160,7 @@ protected:
 	// Position and color of the cube
 	glm::vec3 cubePosition;
 	glm::vec3 cubeColor;
-  const float cubeHalfSize = 0.1f;;
+  	const float cubeHalfSize = 0.1f;
 
 	
 	//for collision management
@@ -176,7 +176,9 @@ protected:
 	// Rotation speed and the forward / backward speed of the camera
 	float camRotSpeed, camNFSpeed;
 	// Camera distance and constraints
-	float camDistance, minCamDistance, maxCamDistance;
+	float camDistance;
+	const float minCamDistance = 0.22f;
+	const float maxCamDistance = 0.9f;
 	// Minimum y-level of camera
 	const float camMinHeight = 0.1f;
 
@@ -186,6 +188,8 @@ protected:
 	// Jumping status of the cube
 	bool isJumping;
 	bool isCollision;
+	bool isCollisionXZ;
+	std::string collisionId;
 	// Ground level of the position
 	float groundLevel;
 
@@ -193,21 +197,30 @@ protected:
 	const float COIN_MAX_HEIGHT = 0.5f;
 	const float COIN_ROT_SPEED = 0.05f;
 
-	const glm::vec3 DEFAULT_POS = glm::vec3(0.0f, 0.2f, 4.0f);
-	const glm::vec3 POS_1 = glm::vec3(4.0f, 0.5f, 4.0f);
-	const glm::vec3 POS_2 = glm::vec3(4.0f, 0.5f, 0.0f);
-	const glm::vec3 POS_3 = glm::vec3(0.0f, 0.5f, -4.0f);
+	const glm::vec3 DEFAULT_POS = glm::vec3(4.0f, 0.2f, 0.0f);
+	const glm::vec3 POS_1 = glm::vec3(-4.10249f, 0.2f, -6.00859f);
+	const glm::vec3 POS_2 = glm::vec3(4.9367f, 0.2f, 3.3424f);
+	const glm::vec3 POS_3 = glm::vec3(-11.3001f, 0.3f, -9.65229f);
+	const glm::vec3 ON_COFFEE_TABLE = glm::vec3(-8.00956f, 1.2f, 5.20554f);
+	// const glm::vec3 ON_YELLOW_POUF = glm::vec3(-5.59736f, 1.2f, 5.71061f);
+	const glm::vec3 ON_POOL_TABLE = glm::vec3(12.6f, 2.8f, 16.0f);
+	
 
 	const std::vector<glm::vec3> coinLocations = { 
 		DEFAULT_POS,
 		POS_1,
 		POS_2,
-		POS_3
+		POS_3,
+		ON_COFFEE_TABLE,
+		ON_POOL_TABLE,
+
 	};
 
 	int coinLocationId;
 	float coinMovSpeed;
 	float coinRot;
+	float coinPosY;
+	float coinMaxHeight;
 	glm::vec3 coinPos;
 
 
@@ -318,14 +331,14 @@ protected:
 		camRotation = glm::vec3(0.0f, 0.0f, 0.0f);
 		camRotSpeed = 1.2f;
 		camDistance = 0.4f;
-		minCamDistance = 0.22f;
-		maxCamDistance = 0.7f;
 
 		jumpSpeed = 0.0f;
 		isJumping = false;
 		isCollision = false;
-		gravity = -0.0007f;
-		jumpForce = 0.04f;
+		isCollisionXZ = false;
+		collisionId = "";
+		gravity = -0.003f;
+		jumpForce = 0.2f;
 		groundLevel = 0.0f;
 		camNFSpeed = 0.003f;
 
@@ -333,6 +346,8 @@ protected:
 		coinMovSpeed = 0.002f;
 		coinRot = 0.0f;
 		coinPos = DEFAULT_POS;
+		coinPosY = coinPos.y;
+		coinMaxHeight = coinPosY + COIN_MAX_HEIGHT;
 
 		// cubeCollider.center = cubePosition;
 		// cubeCollider.length = 100.0f;
@@ -476,9 +491,8 @@ protected:
 
 	void updateCubePosition(glm::vec3 newPos) {
 
-		bool isCollisionXZ = false;
+		isCollisionXZ = false;
 		isCollision = false;
-		std::string collisionId;
 		float dampLambda = 10.0f;
 
 		for (auto bb : SC.bbMap) {
@@ -530,13 +544,10 @@ protected:
 						normal.y != -1.0f && !glm::any(glm::isnan(normal))) {
 
 						groundLevel = newPos.y;
-
-						// cubePosition.y = SC.bbMap[collisionId].max.y + cubeHalfSize;
 						isJumping = false;
 
 
 					}
-
 					//else collision from x and z
 					else {
 						// temporal adjustment for nan values
@@ -557,8 +568,10 @@ protected:
 						// std::cout << coinLocation << " = coinlocation\n";
 						// std::cout << "position of coin: " << coinLocations[coinLocation].x << " " << coinLocations[coinLocation].y << " " << coinLocations[coinLocation].z << "\n";
 						coinPos = coinLocations[coinLocationId];
+						coinPosY = coinPos.y;
+						coinMaxHeight = coinPosY + COIN_MAX_HEIGHT;
 					}
-					SC.bbMap.erase(collisionId);
+					//SC.bbMap.erase(collisionId);
 					break;
 				}
 
@@ -585,6 +598,9 @@ protected:
 		return overlapX && overlapZ;
 	}
 
+	void printxyz(glm::vec3 bb){
+		std::cout << bb.x << " " << bb.y << " " << bb.z << "\n";
+	}
 
 	// Place a bounding box on scene
 	void placeBB(std::string instanceName, glm::mat4 &worldMatrix, std::unordered_map<std::string, BoundingBox> &bbMap){
@@ -598,6 +614,8 @@ protected:
 				modelName = it->first;
 			} 
 		}
+
+
 
 		if (modelName != "") {
 			if (instanceName == "coin" || bbMap.find(instanceName) == bbMap.end()) {
@@ -617,11 +635,20 @@ protected:
 				// bb.min = glm::round(bb.min * 100.0f) / 100.0f;
 				(modelName.substr(0, 4) == "coin") ? bb.cType = COLLECTIBLE
 					: bb.cType = OBJECT;
+
+				/*
+				if(bb.cType == COLLECTIBLE){
+					std::cout << "min: ";
+					printxyz(bb.min);
+					std::cout << "max: ";
+					printxyz(bb.max);
+				}*/
 				bbMap[instanceName] = bb;
 			}
 		}
 	
 	}
+
 
 
 	float getTime() {
@@ -984,13 +1011,14 @@ protected:
 
 		camPosition = newCamPosition;
 
-		// coin position 
+		// coin position update
 		coinPos.y += coinMovSpeed;
-    // coin rotation
+    	// coin rotation update
 		coinRot += COIN_ROT_SPEED * deltaTime;
 		if(coinRot > 360.0f) coinRot = 0.0f;
 
-		if(coinPos.y >= COIN_MAX_HEIGHT || coinPos.y < 0.05f){
+		//TODO check bug of BB when on coffee table
+		if(coinPos.y >= coinMaxHeight || coinPos.y < coinPosY){
 			coinMovSpeed *= -1 ;
 		}
 		
@@ -999,7 +1027,7 @@ protected:
 		// World = glm::translate(glm::mat4(1.0f), coinLocations[coinLocation]);
 		World *= glm::rotate(glm::mat4(1.0f),glm::radians(90.0f), glm::vec3(1,0,0));
 		World *= glm::rotate(glm::mat4(1.0f), coinRot, glm::vec3(0.0f, 0.0f, 1.0f));
-		World *= glm::scale(glm::vec3(0.002f,0.002f,0.002f));
+		World *= glm::scale(glm::vec3(0.003f,0.003f,0.003f));
 		CoinUbo.mMat = baseMatrix * World;
 		CoinUbo.mvpMat = viewPrjMatrix * World;
 		CoinUbo.nMat = glm::inverse(glm::transpose(CoinUbo.mMat));

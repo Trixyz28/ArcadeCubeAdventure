@@ -42,8 +42,9 @@ class Scene {
 	
 	BaseProject *BP;
 
+
 	// Models, textures and Descriptors (values assigned to the uniforms)
-	// Please note that Model objects depends on the corresponding vertex structure
+	// Model objects depends on the corresponding vertex structure
 	
 	// Models
 	int ModelCount = 0;
@@ -156,33 +157,19 @@ class Scene {
 					nlohmann::json translatePos = is[j]["translate"];
 
 					float scalingVec[3], rotationVec[3], translateVec[3];
-
 					for (int l = 0; l < 3; l++) { 
 						scalingVec[l] = scalingFactors[l];
 						rotationVec[l] = rotationAngles[l];
 						translateVec[l] = translatePos[l];
 					}
 
-					
-					PI[k].I[j].Wm = glm::mat4(1.0f);
-					PI[k].I[j].Wm *= glm::translate(glm::mat4(1.0f), glm::vec3(translateVec[0], translateVec[1], translateVec[2]));
-					PI[k].I[j].Wm *= glm::rotate(glm::mat4(1.0f), glm::radians(rotationVec[1]), glm::vec3(0.0f, 1.0f, 0.0f));
-					PI[k].I[j].Wm *= glm::rotate(glm::mat4(1.0f), glm::radians(rotationVec[0]), glm::vec3(1.0f, 0.0f, 0.0f));
-					PI[k].I[j].Wm *= glm::rotate(glm::mat4(1.0f), glm::radians(rotationVec[2]), glm::vec3(0.0f, 0.0f, 1.0f));
-					PI[k].I[j].Wm *= glm::scale(glm::mat4(1.0f), glm::vec3(scalingVec[0], scalingVec[1], scalingVec[2]));
-
-
-					
-
-					/*
+					// Transform order: scale, rotate z, rotate x, rotate y, translate
 					PI[k].I[j].Wm = glm::translate(glm::mat4(1.0f), glm::vec3(translateVec[0], translateVec[1], translateVec[2]))
 						* glm::rotate(glm::mat4(1.0f), glm::radians(rotationVec[1]), glm::vec3(0.0f, 1.0f, 0.0f))
 						* glm::rotate(glm::mat4(1.0f), glm::radians(rotationVec[0]), glm::vec3(1.0f, 0.0f, 0.0f))
 						* glm::rotate(glm::mat4(1.0f), glm::radians(rotationVec[2]), glm::vec3(0.0f, 0.0f, 1.0f))
 						* glm::scale(glm::mat4(1.0f), glm::vec3(scalingVec[0], scalingVec[1], scalingVec[2]));
-						*/
-
-
+		
 
 					PI[k].I[j].PI = &PI[k];
 					PI[k].I[j].D = &PI[k].PR->P->D;

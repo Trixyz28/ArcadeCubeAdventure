@@ -1,13 +1,13 @@
-// This has been adapted from the Vulkan tutorial
+// Main code of the application, this has been adapted from the Vulkan tutorial
 
 #define JSON_DIAGNOSTICS 1
 #include "modules/Starter.hpp"
 #include "modules/TextMaker.hpp"
-
+#include "modules/Scene.hpp"
 
 // Vector of text
 std::vector<SingleText> outText = {
-	{1, {"Cube Arcade Adventure"}, 0, 0},
+	{1, {"Arcade Cube Adventure"}, 0, 0},
 };
 
 
@@ -37,12 +37,6 @@ struct LightUniformBufferObject {
 
 // GUBO
 struct GlobalUniformBufferObject {
-	/*
-	alignas(16) glm::vec3 lightDir;
-	alignas(16) glm::vec4 lightColor;
-	alignas(16) glm::vec3 eyePos;
-	alignas(16) glm::vec4 eyeDir;
-	*/
 	struct {
 		alignas(16) glm::vec3 v;
 	} lightDir[4];
@@ -66,14 +60,7 @@ struct Vertex {
 	glm::vec3 norm;
 };
 
-// Structure to handle the collision machanism
-// struct CubeCollider {
-// 	glm::vec3 center;
-// 	float length;
-// };
 
-
-#include "modules/Scene.hpp"
 
 
 // MAIN ! 

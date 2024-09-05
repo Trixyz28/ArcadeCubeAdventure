@@ -44,6 +44,7 @@ class Scene {
 
 	// Models, textures and Descriptors (values assigned to the uniforms)
 	// Please note that Model objects depends on the corresponding vertex structure
+	
 	// Models
 	int ModelCount = 0;
 	Model **M;
@@ -143,10 +144,45 @@ class Scene {
 						std::cout << " " << is[j]["texture"][h] << "(" << PI[k].I[j].Tid[h] << ")";
 					}
 					std::cout << "}\n";
-					nlohmann::json TMjson = is[j]["transform"];
-					float TMj[16];
-					for (int l = 0; l < 16; l++) { TMj[l] = TMjson[l]; }
-					PI[k].I[j].Wm = glm::mat4(TMj[0], TMj[4], TMj[8], TMj[12], TMj[1], TMj[5], TMj[9], TMj[13], TMj[2], TMj[6], TMj[10], TMj[14], TMj[3], TMj[7], TMj[11], TMj[15]);
+
+
+					// Scaling factors on x, y, z axis respectively
+					nlohmann::json scalingFactors = is[j]["scale"];
+					
+					// Rotation angles (in degrees) on x, y, z axis respectively
+					nlohmann::json rotationAngles = is[j]["rotate"];
+					
+					// Translation on x, y, z axis respectively
+					nlohmann::json translatePos = is[j]["translate"];
+
+					float scalingVec[3], rotationVec[3], translateVec[3];
+
+					for (int l = 0; l < 3; l++) { 
+						scalingVec[l] = scalingFactors[l];
+						rotationVec[l] = rotationAngles[l];
+						translateVec[l] = translatePos[l];
+					}
+
+					
+					PI[k].I[j].Wm = glm::mat4(1.0f);
+					PI[k].I[j].Wm *= glm::translate(glm::mat4(1.0f), glm::vec3(translateVec[0], translateVec[1], translateVec[2]));
+					PI[k].I[j].Wm *= glm::rotate(glm::mat4(1.0f), glm::radians(rotationVec[1]), glm::vec3(0.0f, 1.0f, 0.0f));
+					PI[k].I[j].Wm *= glm::rotate(glm::mat4(1.0f), glm::radians(rotationVec[0]), glm::vec3(1.0f, 0.0f, 0.0f));
+					PI[k].I[j].Wm *= glm::rotate(glm::mat4(1.0f), glm::radians(rotationVec[2]), glm::vec3(0.0f, 0.0f, 1.0f));
+					PI[k].I[j].Wm *= glm::scale(glm::mat4(1.0f), glm::vec3(scalingVec[0], scalingVec[1], scalingVec[2]));
+
+
+					
+
+					/*
+					PI[k].I[j].Wm = glm::translate(glm::mat4(1.0f), glm::vec3(translateVec[0], translateVec[1], translateVec[2]))
+						* glm::rotate(glm::mat4(1.0f), glm::radians(rotationVec[1]), glm::vec3(0.0f, 1.0f, 0.0f))
+						* glm::rotate(glm::mat4(1.0f), glm::radians(rotationVec[0]), glm::vec3(1.0f, 0.0f, 0.0f))
+						* glm::rotate(glm::mat4(1.0f), glm::radians(rotationVec[2]), glm::vec3(0.0f, 0.0f, 1.0f))
+						* glm::scale(glm::mat4(1.0f), glm::vec3(scalingVec[0], scalingVec[1], scalingVec[2]));
+						*/
+
+
 
 					PI[k].I[j].PI = &PI[k];
 					PI[k].I[j].D = &PI[k].PR->P->D;

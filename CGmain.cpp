@@ -73,7 +73,7 @@ class CGmain : public BaseProject {
 protected:
 
 	// Descriptor Layouts ["classes" of what will be passed to the shaders]
-	DescriptorSetLayout DSLGlobal, DSL, DSLcube, DSLlight;
+	DescriptorSetLayout DSLGlobal, DSLstatic, DSLcube, DSLlight;
 
 	// Vertex formats
 	VertexDescriptor VD;
@@ -83,6 +83,8 @@ protected:
 
 	// Scene
 	Scene SC;
+
+	// Reference to pipelines: name (string), corresponding pipeline
 	std::vector<PipelineRef> PRs;
 
 	TextMaker txt;
@@ -107,6 +109,8 @@ protected:
 		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable", 
 		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
+
+
 
 	// Reward gadgets to draw
 	std::vector<std::string> gadgetObj = { "diamond" };
@@ -147,22 +151,15 @@ protected:
 
 	// Other application parameters
 
-	// currScene = 0: third person view
-	int currScene = 0;
 
 	// Position and color of the cube
 	glm::vec3 cubePosition;
 	glm::vec3 cubeColor;
   	const float cubeHalfSize = 0.1f;
 
-	
-	//for collision management
-	// CubeCollider cubeCollider;
-
 	// Moving speed, rotation speed and angle of the cube
 	float cubeRotAngle, cubeRotSpeed;
 	glm::vec3 cubeMovSpeed;
-	glm::vec3 cubeDefMovSpeed;
 
 	// Position and rotation of the camera
 	glm::vec3 camPosition, camRotation;
@@ -187,6 +184,7 @@ protected:
 	float groundLevel;
 
 
+	// Parameters for coins
 	const float COIN_MAX_HEIGHT = 0.5f;
 	const float COIN_ROT_SPEED = 0.05f;
 
@@ -220,6 +218,7 @@ protected:
 	// Maximum abs coordinate of the map (for both x and z axis)
 	const float mapLimit = 23.94f;
 
+
 	// Time offset to compensate different device performance
 	float deltaTime;
 
@@ -244,20 +243,26 @@ protected:
 	void localInit() {
 
 		// Descriptor Layouts [what will be passed to the shaders]
+		// Parameters for init: binding, type, flag(stage), size
+		
+		// Global DSL
 		DSLGlobal.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(GlobalUniformBufferObject)}
 			});
 
-		DSL.init(this, {
+		// DSL for static elements of the scene
+		DSLstatic.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(UniformBufferObject)},
 					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0}
 			});
 
+		// DSL for cube
 		DSLcube.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(CubeUniformBufferObject)},
 					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0}
 			});
 
+		// DSL for light
 		DSLlight.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(LightUniformBufferObject)},
 					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
@@ -266,6 +271,7 @@ protected:
 
 
 		// Vertex descriptors
+		// Position, UV, normal
 		VD.init(this, {
 				  {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
 			}, {
@@ -277,94 +283,92 @@ protected:
 					 sizeof(glm::vec3), NORMAL}
 			});
 
-
 		// Pipelines [Shader couples]
-		P.init(this, &VD, "shaders/Vert.spv", "shaders/PhongFrag.spv", { &DSLGlobal, &DSL });
+		// Shader.vert, PhongShader.frag
+		P.init(this, &VD, "shaders/Vert.spv", "shaders/PhongFrag.spv", { &DSLGlobal, &DSLstatic });
 		
 		// VK_POLYGON_MODE_FILL for normal view, VK_POLYGON_MODE_LINE for meshes
 		P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
 			VK_CULL_MODE_NONE, false);
+
+		// CubeShader.vert, CubeShader.frag
 		Pcube.init(this, &VD, "shaders/CubeVert.spv", "shaders/CubeFrag.spv", { &DSLGlobal, &DSLcube });
+		
+		// LightShader.vert, LightShader.frag
 		Plight.init(this, &VD, "shaders/LightVert.spv", "shaders/LightFrag.spv", { &DSLGlobal, &DSLlight });
 		Plight.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
 			VK_CULL_MODE_NONE, false);
 
+		// Initialize PipelineRef with names and pipelines
 		PRs.resize(3);
 		PRs[0].init("P", &P);
 		PRs[1].init("PBlinn", &Pcube);
 		PRs[2].init("PLight", &Plight);
 
-		// Models, textures and Descriptors (values assigned to the uniforms)
-/*		std::vector<Vertex> vertices = {
-					   {{-100.0,0.0f,-100.0}, {0.0f,0.0f}, {0.0f,1.0f,0.0f}},
-					   {{-100.0,0.0f, 100.0}, {0.0f,1.0f}, {0.0f,1.0f,0.0f}},
-					   {{ 100.0,0.0f,-100.0}, {1.0f,0.0f}, {0.0f,1.0f,0.0f}},
-					   {{ 100.0,0.0f, 100.0}, {1.0f,1.0f}, {0.0f,1.0f,0.0f}}};
-		M1.vertices = std::vector<unsigned char>(vertices.size()*sizeof(Vertex), 0);
-		memcpy(&vertices[0], &M1.vertices[0], vertices.size()*sizeof(Vertex));
-		M1.indices = {0, 1, 2,    1, 3, 2};
-		M1.initMesh(this, &VD); */
 
 		// Initialize pools
 		uniformBlocksInPool = 1; /* Global Ubo */
 		texturesInPool = 0;
 		setsInPool = 1;  /* DSGlobal */
 
-		// Load Scene: the models are stored in json
+
+		// Load Scene with VD, PRs, and models / textures / instances stored in json
 		SC.init(this, &VD, PRs, "models/scene.json");
 
 		// Update the text
 		txt.init(this, &outText);
 
+
 		// Initialize local variables
+		
+		// Variables for the cube
 		cubePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 		cubeRotAngle = 0.0f;
-		cubeDefMovSpeed = glm::vec3(0.015f,0.015f,0.015f);
-		cubeMovSpeed = cubeDefMovSpeed;
+		cubeMovSpeed = glm::vec3(0.015f, 0.015f, 0.015f);
 		cubeRotSpeed = 0.8f;
 		cubeColor = glm::vec3(0.0f, 0.0f, 0.0f);
 
-
+		// Variables for the camera
 		camPosition = cubePosition + glm::vec3(0.0f, camMinHeight, 0.0f);
 		camRotation = glm::vec3(0.0f, 0.0f, 0.0f);
 		camRotSpeed = 1.2f;
 		camDistance = 0.4f;
+		camNFSpeed = 0.003f;
 
+		// Variables for jumping and collision check
 		jumpSpeed = 0.0f;
 		isJumping = false;
-		isCollision = false;
-		isCollisionXZ = false;
-		collisionId = "";
 		gravity = -0.003f;
 		jumpForce = 0.2f;
 		groundLevel = 0.0f;
-		camNFSpeed = 0.003f;
+		isCollision = false;
+		isCollisionXZ = false;
+		collisionId = "";
 
-		// coinLocationId = 1;
+		// Variables for the collectible coins
 		coinMovSpeed = 0.002f;
 		coinRot = 0.0f;
 		coinPos = DEFAULT_POS;
 		coinPosY = coinPos.y;
 		coinMaxHeight = coinPosY + COIN_MAX_HEIGHT;
 
-		// cubeCollider.center = cubePosition;
-		// cubeCollider.length = 100.0f;
 
 		debounce = false;
 		currDebounce = 0;
 
 		deltaTime = getTime();
 
+		// Initialize view matrix: look-at
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 
-
+		// Initialize bounding boxes
 		for (std::vector<std::string>::iterator it = BBObj.begin(); it != BBObj.end(); it++) {
 			std::string obj_id = it->c_str();
-			int i = SC.InstanceIds[it->c_str()];
+			int i = SC.instanceMap[it->c_str()];
 			placeBB(obj_id, SC.I[i]->Wm, SC.bbMap);
 		}
 
-		// lights
+		// Load lights from json
 		nlohmann::json js;
 		std::ifstream ifs("models/Lights.json");
 		if (!ifs.is_open()) {
@@ -376,20 +380,18 @@ protected:
 			std::cout << "Parsing JSON\n";
 			ifs >> js;
 			ifs.close();
-			nlohmann::json ld = js["lights"];
-			n_lights = ld.size();
+			nlohmann::json lights = js["lights"];
+			n_lights = lights.size();
 			std::cout << "There are " << n_lights << " lights.\n";
-			for (int i = 0; i < ld.size(); i++) {
-				lPos[i] = glm::vec3(ld[i]["position"][0], ld[i]["position"][1], ld[i]["position"][2]);
-				lDir[i] = glm::vec3(ld[i]["direction"][0], ld[i]["direction"][1], ld[i]["direction"][2]);
-				lCol[i] = glm::vec4(ld[i]["color"][0], ld[i]["color"][1], ld[i]["color"][2], ld[i]["intensity"]);
-				emInt[i] = ld[i]["em"];
+			for (int i = 0; i < lights.size(); i++) {
+				lPos[i] = glm::vec3(lights[i]["position"][0], lights[i]["position"][1], lights[i]["position"][2]);
+				lDir[i] = glm::vec3(lights[i]["direction"][0], lights[i]["direction"][1], lights[i]["direction"][2]);
+				lCol[i] = glm::vec4(lights[i]["color"][0], lights[i]["color"][1], lights[i]["color"][2], lights[i]["intensity"]);
+				emInt[i] = lights[i]["em"];	/*emission intensity*/
 			}
-		}
-		catch (const nlohmann::json::exception& e) {
+		} catch (const nlohmann::json::exception& e) {
 			std::cout << e.what() << '\n';
 		}
-
 
 		std::cout << "Initialization completed!\n";
 		std::cout << "Uniform Blocks in the Pool  : " << uniformBlocksInPool << "\n";
@@ -397,79 +399,61 @@ protected:
 		std::cout << "Descriptor Sets in the Pool : " << setsInPool << "\n";
 	}
 
-	// Here you create your pipelines and Descriptor Sets!
+	// Create pipelines and descriptor sets
 	void pipelinesAndDescriptorSetsInit() {
-		// This creates a new pipeline (with the current surface), using its shaders
+		// Create a new pipeline (with the current surface) using its shaders
 		P.create();
 		Pcube.create();
 		Plight.create();
 
-		// Here you define the data set
-		SC.pipelinesAndDescriptorSetsInit( &DSLGlobal );
+		// Create the Descriptor Sets
+		SC.descriptorSetsInit( &DSLGlobal );
 		txt.pipelinesAndDescriptorSetsInit();
 	}
 
-	// Here you destroy your pipelines and Descriptor Sets!
+
+	// Destroy pipelines and descriptor sets
 	// All the object classes defined in Starter.hpp have a method .cleanup() for this purpose
 	void pipelinesAndDescriptorSetsCleanup() {
+
 		// Cleanup pipelines
 		P.cleanup();
 		Pcube.cleanup();
 		Plight.cleanup();
 
-		SC.pipelinesAndDescriptorSetsCleanup();
+		// Cleanup descriptor sets
+		SC.descriptorSetsCleanup();
 		txt.pipelinesAndDescriptorSetsCleanup();
 	}
 
-	// Here you destroy all the Models, Texture and Desc. Set Layouts you created!
-	// All the object classes defined in Starter.hpp have a method .cleanup() for this purpose
-	// You also have to destroy the pipelines: since they need to be rebuilt, they have two different
-	// methods: .cleanup() recreates them, while .destroy() delete them completely
+
+	// Destroy all the models, textures and descriptor set layouts
+	// For the pipelines: .cleanup() recreates them, while .destroy() delete them completely
 	void localCleanup() {
-		/*
-		for(int i=0; i < SC.InstanceCount; i++) {
-			delete deltaP[i];
-		}
-		free(deltaP);*/
+
+		// Cleanup models, textures, and remove instances
+		SC.localCleanup();
 
 		// Cleanup descriptor set layouts
 		DSLGlobal.cleanup();
-		DSL.cleanup();
+		DSLstatic.cleanup();
 		DSLcube.cleanup();
 		DSLlight.cleanup();
 
-		// Destroies the pipelines
+		// Destroy the pipelines
 		P.destroy();
 		Pcube.destroy();
 		Plight.destroy();
 
-		SC.localCleanup();
+
 		txt.localCleanup();
 	}
 
 
-
-
-	// Here it is the creation of the command buffer:
-	// You send to the GPU all the objects you want to draw,
-	// with their buffers and textures
-
+	// Creation of the command buffer: send to the GPU all the objects to draw with their buffers and textures
 	void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-
-
-		/*		// binds the data set
-				DS1.bind(commandBuffer, P, 0, currentImage);
-
-				// binds the model
-				M1.bind(commandBuffer);
-
-				// record the drawing command in the command buffer
-				vkCmdDrawIndexed(commandBuffer,
-						static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
-				std::cout << M1.indices.size();
-		*/
 		SC.populateCommandBuffer(commandBuffer, currentImage);
-		txt.populateCommandBuffer(commandBuffer, currentImage, currScene);
+		txt.populateCommandBuffer(commandBuffer, currentImage, 0);
 	}
 
 	
@@ -488,136 +472,40 @@ protected:
 	}
 
 
-	void updateCubePosition(glm::vec3 newPos) {
-
-		isCollisionXZ = false;
-		isCollision = false;
-		float dampLambda = 10.0f;
-
-		for (auto bb : SC.bbMap) {
-
-			if (checkCollisionXZ(bb.second)) {
-				isCollisionXZ = true;			
-			}
-
-			if (checkBBCollision(bb.second, newPos)) {
-				isCollision = true;
-				// Grab key of colliding object
-				collisionId = bb.first;
-				// std::cout << "\n\n" << "collision with" << collisionId << "\n";
-				break;
-			}
-		}
-
-		if (!isCollisionXZ) {
-			if (groundLevel != 0.0f) {
-				groundLevel = 0.0f;
-				isJumping = true;
-			}
-		}
-
-		if (isCollision) {
-
-			switch (SC.bbMap[collisionId].cType) {
-
-				case OBJECT: {
-
-					glm::vec3 closestPoint = glm::clamp(newPos, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
-
-					glm::vec3 difference = newPos - closestPoint;
-					// std::cout << "closest point: " << closestPoint.x <<" "<< closestPoint.y <<" "<< closestPoint.z << "\n";
-					// std::cout << "Cube position: " << cubePosition.x <<" "<< cubePosition.y <<" "<< cubePosition.z << "\n";
-					// std::cout << "difference of point: " << difference.x <<" "<< difference.y <<" "<< difference.z << "\n";
-
-					float distance = glm::length(difference);
-					// std::cout << "distance: " << distance << "\n";
-
-					// the normalized vector (unit vector) pointing from the closest point on the AABB to the rocket's center
-					// This vector represents the direction of the collision response.
-					glm::vec3 normal = glm::normalize(difference);
-					// std::cout << "normal         = " << normal.x << " " <<  normal.y << " " << normal.z   << ";\n";
-
-					//if collision is from y 
-					if (newPos.y <= SC.bbMap[collisionId].max.y + cubeHalfSize &&  // If the collision is coming from above
-						!(std::abs(normal.x) > 0.5f || std::abs(normal.z) > 0.5f) &&	 // Not from the side
-						normal.y != -1.0f && !glm::any(glm::isnan(normal))) {
-
-						groundLevel = newPos.y;
-						isJumping = false;
-
-
-					}
-					//else collision from x and z
-					else {
-						// temporal adjustment for nan values
-						if (glm::any(glm::isnan(normal))) {
-							normal = glm::vec3(0.0f, 0.0f, 0.0f);
-						}
-						// Move the cube out of collision along the normal
-						newPos = closestPoint + normal * glm::vec3(cubeHalfSize);
-						// std::cout << "cubePosition         = " << cubePosition.x << " " <<  cubePosition.y << " " << cubePosition.z   << ";\n";
-					}
-
-					break;
-				}
-				case COLLECTIBLE: {
-					std::cout << "collision coin!\n";
-					if(collisionId == "coin" ){
-						coinLocationId = int(std::rand() % coinLocations.size());
-						// std::cout << coinLocation << " = coinlocation\n";
-						// std::cout << "position of coin: " << coinLocations[coinLocation].x << " " << coinLocations[coinLocation].y << " " << coinLocations[coinLocation].z << "\n";
-						coinPos = coinLocations[coinLocationId];
-						coinPosY = coinPos.y;
-						coinMaxHeight = coinPosY + COIN_MAX_HEIGHT;
-					}
-					//SC.bbMap.erase(collisionId);
-					break;
-				}
-
-			}
-
-		}
-
-		cubePosition.x = newPos.x;
-		cubePosition.z = newPos.z;
-		cubePosition.y = newPos.y;
-
-	}
-
-
-
-	// helper function for collision check on axis x and z
+	// Helper function for collision check on axis x and z
 	bool checkCollisionXZ(const BoundingBox& box) {
 
 		bool overlapX = cubePosition.x-cubeHalfSize >= box.min.x && cubePosition.x+cubeHalfSize <= box.max.x;
 		bool overlapZ = cubePosition.z-cubeHalfSize >= box.min.z && cubePosition.z+cubeHalfSize <= box.max.z;
 
-		// std::cout << "overlapX && overlapZ" << (overlapX && overlapZ) << "\n";
-
 		return overlapX && overlapZ;
 	}
 
+
+	// Function for printing 3-dimensional vectors
 	void printxyz(glm::vec3 bb){
 		std::cout << bb.x << " " << bb.y << " " << bb.z << "\n";
 	}
 
-	// Place a bounding box on scene
+
+	// Place a bounding box on scene for the given instance
 	void placeBB(std::string instanceName, glm::mat4 &worldMatrix, std::unordered_map<std::string, BoundingBox> &bbMap){
 
-		int instanceId = SC.InstanceIds[instanceName];
-		int modelId = SC.I[instanceId]->Mid;
+		int instanceId = SC.instanceMap[instanceName];
+		int modelId = SC.I[instanceId]->modelId;
 
+		// Retrieve the model name for the given model id
 		std::string modelName = "";
-		for (std::unordered_map<std::string, int>::iterator it = SC.MeshIds.begin(); it != SC.MeshIds.end(); ++it) {
+		for (std::unordered_map<std::string, int>::iterator it = SC.modelMap.begin(); it != SC.modelMap.end(); ++it) {
 			if (it->second == modelId) {
 				modelName = it->first;
 			} 
 		}
 
-
-
 		if (modelName != "") {
 			if (instanceName == "coin" || bbMap.find(instanceName) == bbMap.end()) {
+
+				// Create bounding box for the instance
 				BoundingBox bb;
 
 				bb.min = glm::vec3(std::numeric_limits<float>::max());
@@ -630,10 +518,11 @@ protected:
 					bb.min = glm::min(bb.min, glm::vec3(newVert));
 					bb.max = glm::max(bb.max, glm::vec3(newVert));
 				}
-				// bb.max = glm::round(bb.max * 100.0f) / 100.0f;
-				// bb.min = glm::round(bb.min * 100.0f) / 100.0f;
-				(modelName.substr(0, 4) == "coin") ? bb.cType = COLLECTIBLE
-					: bb.cType = OBJECT;
+
+				// Coins are collectible, other objects not
+				(modelName.substr(0, 4) == "coin") ? bb.cType = COLLECTIBLE : bb.cType = OBJECT;
+
+				bbMap[instanceName] = bb;
 
 				/*
 				if(bb.cType == COLLECTIBLE){
@@ -642,14 +531,12 @@ protected:
 					std::cout << "max: ";
 					printxyz(bb.max);
 				}*/
-				bbMap[instanceName] = bb;
 			}
 		}
-	
 	}
 
 
-
+	// Function tracing the execution time for different devices
 	float getTime() {
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		static float lastTime = 0.0f;
@@ -662,6 +549,102 @@ protected:
 		deltaT = deltaT * 1e2;
 
 		return deltaT;
+	}
+
+
+	// Update the position of the cube given the computed new position
+	void updateCubePosition(glm::vec3 newPos) {
+
+		isCollisionXZ = false;
+		isCollision = false;
+
+		for (std::pair bb : SC.bbMap) {
+
+			// Check if there is collision on the axis x and z
+			if (checkCollisionXZ(bb.second)) {
+				isCollisionXZ = true;
+			}
+
+			// Check if there is collision with any bounding box
+			if (checkBBCollision(bb.second, newPos)) {
+				isCollision = true;
+
+				// Grab key of colliding object
+				collisionId = bb.first;
+				break;
+			}
+		}
+
+		// Set the ground level and the jumping status
+		if (!isCollisionXZ) {
+			if (groundLevel != 0.0f) {
+				groundLevel = 0.0f;
+				isJumping = true;
+			}
+		}
+
+		if (isCollision) {
+
+			switch (SC.bbMap[collisionId].cType) {
+
+			case OBJECT: {
+
+				glm::vec3 closestPoint = glm::clamp(newPos, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
+
+				glm::vec3 difference = newPos - closestPoint;
+
+				float distance = glm::length(difference);
+				// std::cout << "distance: " << distance << "\n";
+
+				// the normalized vector (unit vector) pointing from the closest point on the AABB to the rocket's center
+				// This vector represents the direction of the collision response.
+				glm::vec3 normal = glm::normalize(difference);
+				// std::cout << "normal         = " << normal.x << " " <<  normal.y << " " << normal.z   << ";\n";
+
+				//if collision is from y 
+				if (newPos.y <= SC.bbMap[collisionId].max.y + cubeHalfSize &&  // If the collision is coming from above
+					!(std::abs(normal.x) > 0.5f || std::abs(normal.z) > 0.5f) &&	 // Not from the side
+					normal.y != -1.0f && !glm::any(glm::isnan(normal))) {
+
+					groundLevel = newPos.y;
+					isJumping = false;
+
+
+				}
+				//else collision from x and z
+				else {
+					// temporal adjustment for nan values
+					if (glm::any(glm::isnan(normal))) {
+						normal = glm::vec3(0.0f, 0.0f, 0.0f);
+					}
+					// Set the position to go to the closest point reachable of the bounding box
+					newPos = closestPoint + normal * glm::vec3(cubeHalfSize);
+				}
+
+				break;
+			}
+			case COLLECTIBLE: {
+				std::cout << "collision coin!\n";
+				if (collisionId == "coin") {
+					coinLocationId = int(std::rand() % coinLocations.size());
+					// std::cout << coinLocation << " = coinlocation\n";
+					// std::cout << "position of coin: " << coinLocations[coinLocation].x << " " << coinLocations[coinLocation].y << " " << coinLocations[coinLocation].z << "\n";
+					coinPos = coinLocations[coinLocationId];
+					coinPosY = coinPos.y;
+					coinMaxHeight = coinPosY + COIN_MAX_HEIGHT;
+				}
+				//SC.bbMap.erase(collisionId);
+				break;
+			}
+
+			}
+
+		}
+
+		cubePosition.x = newPos.x;
+		cubePosition.z = newPos.z;
+		cubePosition.y = newPos.y;
+
 	}
 
 
@@ -841,17 +824,8 @@ protected:
 
 
 
-		// Here is where you actually update your uniforms
-		/*
-		// updates global uniforms
-		GlobalUniformBufferObject gubo{};
-		gubo.lightDir = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
-		gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		gubo.eyePos = dampedCamPos;
-		gubo.eyeDir = glm::vec4(0);
-		gubo.eyeDir.w = 1.0;
-		*/
 
+		// Update global uniforms
 		GlobalUniformBufferObject gubo{};
 
 		for (int i = 0; i < n_lights; i++) {
@@ -864,16 +838,6 @@ protected:
 		gubo.lightDir[n_lights].v = glm::normalize(glm::vec3(camPosition.x - cubePosition.x, 0.0f, camPosition.z - cubePosition.z));
 		gubo.lightPos[n_lights].v = cubePosition;
 		gubo.lightColor[n_lights] = glm::vec4(cubeColor, 6.0f);
-		
-		/*
-		gubo.lightDir[1].v = glm::normalize(glm::vec3(camPosition.x - cubePosition.x, 0.0f, camPosition.z - cubePosition.z));
-		gubo.lightPos[1].v = cubePosition;
-		gubo.lightColor[1] = glm::vec4(cubeColor, 15.0f);
-		gubo.lightDir[2].v = glm::vec3(0.0f, 1.0f, 0.0f);
-		gubo.lightPos[2].v = glm::vec3(0.0f, 160.0f, 0.0f);
-		gubo.lightColor[2] = glm::vec4(1.0f, 0.0f, 1.0f, 50.0f);
-		*/
-		
 
 		gubo.eyePos = camPosition;
 		gubo.eyeDir = glm::vec4(0);
@@ -886,7 +850,7 @@ protected:
 
 		// Draw the landscape
 		for (std::vector<std::string>::iterator it = staticObj.begin(); it != staticObj.end(); it++) {
-			int i = SC.InstanceIds[it->c_str()];
+			int i = SC.instanceMap[it->c_str()];
 			// Product per transform matrix
 			// staticUbo.mMat = baseMatrix * SC.I[i]->Wm * SC.M[SC.I[i]->Mid]->Wm;
 			staticUbo.mMat = baseMatrix * SC.I[i]->Wm;
@@ -904,7 +868,7 @@ protected:
 		int k;
 		/* k = 1 starts from first point light */
 		for (it = lightObj.begin(),  k = 0; it != lightObj.end(); it++, k++) {
-			int i = SC.InstanceIds[it->c_str()];
+			int i = SC.instanceMap[it->c_str()];
 			//std::cout << *it << " " << i << "\n";
 						// Product per transform matrix
 			
@@ -921,11 +885,11 @@ protected:
 
 
 		for (std::vector<std::string>::iterator it = gadgetObj.begin(); it != gadgetObj.end(); it++) {
-			int i = SC.InstanceIds[it->c_str()];
+			int i = SC.instanceMap[it->c_str()];
 			
 			//std::cout << *it << " " << i << "\n";
 						// Product per transform matrix
-			staticUbo.mMat = baseMatrix * SC.I[i]->Wm * SC.M[SC.I[i]->Mid]->Wm;
+			staticUbo.mMat = baseMatrix * SC.I[i]->Wm * SC.M[SC.I[i]->modelId]->Wm;
 			staticUbo.mvpMat = viewPrjMatrix * staticUbo.mMat;
 			staticUbo.nMat = glm::inverse(glm::transpose(staticUbo.mMat));
 			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
@@ -1002,8 +966,8 @@ protected:
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 
 
-		int i = SC.InstanceIds[cubeObj];
-		cubeUbo.mMat = baseMatrix * worldMatrix * SC.M[SC.I[i]->Mid]->Wm * SC.I[i]->Wm;
+		int i = SC.instanceMap[cubeObj];
+		cubeUbo.mMat = baseMatrix * worldMatrix * SC.M[SC.I[i]->modelId]->Wm * SC.I[i]->Wm;
 		cubeUbo.mvpMat = viewPrjMatrix * cubeUbo.mMat;
 		cubeUbo.nMat = glm::inverse(glm::transpose(cubeUbo.mMat));
 		cubeUbo.col = cubeColor;
@@ -1023,7 +987,7 @@ protected:
 			coinMovSpeed *= -1 ;
 		}
 		
-		i = SC.InstanceIds["coin"];
+		i = SC.instanceMap["coin"];
 		World = glm::translate(glm::mat4(1.0f),coinPos);
 		// World = glm::translate(glm::mat4(1.0f), coinLocations[coinLocation]);
 		World *= glm::rotate(glm::mat4(1.0f),glm::radians(90.0f), glm::vec3(1,0,0));

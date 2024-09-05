@@ -33,6 +33,7 @@ struct LightUniformBufferObject {
 	alignas(16) glm::mat4 mMat;
 	alignas(16) glm::mat4 nMat;
 	alignas(4) float id;
+	alignas(4) float em;
 };
 
 // GUBO
@@ -236,9 +237,12 @@ protected:
 
 
 	glm::mat4 viewMatrix;
+
+	// Lights
 	glm::vec3 lPos[4];
 	glm::vec3 lDir[4];
 	glm::vec4 lCol[4];
+	float emInt[4];
 	int n_lights;
 	
 
@@ -264,8 +268,7 @@ protected:
 
 		DSLlight.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(LightUniformBufferObject)},
-					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
-					{2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1}
+					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0}
 			});
 
 
@@ -290,6 +293,8 @@ protected:
 			VK_CULL_MODE_NONE, false);
 		Pcube.init(this, &VD, "shaders/CubeVert.spv", "shaders/CubeFrag.spv", { &DSLGlobal, &DSLcube });
 		Plight.init(this, &VD, "shaders/LightVert.spv", "shaders/LightFrag.spv", { &DSLGlobal, &DSLlight });
+		Plight.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+			VK_CULL_MODE_NONE, false);
 
 		PRs.resize(3);
 		PRs[0].init("P", &P);
@@ -385,6 +390,7 @@ protected:
 				lPos[i] = glm::vec3(ld[i]["position"][0], ld[i]["position"][1], ld[i]["position"][2]);
 				lDir[i] = glm::vec3(ld[i]["direction"][0], ld[i]["direction"][1], ld[i]["direction"][2]);
 				lCol[i] = glm::vec4(ld[i]["color"][0], ld[i]["color"][1], ld[i]["color"][2], ld[i]["intensity"]);
+				emInt[i] = ld[i]["em"];
 			}
 		}
 		catch (const nlohmann::json::exception& e) {
@@ -879,7 +885,7 @@ protected:
 		gubo.eyePos = camPosition;
 		gubo.eyeDir = glm::vec4(0);
 		gubo.eyeDir.w = 1.0;
-		gubo.lightOn = glm::vec3(0.0f, 1.0f, 1.0f);
+		gubo.lightOn = glm::vec3(1.0f, 1.0f, 1.0f);
 		gubo.cosIn = cos(0.3490658504);
 		gubo.cosOut = cos(0.5235987756f);
 		SC.DSGlobal->map(currentImage, &gubo, sizeof(gubo), 0);
@@ -914,6 +920,7 @@ protected:
 			lightUbo.nMat = glm::inverse(glm::transpose(lightUbo.mMat));
 			// Light id
 			lightUbo.id = k;
+			lightUbo.em = emInt[k];
 
 			SC.I[i]->DS[0]->map(currentImage, &lightUbo, sizeof(lightUbo), 0);
 		}

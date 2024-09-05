@@ -66,13 +66,6 @@ struct Vertex {
 	glm::vec3 norm;
 };
 
-// Structure to handle the collision machanism
-// struct CubeCollider {
-// 	glm::vec3 center;
-// 	float length;
-// };
-
-
 #include "modules/Scene.hpp"
 
 
@@ -105,7 +98,8 @@ protected:
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
 		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable",
-		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
+		"bluepouf", "brownpouf", "yellowpouf", 
+		// "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
 
 	// Elements with bounding box around
@@ -113,7 +107,8 @@ protected:
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
 		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable",
-		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
+		"bluepouf", "brownpouf", "yellowpouf", 
+		//"frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
 
 	// Reward gadgets to draw
@@ -199,7 +194,7 @@ protected:
 	const glm::vec3 POS_1 = glm::vec3(-4.10249f, 0.2f, -6.00859f);
 	const glm::vec3 POS_2 = glm::vec3(4.9367f, 0.2f, 3.3424f);
 	const glm::vec3 POS_3 = glm::vec3(-11.3001f, 0.3f, -9.65229f);
-	const glm::vec3 ON_COFFEE_TABLE = glm::vec3(-8.00956f, 1.2f, 5.20554f);
+	const glm::vec3 ON_COFFEE_TABLE = glm::vec3(-8.73825f, 1.2f, 4.34894f);
 	// const glm::vec3 ON_YELLOW_POUF = glm::vec3(-5.59736f, 1.2f, 5.71061f);
 	const glm::vec3 ON_POOL_TABLE = glm::vec3(12.6f, 2.8f, 16.0f);
 	
@@ -219,6 +214,7 @@ protected:
 	float coinRot;
 	float coinPosY;
 	float coinMaxHeight;
+	int collectedCoin;
 	glm::vec3 coinPos;
 
 
@@ -337,8 +333,8 @@ protected:
 		isCollision = false;
 		isCollisionXZ = false;
 		collisionId = "";
-		gravity = -0.003f;
-		jumpForce = 0.2f;
+		gravity = -0.002f;
+		jumpForce = 0.25f;
 		groundLevel = 0.0f;
 		camNFSpeed = 0.003f;
 
@@ -348,6 +344,7 @@ protected:
 		coinPos = DEFAULT_POS;
 		coinPosY = coinPos.y;
 		coinMaxHeight = coinPosY + COIN_MAX_HEIGHT;
+		collectedCoin = 0;
 
 		// cubeCollider.center = cubePosition;
 		// cubeCollider.length = 100.0f;
@@ -475,17 +472,29 @@ protected:
 
 	
 	// Check if the given position collides with a certain bounding box
+	// bool checkBBCollision(const BoundingBox& box, glm::vec3 newPos) {
+
+	// 	float x = glm::max(box.min.x, glm::min(newPos.x, box.max.x));
+	// 	float y = glm::max(box.min.y, glm::min(newPos.y, box.max.y));
+	// 	float z = glm::max(box.min.z, glm::min(newPos.z, box.max.z));
+
+	// 	float distance = glm::sqrt((x - newPos.x) * (x - newPos.x) +
+	// 							   (y - newPos.y) * (y - newPos.y) +
+	// 							   (z - newPos.z) * (z - newPos.z));
+
+	// 	return distance < cubeHalfSize;
+	// }
+
+	// helper function for collision check
 	bool checkBBCollision(const BoundingBox& box, glm::vec3 newPos) {
 
-		float x = glm::max(box.min.x, glm::min(newPos.x, box.max.x));
-		float y = glm::max(box.min.y, glm::min(newPos.y, box.max.y));
-		float z = glm::max(box.min.z, glm::min(newPos.z, box.max.z));
+		bool overlapX = newPos.x+cubeHalfSize >= box.min.x && newPos.x-cubeHalfSize <= box.max.x;
+		bool overlapY = newPos.y+cubeHalfSize >= box.min.y && newPos.y-cubeHalfSize <= box.max.y;
+		bool overlapZ = newPos.z+cubeHalfSize >= box.min.z && newPos.z-cubeHalfSize <= box.max.z;
 
-		float distance = glm::sqrt((x - newPos.x) * (x - newPos.x) +
-								   (y - newPos.y) * (y - newPos.y) +
-								   (z - newPos.z) * (z - newPos.z));
+		// std::cout << "overlapX && overlapZ" << (overlapX && overlapZ) << "\n";
 
-		return distance < cubeHalfSize;
+		return overlapX && overlapY && overlapZ;
 	}
 
 
@@ -513,11 +522,13 @@ protected:
 		if (!isCollisionXZ) {
 			if (groundLevel != 0.0f) {
 				groundLevel = 0.0f;
+				//reset jump speed
+				jumpSpeed = 0.0f;
 				isJumping = true;
 			}
 		}
 
-		if (isCollision) {
+		if (isCollision || isCollisionXZ) {
 
 			switch (SC.bbMap[collisionId].cType) {
 
@@ -526,9 +537,6 @@ protected:
 					glm::vec3 closestPoint = glm::clamp(newPos, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
 
 					glm::vec3 difference = newPos - closestPoint;
-					// std::cout << "closest point: " << closestPoint.x <<" "<< closestPoint.y <<" "<< closestPoint.z << "\n";
-					// std::cout << "Cube position: " << cubePosition.x <<" "<< cubePosition.y <<" "<< cubePosition.z << "\n";
-					// std::cout << "difference of point: " << difference.x <<" "<< difference.y <<" "<< difference.z << "\n";
 
 					float distance = glm::length(difference);
 					// std::cout << "distance: " << distance << "\n";
@@ -539,17 +547,25 @@ protected:
 					// std::cout << "normal         = " << normal.x << " " <<  normal.y << " " << normal.z   << ";\n";
 
 					//if collision is from y 
-					if (newPos.y <= SC.bbMap[collisionId].max.y + cubeHalfSize &&  // If the collision is coming from above
-						!(std::abs(normal.x) > 0.5f || std::abs(normal.z) > 0.5f) &&	 // Not from the side
-						normal.y != -1.0f && !glm::any(glm::isnan(normal))) {
+					// if (newPos.y <= SC.bbMap[collisionId].max.y + cubeHalfSize &&  // If the collision is coming from above
+					// 	!(std::abs(normal.x) > 0.5f || std::abs(normal.z) > 0.5f) &&	 // Not from the side
+					// 	normal.y != -1.0f && !glm::any(glm::isnan(normal))) {
 
-						groundLevel = newPos.y;
+					// 	groundLevel = newPos.y;
+					// 	isJumping = false;
+					// }
+					float height = newPos.y;
+					
+					// if position of cube in axes y is lower than the collided object 
+					if (height < SC.bbMap[collisionId].max.y &&  // If the collision is coming from above
+						isCollisionXZ) {
+						//new ground level 
+						groundLevel = SC.bbMap[collisionId].max.y;
+						//position updating 
+						newPos.y = SC.bbMap[collisionId].max.y + cubeHalfSize + 0.01f;
 						isJumping = false;
-
-
 					}
-					//else collision from x and z
-					else {
+					else if(isCollision){
 						// temporal adjustment for nan values
 						if (glm::any(glm::isnan(normal))) {
 							normal = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -562,7 +578,6 @@ protected:
 					break;
 				}
 				case COLLECTIBLE: {
-					std::cout << "collision coin!\n";
 					if(collisionId == "coin" ){
 						coinLocationId = int(std::rand() % coinLocations.size());
 						// std::cout << coinLocation << " = coinlocation\n";
@@ -570,8 +585,10 @@ protected:
 						coinPos = coinLocations[coinLocationId];
 						coinPosY = coinPos.y;
 						coinMaxHeight = coinPosY + COIN_MAX_HEIGHT;
+						collectedCoin += 1;
+						// std::cout << "collectd coin: " << collectedCoin << "\n";
 					}
-					//SC.bbMap.erase(collisionId);
+					SC.bbMap.erase(collisionId);
 					break;
 				}
 
@@ -593,14 +610,9 @@ protected:
 		bool overlapX = cubePosition.x-cubeHalfSize >= box.min.x && cubePosition.x+cubeHalfSize <= box.max.x;
 		bool overlapZ = cubePosition.z-cubeHalfSize >= box.min.z && cubePosition.z+cubeHalfSize <= box.max.z;
 
-		// std::cout << "overlapX && overlapZ" << (overlapX && overlapZ) << "\n";
-
 		return overlapX && overlapZ;
 	}
 
-	void printxyz(glm::vec3 bb){
-		std::cout << bb.x << " " << bb.y << " " << bb.z << "\n";
-	}
 
 	// Place a bounding box on scene
 	void placeBB(std::string instanceName, glm::mat4 &worldMatrix, std::unordered_map<std::string, BoundingBox> &bbMap){
@@ -635,12 +647,6 @@ protected:
 				// bb.min = glm::round(bb.min * 100.0f) / 100.0f;
 				(modelName.substr(0, 4) == "coin") ? bb.cType = COLLECTIBLE
 					: bb.cType = OBJECT;
-				if(bb.cType == COLLECTIBLE){
-					std::cout << "min: ";
-					printxyz(bb.min);
-					std::cout << "max: ";
-					printxyz(bb.max);
-				}
 				bbMap[instanceName] = bb;
 			}
 		}
@@ -1025,7 +1031,7 @@ protected:
 		// World = glm::translate(glm::mat4(1.0f), coinLocations[coinLocation]);
 		World *= glm::rotate(glm::mat4(1.0f),glm::radians(90.0f), glm::vec3(1,0,0));
 		World *= glm::rotate(glm::mat4(1.0f), coinRot, glm::vec3(0.0f, 0.0f, 1.0f));
-		World *= glm::scale(glm::vec3(0.003f,0.003f,0.003f));
+		World *= glm::scale(glm::vec3(0.004f,0.004f,0.004f));
 		CoinUbo.mMat = baseMatrix * World;
 		CoinUbo.mvpMat = viewPrjMatrix * World;
 		CoinUbo.nMat = glm::inverse(glm::transpose(CoinUbo.mMat));

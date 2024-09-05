@@ -1,13 +1,13 @@
-// This has been adapted from the Vulkan tutorial
+// Main code of the application, this has been adapted from the Vulkan tutorial
 
 #define JSON_DIAGNOSTICS 1
 #include "modules/Starter.hpp"
 #include "modules/TextMaker.hpp"
-
+#include "modules/Scene.hpp"
 
 // Vector of text
 std::vector<SingleText> outText = {
-	{1, {"Third Person", ":)", "", ""}, 0, 0},
+	{1, {"Arcade Cube Adventure"}, 0, 0},
 };
 
 
@@ -27,22 +27,14 @@ struct CubeUniformBufferObject {
 	alignas(16) glm::vec3 col;
 };
 
-// UBO for the lights
-struct LightUniformBufferObject {
-	alignas(16) glm::mat4 mvpMat;
-	alignas(16) glm::mat4 mMat;
-	alignas(16) glm::mat4 nMat;
+// ParUBO for the lights
+struct LightParUniformBufferObject {
 	alignas(4) float id;
+	alignas(4) float em;
 };
 
 // GUBO
 struct GlobalUniformBufferObject {
-	/*
-	alignas(16) glm::vec3 lightDir;
-	alignas(16) glm::vec4 lightColor;
-	alignas(16) glm::vec3 eyePos;
-	alignas(16) glm::vec4 eyeDir;
-	*/
 	struct {
 		alignas(16) glm::vec3 v;
 	} lightDir[4];
@@ -54,7 +46,7 @@ struct GlobalUniformBufferObject {
 	alignas(4) float cosOut;
 	alignas(16) glm::vec3 eyePos;
 	alignas(16) glm::vec4 eyeDir;
-	alignas(16) glm::vec3 lightOn;
+	alignas(16) glm::vec4 lightOn;
 };
 
 
@@ -66,15 +58,13 @@ struct Vertex {
 	glm::vec3 norm;
 };
 
-#include "modules/Scene.hpp"
-
 
 // MAIN ! 
 class CGmain : public BaseProject {
 protected:
 
 	// Descriptor Layouts ["classes" of what will be passed to the shaders]
-	DescriptorSetLayout DSLGlobal, DSL, DSLcube, DSLlight;
+	DescriptorSetLayout DSLGlobal, DSLstatic, DSLcube, DSLlight;
 
 	// Vertex formats
 	VertexDescriptor VD;
@@ -84,6 +74,8 @@ protected:
 
 	// Scene
 	Scene SC;
+
+	// Reference to pipelines: name (string), corresponding pipeline
 	std::vector<PipelineRef> PRs;
 
 	TextMaker txt;
@@ -95,15 +87,7 @@ protected:
 	// Static elements of the scene to draw
 	std::vector<std::string> staticObj = { 
 		"floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", 
-		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
-		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
-		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable",
-		"bluepouf", "brownpouf", "yellowpouf", 
-		// "frenchchips", "macaron", "drink1", "drink2", "drink3"
-	};
-
-	// Elements with bounding box around
-	std::vector<std::string> BBObj = { 
+		// From here below: scene elements with bounding boxes
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
 		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable",
@@ -115,12 +99,13 @@ protected:
 	std::vector<std::string> gadgetObj = { "diamond" };
 
 	// Lights to draw
-	std::vector<std::string> lightObj = {  "light", "sign24h" };
+	std::vector<std::string> lightObj = { "window", "light", "sign24h" };
 
 
 	CubeUniformBufferObject cubeUbo{};
 	UniformBufferObject staticUbo{};
-	LightUniformBufferObject lightUbo{};
+	UniformBufferObject lightUbo{};
+	LightParUniformBufferObject lightParUbo{};
 
 
 	// Aspect ratio of the application window
@@ -149,29 +134,24 @@ protected:
 
 	// Other application parameters
 
-	// currScene = 0: third person view
-	int currScene = 0;
 
 	// Position and color of the cube
 	glm::vec3 cubePosition;
 	glm::vec3 cubeColor;
   	const float cubeHalfSize = 0.1f;
 
-	
-	//for collision management
-	// CubeCollider cubeCollider;
-
 	// Moving speed, rotation speed and angle of the cube
 	float cubeRotAngle, cubeRotSpeed;
 	glm::vec3 cubeMovSpeed;
-	glm::vec3 cubeDefMovSpeed;
 
 	// Position and rotation of the camera
 	glm::vec3 camPosition, camRotation;
 	// Rotation speed and the forward / backward speed of the camera
 	float camRotSpeed, camNFSpeed;
 	// Camera distance and constraints
-	float camDistance, minCamDistance, maxCamDistance;
+	float camDistance;
+	const float minCamDistance = 0.22f;
+	const float maxCamDistance = 0.9f;
 	// Minimum y-level of camera
 	const float camMinHeight = 0.1f;
 
@@ -187,6 +167,7 @@ protected:
 	float groundLevel;
 
 
+	// Parameters for coins
 	const float COIN_MAX_HEIGHT = 0.5f;
 	const float COIN_ROT_SPEED = 0.05f;
 
@@ -221,6 +202,7 @@ protected:
 	// Maximum abs coordinate of the map (for both x and z axis)
 	const float mapLimit = 23.94f;
 
+
 	// Time offset to compensate different device performance
 	float deltaTime;
 
@@ -230,11 +212,14 @@ protected:
 
 
 	glm::mat4 viewMatrix;
+
+	// Lights
 	glm::vec3 lPos[4];
 	glm::vec3 lDir[4];
 	glm::vec4 lCol[4];
+	float emInt[4];
 	int n_lights;
-	
+	glm::vec4 lights;
 
 
 	// Here the Vulkan Models and Textures are loaded and set up
@@ -242,28 +227,35 @@ protected:
 	void localInit() {
 
 		// Descriptor Layouts [what will be passed to the shaders]
+		// Parameters for init: binding, type, flag(stage), size
+		
+		// Global DSL
 		DSLGlobal.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(GlobalUniformBufferObject)}
 			});
 
-		DSL.init(this, {
+		// DSL for static elements of the scene
+		DSLstatic.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(UniformBufferObject)},
 					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0}
 			});
 
+		// DSL for cube
 		DSLcube.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(CubeUniformBufferObject)},
 					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0}
 			});
 
+		// DSL for light
 		DSLlight.init(this, {
-					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(LightUniformBufferObject)},
+					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(UniformBufferObject)},
 					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
-					{2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1}
+					{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(LightParUniformBufferObject)},
 			});
 
 
 		// Vertex descriptors
+		// Position, UV, normal
 		VD.init(this, {
 				  {0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
 			}, {
@@ -275,70 +267,69 @@ protected:
 					 sizeof(glm::vec3), NORMAL}
 			});
 
-
 		// Pipelines [Shader couples]
-		P.init(this, &VD, "shaders/Vert.spv", "shaders/PhongFrag.spv", { &DSLGlobal, &DSL });
+		// Shader.vert, PhongShader.frag
+		P.init(this, &VD, "shaders/Vert.spv", "shaders/PhongFrag.spv", { &DSLGlobal, &DSLstatic });
 		
 		// VK_POLYGON_MODE_FILL for normal view, VK_POLYGON_MODE_LINE for meshes
 		P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
 			VK_CULL_MODE_NONE, false);
+
+		// CubeShader.vert, CubeShader.frag
 		Pcube.init(this, &VD, "shaders/CubeVert.spv", "shaders/CubeFrag.spv", { &DSLGlobal, &DSLcube });
-		Plight.init(this, &VD, "shaders/LightVert.spv", "shaders/LightFrag.spv", { &DSLGlobal, &DSLlight });
+		
+		// LightShader.vert, LightShader.frag
+		Plight.init(this, &VD, "shaders/Vert.spv", "shaders/LightFrag.spv", { &DSLGlobal, &DSLlight });
+		Plight.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+			VK_CULL_MODE_NONE, false);
 
+		// Initialize PipelineRef with names and pipelines
 		PRs.resize(3);
-		PRs[0].init("P", &P, &VD);
-		PRs[1].init("PBlinn", &Pcube, &VD);
-		PRs[2].init("PLight", &Plight, &VD);
+		PRs[0].init("P", &P);
+		PRs[1].init("PBlinn", &Pcube);
+		PRs[2].init("PLight", &Plight);
 
-		// Models, textures and Descriptors (values assigned to the uniforms)
-/*		std::vector<Vertex> vertices = {
-					   {{-100.0,0.0f,-100.0}, {0.0f,0.0f}, {0.0f,1.0f,0.0f}},
-					   {{-100.0,0.0f, 100.0}, {0.0f,1.0f}, {0.0f,1.0f,0.0f}},
-					   {{ 100.0,0.0f,-100.0}, {1.0f,0.0f}, {0.0f,1.0f,0.0f}},
-					   {{ 100.0,0.0f, 100.0}, {1.0f,1.0f}, {0.0f,1.0f,0.0f}}};
-		M1.vertices = std::vector<unsigned char>(vertices.size()*sizeof(Vertex), 0);
-		memcpy(&vertices[0], &M1.vertices[0], vertices.size()*sizeof(Vertex));
-		M1.indices = {0, 1, 2,    1, 3, 2};
-		M1.initMesh(this, &VD); */
 
 		// Initialize pools
 		uniformBlocksInPool = 1; /* Global Ubo */
 		texturesInPool = 0;
 		setsInPool = 1;  /* DSGlobal */
 
-		// Load Scene: the models are stored in json
+
+		// Load Scene with VD, PRs, and models / textures / instances stored in json
 		SC.init(this, &VD, PRs, "models/scene.json");
 
 		// Update the text
 		txt.init(this, &outText);
 
+
 		// Initialize local variables
+		
+		// Variables for the cube
 		cubePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 		cubeRotAngle = 0.0f;
-		cubeDefMovSpeed = glm::vec3(0.015f,0.015f,0.015f);
-		cubeMovSpeed = cubeDefMovSpeed;
+		cubeMovSpeed = glm::vec3(0.015f, 0.015f, 0.015f);
 		cubeRotSpeed = 0.8f;
-		cubeColor = glm::vec3(0.0f, 0.0f, 0.0f);
+		cubeColor = glm::vec3(1.0f, 1.0f, 1.0f);
 
-
+		// Variables for the camera
 		camPosition = cubePosition + glm::vec3(0.0f, camMinHeight, 0.0f);
 		camRotation = glm::vec3(0.0f, 0.0f, 0.0f);
 		camRotSpeed = 1.2f;
 		camDistance = 0.4f;
-		minCamDistance = 0.22f;
-		maxCamDistance = 0.7f;
+		camNFSpeed = 0.003f;
 
+		// Variables for jumping and collision check
 		jumpSpeed = 0.0f;
 		isJumping = false;
+		gravity = -0.003f;
+		jumpForce = 0.2f;
+		groundLevel = 0.0f;
 		isCollision = false;
 		isCollisionXZ = false;
 		collisionId = "";
-		gravity = -0.002f;
-		jumpForce = 0.25f;
-		groundLevel = 0.0f;
-		camNFSpeed = 0.003f;
 
-		// coinLocationId = 1;
+		// Variables for the collectible coins
 		coinMovSpeed = 0.002f;
 		coinRot = 0.0f;
 		coinPos = DEFAULT_POS;
@@ -346,24 +337,25 @@ protected:
 		coinMaxHeight = coinPosY + COIN_MAX_HEIGHT;
 		collectedCoin = 0;
 
-		// cubeCollider.center = cubePosition;
-		// cubeCollider.length = 100.0f;
 
 		debounce = false;
 		currDebounce = 0;
 
 		deltaTime = getTime();
 
+		lights = glm::vec4(1.0f);
+
+		// Initialize view matrix: look-at
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 
-
-		for (std::vector<std::string>::iterator it = BBObj.begin(); it != BBObj.end(); it++) {
+		// Initialize bounding boxes (no for the walls, ceiling and floor)
+		for (std::vector<std::string>::iterator it = staticObj.begin()+6; it != staticObj.end(); it++) {
 			std::string obj_id = it->c_str();
-			int i = SC.InstanceIds[it->c_str()];
+			int i = SC.instanceMap[it->c_str()];
 			placeBB(obj_id, SC.I[i]->Wm, SC.bbMap);
 		}
 
-		// lights
+		// Load lights from json
 		nlohmann::json js;
 		std::ifstream ifs("models/Lights.json");
 		if (!ifs.is_open()) {
@@ -375,19 +367,18 @@ protected:
 			std::cout << "Parsing JSON\n";
 			ifs >> js;
 			ifs.close();
-			nlohmann::json ld = js["lights"];
-			n_lights = ld.size();
+			nlohmann::json lights = js["lights"];
+			n_lights = lights.size();
 			std::cout << "There are " << n_lights << " lights.\n";
-			for (int i = 0; i < ld.size(); i++) {
-				lPos[i] = glm::vec3(ld[i]["position"][0], ld[i]["position"][1], ld[i]["position"][2]);
-				lDir[i] = glm::vec3(ld[i]["direction"][0], ld[i]["direction"][1], ld[i]["direction"][2]);
-				lCol[i] = glm::vec4(ld[i]["color"][0], ld[i]["color"][1], ld[i]["color"][2], ld[i]["intensity"]);
+			for (int i = 0; i < lights.size(); i++) {
+				lPos[i] = glm::vec3(lights[i]["position"][0], lights[i]["position"][1], lights[i]["position"][2]);
+				lDir[i] = glm::normalize(glm::vec3(lights[i]["direction"][0], lights[i]["direction"][1], lights[i]["direction"][2]));
+				lCol[i] = glm::vec4(lights[i]["color"][0], lights[i]["color"][1], lights[i]["color"][2], lights[i]["intensity"]);
+				emInt[i] = lights[i]["em"];	/*emission intensity*/
 			}
-		}
-		catch (const nlohmann::json::exception& e) {
+		} catch (const nlohmann::json::exception& e) {
 			std::cout << e.what() << '\n';
 		}
-
 
 		std::cout << "Initialization completed!\n";
 		std::cout << "Uniform Blocks in the Pool  : " << uniformBlocksInPool << "\n";
@@ -395,79 +386,61 @@ protected:
 		std::cout << "Descriptor Sets in the Pool : " << setsInPool << "\n";
 	}
 
-	// Here you create your pipelines and Descriptor Sets!
+	// Create pipelines and descriptor sets
 	void pipelinesAndDescriptorSetsInit() {
-		// This creates a new pipeline (with the current surface), using its shaders
+		// Create a new pipeline (with the current surface) using its shaders
 		P.create();
 		Pcube.create();
 		Plight.create();
 
-		// Here you define the data set
-		SC.pipelinesAndDescriptorSetsInit( &DSLGlobal );
+		// Create the Descriptor Sets
+		SC.descriptorSetsInit( &DSLGlobal );
 		txt.pipelinesAndDescriptorSetsInit();
 	}
 
-	// Here you destroy your pipelines and Descriptor Sets!
+
+	// Destroy pipelines and descriptor sets
 	// All the object classes defined in Starter.hpp have a method .cleanup() for this purpose
 	void pipelinesAndDescriptorSetsCleanup() {
+
 		// Cleanup pipelines
 		P.cleanup();
 		Pcube.cleanup();
 		Plight.cleanup();
 
-		SC.pipelinesAndDescriptorSetsCleanup();
+		// Cleanup descriptor sets
+		SC.descriptorSetsCleanup();
 		txt.pipelinesAndDescriptorSetsCleanup();
 	}
 
-	// Here you destroy all the Models, Texture and Desc. Set Layouts you created!
-	// All the object classes defined in Starter.hpp have a method .cleanup() for this purpose
-	// You also have to destroy the pipelines: since they need to be rebuilt, they have two different
-	// methods: .cleanup() recreates them, while .destroy() delete them completely
+
+	// Destroy all the models, textures and descriptor set layouts
+	// For the pipelines: .cleanup() recreates them, while .destroy() delete them completely
 	void localCleanup() {
-		/*
-		for(int i=0; i < SC.InstanceCount; i++) {
-			delete deltaP[i];
-		}
-		free(deltaP);*/
+
+		// Cleanup models, textures, and remove instances
+		SC.localCleanup();
 
 		// Cleanup descriptor set layouts
 		DSLGlobal.cleanup();
-		DSL.cleanup();
+		DSLstatic.cleanup();
 		DSLcube.cleanup();
 		DSLlight.cleanup();
 
-		// Destroies the pipelines
+		// Destroy the pipelines
 		P.destroy();
 		Pcube.destroy();
 		Plight.destroy();
 
-		SC.localCleanup();
+
 		txt.localCleanup();
 	}
 
 
-
-
-	// Here it is the creation of the command buffer:
-	// You send to the GPU all the objects you want to draw,
-	// with their buffers and textures
-
+	// Creation of the command buffer: send to the GPU all the objects to draw with their buffers and textures
 	void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
-
-
-		/*		// binds the data set
-				DS1.bind(commandBuffer, P, 0, currentImage);
-
-				// binds the model
-				M1.bind(commandBuffer);
-
-				// record the drawing command in the command buffer
-				vkCmdDrawIndexed(commandBuffer,
-						static_cast<uint32_t>(M1.indices.size()), 1, 0, 0, 0);
-				std::cout << M1.indices.size();
-		*/
 		SC.populateCommandBuffer(commandBuffer, currentImage);
-		txt.populateCommandBuffer(commandBuffer, currentImage, currScene);
+		txt.populateCommandBuffer(commandBuffer, currentImage, 0);
 	}
 
 	
@@ -495,6 +468,16 @@ protected:
 		// std::cout << "overlapX && overlapZ" << (overlapX && overlapZ) << "\n";
 
 		return overlapX && overlapY && overlapZ;
+	}
+  
+
+	// helper function for collision check on axis x and z
+	bool checkCollisionXZ(const BoundingBox& box) {
+
+		bool overlapX = cubePosition.x-cubeHalfSize >= box.min.x && cubePosition.x+cubeHalfSize <= box.max.x;
+		bool overlapZ = cubePosition.z-cubeHalfSize >= box.min.z && cubePosition.z+cubeHalfSize <= box.max.z;
+
+		return overlapX && overlapZ;
 	}
 
 
@@ -604,33 +587,25 @@ protected:
 
 
 
-	// helper function for collision check on axis x and z
-	bool checkCollisionXZ(const BoundingBox& box) {
 
-		bool overlapX = cubePosition.x-cubeHalfSize >= box.min.x && cubePosition.x+cubeHalfSize <= box.max.x;
-		bool overlapZ = cubePosition.z-cubeHalfSize >= box.min.z && cubePosition.z+cubeHalfSize <= box.max.z;
-
-		return overlapX && overlapZ;
-	}
-
-
-	// Place a bounding box on scene
+	// Place a bounding box on scene for the given instance
 	void placeBB(std::string instanceName, glm::mat4 &worldMatrix, std::unordered_map<std::string, BoundingBox> &bbMap){
 
-		int instanceId = SC.InstanceIds[instanceName];
-		int modelId = SC.I[instanceId]->Mid;
+		int instanceId = SC.instanceMap[instanceName];
+		int modelId = SC.I[instanceId]->modelId;
 
+		// Retrieve the model name for the given model id
 		std::string modelName = "";
-		for (std::unordered_map<std::string, int>::iterator it = SC.MeshIds.begin(); it != SC.MeshIds.end(); ++it) {
+		for (std::unordered_map<std::string, int>::iterator it = SC.modelMap.begin(); it != SC.modelMap.end(); ++it) {
 			if (it->second == modelId) {
 				modelName = it->first;
 			} 
 		}
 
-
-
 		if (modelName != "") {
 			if (instanceName == "coin" || bbMap.find(instanceName) == bbMap.end()) {
+
+				// Create bounding box for the instance
 				BoundingBox bb;
 
 				bb.min = glm::vec3(std::numeric_limits<float>::max());
@@ -650,11 +625,10 @@ protected:
 				bbMap[instanceName] = bb;
 			}
 		}
-	
 	}
 
 
-
+	// Function tracing the execution time for different devices
 	float getTime() {
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		static float lastTime = 0.0f;
@@ -734,12 +708,6 @@ protected:
 			updateCubePosition(newPosition);
 		}
 
-		/*
-		// Down
-		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-			cubePosition.y -= 1.0f;
-		}*/
-
 
 		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 			camRotation.y += camRotSpeed * deltaTime;
@@ -756,6 +724,71 @@ protected:
 		}
 
 	}
+
+
+	void turnLights() {
+		if (glfwGetKey(window, GLFW_KEY_1)) {
+			if (!debounce) {
+				debounce = true;
+				currDebounce = GLFW_KEY_1;
+
+				lights[0] = abs(lights[0] - 1.0f);
+			}
+		}
+		else {
+			if ((currDebounce == GLFW_KEY_1) && debounce) {
+				debounce = false;
+				currDebounce = 0;
+			}
+		}
+	
+		if (glfwGetKey(window, GLFW_KEY_2)) {
+			if (!debounce) {
+				debounce = true;
+				currDebounce = GLFW_KEY_2;
+
+				lights[1] = abs(lights[1] - 1.0f);
+			}
+		}
+		else {
+			if ((currDebounce == GLFW_KEY_2) && debounce) {
+				debounce = false;
+				currDebounce = 0;
+			}
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_3)) {
+			if (!debounce) {
+				debounce = true;
+				currDebounce = GLFW_KEY_3;
+
+				lights[2] = abs(lights[2] - 1.0f);
+			}
+		}
+		else {
+			if ((currDebounce == GLFW_KEY_3) && debounce) {
+				debounce = false;
+				currDebounce = 0;
+			}
+		}
+	
+
+		if (glfwGetKey(window, GLFW_KEY_4)) {
+			if (!debounce) {
+				debounce = true;
+				currDebounce = GLFW_KEY_4;
+
+				lights[3] = abs(lights[3] - 1.0f);
+			}
+		}
+		else {
+			if ((currDebounce == GLFW_KEY_4) && debounce) {
+				debounce = false;
+				currDebounce = 0;
+			}
+		}
+	}
+
 
 
 	// Change Cube's color
@@ -788,7 +821,6 @@ protected:
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		}
-
 
 		const float fovY = glm::radians(90.0f);
 		const float nearPlane = 0.01f;
@@ -845,18 +877,9 @@ protected:
 		}
 
 
+		turnLights();
 
-		// Here is where you actually update your uniforms
-		/*
-		// updates global uniforms
-		GlobalUniformBufferObject gubo{};
-		gubo.lightDir = glm::vec3(cos(glm::radians(135.0f)), sin(glm::radians(135.0f)), 0.0f);
-		gubo.lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		gubo.eyePos = dampedCamPos;
-		gubo.eyeDir = glm::vec4(0);
-		gubo.eyeDir.w = 1.0;
-		*/
-
+		// Update global uniforms
 		GlobalUniformBufferObject gubo{};
 
 		for (int i = 0; i < n_lights; i++) {
@@ -869,21 +892,11 @@ protected:
 		gubo.lightDir[n_lights].v = glm::normalize(glm::vec3(camPosition.x - cubePosition.x, 0.0f, camPosition.z - cubePosition.z));
 		gubo.lightPos[n_lights].v = cubePosition;
 		gubo.lightColor[n_lights] = glm::vec4(cubeColor, 6.0f);
-		
-		/*
-		gubo.lightDir[1].v = glm::normalize(glm::vec3(camPosition.x - cubePosition.x, 0.0f, camPosition.z - cubePosition.z));
-		gubo.lightPos[1].v = cubePosition;
-		gubo.lightColor[1] = glm::vec4(cubeColor, 15.0f);
-		gubo.lightDir[2].v = glm::vec3(0.0f, 1.0f, 0.0f);
-		gubo.lightPos[2].v = glm::vec3(0.0f, 160.0f, 0.0f);
-		gubo.lightColor[2] = glm::vec4(1.0f, 0.0f, 1.0f, 50.0f);
-		*/
-		
 
 		gubo.eyePos = camPosition;
 		gubo.eyeDir = glm::vec4(0);
 		gubo.eyeDir.w = 1.0;
-		gubo.lightOn = glm::vec3(0.0f, 1.0f, 1.0f);
+		gubo.lightOn = lights;
 		gubo.cosIn = cos(0.3490658504);
 		gubo.cosOut = cos(0.5235987756f);
 		SC.DSGlobal->map(currentImage, &gubo, sizeof(gubo), 0);
@@ -891,7 +904,7 @@ protected:
 
 		// Draw the landscape
 		for (std::vector<std::string>::iterator it = staticObj.begin(); it != staticObj.end(); it++) {
-			int i = SC.InstanceIds[it->c_str()];
+			int i = SC.instanceMap[it->c_str()];
 			// Product per transform matrix
 			// staticUbo.mMat = baseMatrix * SC.I[i]->Wm * SC.M[SC.I[i]->Mid]->Wm;
 			staticUbo.mMat = baseMatrix * SC.I[i]->Wm;
@@ -908,8 +921,8 @@ protected:
 		std::vector<std::string>::iterator it;
 		int k;
 		/* k = 1 starts from first point light */
-		for (it = lightObj.begin(),  k = 1; it != lightObj.end(); it++, k++) {
-			int i = SC.InstanceIds[it->c_str()];
+		for (it = lightObj.begin(),  k = 0; it != lightObj.end(); it++, k++) {
+			int i = SC.instanceMap[it->c_str()];
 			//std::cout << *it << " " << i << "\n";
 						// Product per transform matrix
 			
@@ -917,18 +930,20 @@ protected:
 			lightUbo.mvpMat = viewPrjMatrix * lightUbo.mMat;
 			lightUbo.nMat = glm::inverse(glm::transpose(lightUbo.mMat));
 			// Light id
-			lightUbo.id = k;
+			lightParUbo.id = k;
+			lightParUbo.em = emInt[k];
 
 			SC.I[i]->DS[0]->map(currentImage, &lightUbo, sizeof(lightUbo), 0);
+			SC.I[i]->DS[0]->map(currentImage, &lightParUbo, sizeof(lightParUbo), 2);
 		}
 
 
 		for (std::vector<std::string>::iterator it = gadgetObj.begin(); it != gadgetObj.end(); it++) {
-			int i = SC.InstanceIds[it->c_str()];
+			int i = SC.instanceMap[it->c_str()];
 			
 			//std::cout << *it << " " << i << "\n";
 						// Product per transform matrix
-			staticUbo.mMat = baseMatrix * SC.I[i]->Wm * SC.M[SC.I[i]->Mid]->Wm;
+			staticUbo.mMat = baseMatrix * SC.I[i]->Wm * SC.M[SC.I[i]->modelId]->Wm;
 			staticUbo.mvpMat = viewPrjMatrix * staticUbo.mMat;
 			staticUbo.nMat = glm::inverse(glm::transpose(staticUbo.mMat));
 			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
@@ -1005,8 +1020,8 @@ protected:
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 
 
-		int i = SC.InstanceIds[cubeObj];
-		cubeUbo.mMat = baseMatrix * worldMatrix * SC.M[SC.I[i]->Mid]->Wm * SC.I[i]->Wm;
+		int i = SC.instanceMap[cubeObj];
+		cubeUbo.mMat = baseMatrix * worldMatrix * SC.M[SC.I[i]->modelId]->Wm * SC.I[i]->Wm;
 		cubeUbo.mvpMat = viewPrjMatrix * cubeUbo.mMat;
 		cubeUbo.nMat = glm::inverse(glm::transpose(cubeUbo.mMat));
 		cubeUbo.col = cubeColor;
@@ -1026,7 +1041,7 @@ protected:
 			coinMovSpeed *= -1 ;
 		}
 		
-		i = SC.InstanceIds["coin"];
+		i = SC.instanceMap["coin"];
 		World = glm::translate(glm::mat4(1.0f),coinPos);
 		// World = glm::translate(glm::mat4(1.0f), coinLocations[coinLocation]);
 		World *= glm::rotate(glm::mat4(1.0f),glm::radians(90.0f), glm::vec3(1,0,0));

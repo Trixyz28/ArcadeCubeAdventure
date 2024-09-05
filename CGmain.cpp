@@ -279,9 +279,9 @@ protected:
 		Plight.init(this, &VD, "shaders/LightVert.spv", "shaders/LightFrag.spv", { &DSLGlobal, &DSLlight });
 
 		PRs.resize(3);
-		PRs[0].init("P", &P, &VD);
-		PRs[1].init("PBlinn", &Pcube, &VD);
-		PRs[2].init("PLight", &Plight, &VD);
+		PRs[0].init("P", &P);
+		PRs[1].init("PBlinn", &Pcube);
+		PRs[2].init("PLight", &Plight);
 
 		// Models, textures and Descriptors (values assigned to the uniforms)
 /*		std::vector<Vertex> vertices = {

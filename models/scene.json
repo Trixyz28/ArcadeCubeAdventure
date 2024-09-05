@@ -393,14 +393,7 @@
 					"rotate": [ 0.0, -90.0, 0.0 ],
 					"translate": [ -22.7, 0.0, -9.0 ]
 				},
-				{
-					"id": "window",
-					"model": "window",
-					"texture": [ "tfurniture" ],
-					"scale": [ 3.0, 3.0, 3.0 ],
-					"rotate": [ 0.0, 90.0, 0.0 ],
-					"translate": [ -23.7, 9.0, 9.0 ]
-				},
+				
 				{
 					"id": "coffeetable",
 					"model": "coffeetable",
@@ -516,11 +509,20 @@
 		},
 
 		{
-			"pipeline":  "PLight", "elements": [
+			"pipeline": "PLight",
+			"elements": [
+				{
+					"id": "window",
+					"model": "window",
+					"texture": [ "tfurniture" ],
+					"scale": [ 3.0, 3.0, 3.0 ],
+					"rotate": [ 0.0, 90.0, 0.0 ],
+					"translate": [ -23.7, 9.0, 9.0 ]
+				},
 				{
 					"id": "light",
 					"model": "light",
-					"texture": [ "tlight", "tlight" ],
+					"texture": [ "tlight"],
 					"scale": [ 0.1, 0.05, 0.1 ],
 					"rotate": [ 0.0, 0.0, 0.0 ],
 					"translate": [ 0.0, 15.5, 0.0 ]
@@ -528,11 +530,11 @@
 				{
 					"id": "sign24h",
 					"model": "sign24h",
-					"texture": [ "t24h", "t24h_m" ],
+					"texture": [ "t24h"],
 					"scale": [ 0.1, 0.1, 0.1 ],
 					"rotate": [ 0.0, 90.0, 0.0 ],
 					"translate": [ 0.0, 9.5, 23.2 ]
 				}
-		]}
+			]}
 	]
 }

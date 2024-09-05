@@ -32,6 +32,10 @@ struct LightUniformBufferObject {
 	alignas(16) glm::mat4 mvpMat;
 	alignas(16) glm::mat4 mMat;
 	alignas(16) glm::mat4 nMat;
+};
+
+// ParUBO for the lights
+struct LightParUniformBufferObject {
 	alignas(4) float id;
 	alignas(4) float em;
 };
@@ -127,6 +131,7 @@ protected:
 	CubeUniformBufferObject cubeUbo{};
 	UniformBufferObject staticUbo{};
 	LightUniformBufferObject lightUbo{};
+	LightParUniformBufferObject lightParUbo{};
 
 
 	// Aspect ratio of the application window
@@ -268,7 +273,8 @@ protected:
 
 		DSLlight.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(LightUniformBufferObject)},
-					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0}
+					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
+					{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(LightParUniformBufferObject)},
 			});
 
 
@@ -919,10 +925,11 @@ protected:
 			lightUbo.mvpMat = viewPrjMatrix * lightUbo.mMat;
 			lightUbo.nMat = glm::inverse(glm::transpose(lightUbo.mMat));
 			// Light id
-			lightUbo.id = k;
-			lightUbo.em = emInt[k];
+			lightParUbo.id = k;
+			lightParUbo.em = emInt[k];
 
 			SC.I[i]->DS[0]->map(currentImage, &lightUbo, sizeof(lightUbo), 0);
+			SC.I[i]->DS[0]->map(currentImage, &lightParUbo, sizeof(lightParUbo), 2);
 		}
 
 

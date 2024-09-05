@@ -132,6 +132,11 @@
 			"format": "OBJ"
 		},
 		{
+			"id": "window",
+			"model": "models/window.mgcg",
+			"format": "MGCG"
+		},
+		{
 			"id": "diamond",
 			"model": "models/Diamond_Blue.mgcg",
 			"format": "MGCG"
@@ -324,13 +329,19 @@
 			{"id": "vendingmachine",   "model": "vendingmachine",   "texture": ["tfurniture"],
 				"transform": [0, 0, 5, -22.85,
 					   0, 5, 0, 0,
-					   5, 0, 0, 1,
+					   5, 0, 0, -3,
 					   0, 0, 0, 1]},
 
 			{"id": "popcornmachine",   "model": "popcornmachine",   "texture": ["tfurniture"],
 				"transform": [0, 0, -5, -22.7,
 					   0, 5, 0, 0,
-					   -5, 0, 0, -5,
+					   -5, 0, 0, -9,
+					   0, 0, 0, 1]},
+
+			{"id": "window",   "model": "window",   "texture": ["tfurniture"],
+				"transform": [0, 0, 3, -23.7,
+					   0, 3, 0, 9,
+					   3, 0, 0, 9,
 					   0, 0, 0, 1]},
 
 			{"id": "coffeetable",   "model": "coffeetable",   "texture": ["tfurniture"],

@@ -7,7 +7,7 @@
 
 // Vector of text
 std::vector<SingleText> outText = {
-	{1, {"Third Person", ":)", "", ""}, 0, 0},
+	{1, {"Cube Arcade Adventure"}, 0, 0},
 };
 
 
@@ -104,7 +104,7 @@ protected:
 		"floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", 
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
-		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable",
+		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable", "window",
 		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
 
@@ -112,7 +112,7 @@ protected:
 	std::vector<std::string> BBObj = { 
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
-		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable",
+		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable", "window",
 		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
 
@@ -176,7 +176,9 @@ protected:
 	// Rotation speed and the forward / backward speed of the camera
 	float camRotSpeed, camNFSpeed;
 	// Camera distance and constraints
-	float camDistance, minCamDistance, maxCamDistance;
+	float camDistance;
+	const float minCamDistance = 0.22f;
+	const float maxCamDistance = 0.9f;
 	// Minimum y-level of camera
 	const float camMinHeight = 0.1f;
 
@@ -329,8 +331,6 @@ protected:
 		camRotation = glm::vec3(0.0f, 0.0f, 0.0f);
 		camRotSpeed = 1.2f;
 		camDistance = 0.4f;
-		minCamDistance = 0.22f;
-		maxCamDistance = 0.7f;
 
 		jumpSpeed = 0.0f;
 		isJumping = false;
@@ -635,12 +635,14 @@ protected:
 				// bb.min = glm::round(bb.min * 100.0f) / 100.0f;
 				(modelName.substr(0, 4) == "coin") ? bb.cType = COLLECTIBLE
 					: bb.cType = OBJECT;
+
+				/*
 				if(bb.cType == COLLECTIBLE){
 					std::cout << "min: ";
 					printxyz(bb.min);
 					std::cout << "max: ";
 					printxyz(bb.max);
-				}
+				}*/
 				bbMap[instanceName] = bb;
 			}
 		}

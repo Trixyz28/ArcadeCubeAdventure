@@ -443,35 +443,18 @@ protected:
 		txt.populateCommandBuffer(commandBuffer, currentImage, 0);
 	}
 
-	
-	// Check if the given position collides with a certain bounding box
-	// bool checkBBCollision(const BoundingBox& box, glm::vec3 newPos) {
-
-	// 	float x = glm::max(box.min.x, glm::min(newPos.x, box.max.x));
-	// 	float y = glm::max(box.min.y, glm::min(newPos.y, box.max.y));
-	// 	float z = glm::max(box.min.z, glm::min(newPos.z, box.max.z));
-
-	// 	float distance = glm::sqrt((x - newPos.x) * (x - newPos.x) +
-	// 							   (y - newPos.y) * (y - newPos.y) +
-	// 							   (z - newPos.z) * (z - newPos.z));
-
-	// 	return distance < cubeHalfSize;
-	// }
-
-	// helper function for collision check
+	// Helper function for collision check
 	bool checkBBCollision(const BoundingBox& box, glm::vec3 newPos) {
 
 		bool overlapX = newPos.x+cubeHalfSize >= box.min.x && newPos.x-cubeHalfSize <= box.max.x;
 		bool overlapY = newPos.y+cubeHalfSize >= box.min.y && newPos.y-cubeHalfSize <= box.max.y;
 		bool overlapZ = newPos.z+cubeHalfSize >= box.min.z && newPos.z-cubeHalfSize <= box.max.z;
 
-		// std::cout << "overlapX && overlapZ" << (overlapX && overlapZ) << "\n";
-
 		return overlapX && overlapY && overlapZ;
 	}
   
 
-	// helper function for collision check on axis x and z
+	// Helper function for collision check on axis x and z
 	bool checkCollisionXZ(const BoundingBox& box) {
 
 		bool overlapX = cubePosition.x-cubeHalfSize >= box.min.x && cubePosition.x+cubeHalfSize <= box.max.x;
@@ -480,33 +463,32 @@ protected:
 		return overlapX && overlapZ;
 	}
 
-
+	// Update the cube position
 	void updateCubePosition(glm::vec3 newPos) {
 
 		isCollisionXZ = false;
 		isCollision = false;
 		float dampLambda = 10.0f;
 
+		// Check collision between new position of cube and each bounding box
 		for (auto bb : SC.bbMap) {
-
 			if (checkCollisionXZ(bb.second)) {
 				isCollisionXZ = true;			
 			}
-
 			if (checkBBCollision(bb.second, newPos)) {
 				isCollision = true;
 				// Grab key of colliding object
 				collisionId = bb.first;
-				// std::cout << "\n\n" << "collision with" << collisionId << "\n";
+				std::cout << "\n\n" << "collision with " << collisionId << "\n";
 				break;
 			}
 		}
 
+
 		if (!isCollisionXZ) {
+			// reset variables
 			if (groundLevel != 0.0f) {
 				groundLevel = 0.0f;
-				//reset jump speed
-				jumpSpeed = 0.0f;
 				isJumping = true;
 			}
 		}
@@ -514,42 +496,28 @@ protected:
 		if (isCollision || isCollisionXZ) {
 
 			switch (SC.bbMap[collisionId].cType) {
-
+				// Colliding with objects
 				case OBJECT: {
-
 					glm::vec3 closestPoint = glm::clamp(newPos, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
 
 					glm::vec3 difference = newPos - closestPoint;
 
-					float distance = glm::length(difference);
-					// std::cout << "distance: " << distance << "\n";
-
-					// the normalized vector (unit vector) pointing from the closest point on the AABB to the rocket's center
-					// This vector represents the direction of the collision response.
+					// This vector represents the direction of the collision response
 					glm::vec3 normal = glm::normalize(difference);
-					// std::cout << "normal         = " << normal.x << " " <<  normal.y << " " << normal.z   << ";\n";
 
-					//if collision is from y 
-					// if (newPos.y <= SC.bbMap[collisionId].max.y + cubeHalfSize &&  // If the collision is coming from above
-					// 	!(std::abs(normal.x) > 0.5f || std::abs(normal.z) > 0.5f) &&	 // Not from the side
-					// 	normal.y != -1.0f && !glm::any(glm::isnan(normal))) {
-
-					// 	groundLevel = newPos.y;
-					// 	isJumping = false;
-					// }
 					float height = newPos.y;
 					
-					// if position of cube in axes y is lower than the collided object 
-					if (height < SC.bbMap[collisionId].max.y &&  // If the collision is coming from above
-						isCollisionXZ) {
-						//new ground level 
+					// Collision from axes x, y, z
+					if (height < SC.bbMap[collisionId].max.y && isCollisionXZ) {
+						//new ground level
 						groundLevel = SC.bbMap[collisionId].max.y;
-						//position updating 
+						//position update 
 						newPos.y = SC.bbMap[collisionId].max.y + cubeHalfSize + 0.01f;
 						isJumping = false;
 					}
+					// Collision not from above
 					else if(isCollision){
-						// temporal adjustment for nan values
+						// Adjustment for nan values
 						if (glm::any(glm::isnan(normal))) {
 							normal = glm::vec3(0.0f, 0.0f, 0.0f);
 						}
@@ -560,17 +528,19 @@ protected:
 
 					break;
 				}
+				// Colliding with "rewards"
 				case COLLECTIBLE: {
-					if(collisionId == "coin" ){
+
+					if(isCollision && collisionId == "coin" ){
+						// New position for "coin"
 						coinLocationId = int(std::rand() % coinLocations.size());
-						// std::cout << coinLocation << " = coinlocation\n";
-						// std::cout << "position of coin: " << coinLocations[coinLocation].x << " " << coinLocations[coinLocation].y << " " << coinLocations[coinLocation].z << "\n";
 						coinPos = coinLocations[coinLocationId];
+
 						coinPosY = coinPos.y;
 						coinMaxHeight = coinPosY + COIN_MAX_HEIGHT;
 						collectedCoin += 1;
-						// std::cout << "collectd coin: " << collectedCoin << "\n";
 					}
+					// Delete the bouding box for that coin
 					SC.bbMap.erase(collisionId);
 					break;
 				}
@@ -579,6 +549,7 @@ protected:
 
 		}
 
+		// position update
 		cubePosition.x = newPos.x;
 		cubePosition.z = newPos.z;
 		cubePosition.y = newPos.y;
@@ -618,10 +589,10 @@ protected:
 					bb.min = glm::min(bb.min, glm::vec3(newVert));
 					bb.max = glm::max(bb.max, glm::vec3(newVert));
 				}
-				// bb.max = glm::round(bb.max * 100.0f) / 100.0f;
-				// bb.min = glm::round(bb.min * 100.0f) / 100.0f;
-				(modelName.substr(0, 4) == "coin") ? bb.cType = COLLECTIBLE
-					: bb.cType = OBJECT;
+
+				(modelName.substr(0, 4) == "coin") ?  bb.cType = COLLECTIBLE
+													: bb.cType = OBJECT;
+				
 				bbMap[instanceName] = bb;
 			}
 		}
@@ -643,7 +614,7 @@ protected:
 		return deltaT;
 	}
 
-
+	// Function for jumping action
 	void getJump() {
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && !isJumping) {
 			if (!debounce) {
@@ -708,17 +679,23 @@ protected:
 			updateCubePosition(newPosition);
 		}
 
-
+		// Control camera's view
+		// Up
 		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 			camRotation.y += camRotSpeed * deltaTime;
 		}
+
+		// Down
 		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 			camRotation.y -= camRotSpeed * deltaTime;
 		}
 
+		// Zoom in
 		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
 			camDistance -= camNFSpeed * deltaTime;
 		}
+
+		// Zoom out
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
 			camDistance += camNFSpeed * deltaTime;
 		}
@@ -837,7 +814,7 @@ protected:
 		glm::mat4 viewPrjMatrix = prjMatrix * viewMatrix;
 
 
-
+		// Bouding box info
 		if (glfwGetKey(window, GLFW_KEY_B)) {
 			if (!debounce) {
 				debounce = true;
@@ -860,6 +837,7 @@ protected:
 
 		deltaTime = getTime();
 
+		// Cube, Camera, DeltaTime info
 		if (glfwGetKey(window, GLFW_KEY_V)) {
 			if (!debounce) {
 				debounce = true;
@@ -910,9 +888,7 @@ protected:
 			staticUbo.mMat = baseMatrix * SC.I[i]->Wm;
 			staticUbo.mvpMat = viewPrjMatrix * staticUbo.mMat;
 			staticUbo.nMat = glm::inverse(glm::transpose(staticUbo.mMat));
-      
-			// placeBB(it->c_str(), it->c_str(), SC.I[i]->Wm, SC.bbMap);
-			
+      			
 			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
 			
 		}
@@ -949,17 +925,9 @@ protected:
 			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
 		}
 
-
-
-		// TODO: try above to use placeBB and try collision
-		// placeBB("sofa", "sofa", SC.I[SC.InstanceIds[obj_id]]->Wm, SC.bbMap);
-		// Print the matrix
-    	// std::cout << "Matrix: " << std::endl;
-    	// printMatrix(SC.I[SC.InstanceIds[obj_id]]->Wm);
-
 		getJump();
 
-
+		// Jump action
 		if (isJumping) {
 			glm::vec3 newPosition = cubePosition;
 			// std::cout << "isjumping\n";
@@ -1014,7 +982,6 @@ protected:
 		newCamPosition.y = glm::clamp(newCamPosition.y, camMinHeight, 16.0f);
 
 
-
 		camPosition = camPosition * exp(-dampLambda * deltaTime)  + newCamPosition * (1-exp(-dampLambda * deltaTime));
 
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -1030,29 +997,31 @@ protected:
 
 		camPosition = newCamPosition;
 
-		// coin position update
-		coinPos.y += coinMovSpeed;
-    	// coin rotation update
-		coinRot += COIN_ROT_SPEED * deltaTime;
-		if(coinRot > 360.0f) coinRot = 0.0f;
 
-		//TODO check bug of BB when on coffee table
+		// coin position on y axis update
+		coinPos.y += coinMovSpeed;
 		if(coinPos.y >= coinMaxHeight || coinPos.y < coinPosY){
 			coinMovSpeed *= -1 ;
 		}
+
+    	// coin rotation update
+		coinRot += COIN_ROT_SPEED * deltaTime;
+		if(coinRot > 360.0f) coinRot = 0.0f;
 		
 		i = SC.instanceMap["coin"];
 		World = glm::translate(glm::mat4(1.0f),coinPos);
-		// World = glm::translate(glm::mat4(1.0f), coinLocations[coinLocation]);
 		World *= glm::rotate(glm::mat4(1.0f),glm::radians(90.0f), glm::vec3(1,0,0));
 		World *= glm::rotate(glm::mat4(1.0f), coinRot, glm::vec3(0.0f, 0.0f, 1.0f));
 		World *= glm::scale(glm::vec3(0.004f,0.004f,0.004f));
+
 		CoinUbo.mMat = baseMatrix * World;
 		CoinUbo.mvpMat = viewPrjMatrix * World;
 		CoinUbo.nMat = glm::inverse(glm::transpose(CoinUbo.mMat));
+
+		// place bouding box
 		placeBB("coin", World, SC.bbMap);
-		SC.I[i]->DS[0]->map(currentImage, &CoinUbo, sizeof(CoinUbo), 0);
-	
+
+		SC.I[i]->DS[0]->map(currentImage, &CoinUbo, sizeof(CoinUbo), 0);	
 }
 
 };

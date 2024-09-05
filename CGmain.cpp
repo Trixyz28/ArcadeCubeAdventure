@@ -219,7 +219,7 @@ protected:
 	glm::vec4 lCol[4];
 	float emInt[4];
 	int n_lights;
-	
+	glm::vec4 lights;
 
 
 	// Here the Vulkan Models and Textures are loaded and set up
@@ -310,7 +310,7 @@ protected:
 		cubeRotAngle = 0.0f;
 		cubeMovSpeed = glm::vec3(0.015f, 0.015f, 0.015f);
 		cubeRotSpeed = 0.8f;
-		cubeColor = glm::vec3(0.0f, 0.0f, 0.0f);
+		cubeColor = glm::vec3(1.0f, 1.0f, 1.0f);
 
 		// Variables for the camera
 		camPosition = cubePosition + glm::vec3(0.0f, camMinHeight, 0.0f);
@@ -341,6 +341,8 @@ protected:
 		currDebounce = 0;
 
 		deltaTime = getTime();
+
+		lights = glm::vec4(1.0f);
 
 		// Initialize view matrix: look-at
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -714,6 +716,71 @@ protected:
 	}
 
 
+	void turnLights() {
+		if (glfwGetKey(window, GLFW_KEY_1)) {
+			if (!debounce) {
+				debounce = true;
+				currDebounce = GLFW_KEY_1;
+
+				lights[0] = abs(lights[0] - 1.0f);
+			}
+		}
+		else {
+			if ((currDebounce == GLFW_KEY_1) && debounce) {
+				debounce = false;
+				currDebounce = 0;
+			}
+		}
+	
+		if (glfwGetKey(window, GLFW_KEY_2)) {
+			if (!debounce) {
+				debounce = true;
+				currDebounce = GLFW_KEY_2;
+
+				lights[1] = abs(lights[1] - 1.0f);
+			}
+		}
+		else {
+			if ((currDebounce == GLFW_KEY_2) && debounce) {
+				debounce = false;
+				currDebounce = 0;
+			}
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_3)) {
+			if (!debounce) {
+				debounce = true;
+				currDebounce = GLFW_KEY_3;
+
+				lights[2] = abs(lights[2] - 1.0f);
+			}
+		}
+		else {
+			if ((currDebounce == GLFW_KEY_3) && debounce) {
+				debounce = false;
+				currDebounce = 0;
+			}
+		}
+	
+
+		if (glfwGetKey(window, GLFW_KEY_4)) {
+			if (!debounce) {
+				debounce = true;
+				currDebounce = GLFW_KEY_4;
+
+				lights[3] = abs(lights[3] - 1.0f);
+			}
+		}
+		else {
+			if ((currDebounce == GLFW_KEY_4) && debounce) {
+				debounce = false;
+				currDebounce = 0;
+			}
+		}
+	}
+
+
+
 	// Change Cube's color
 	void changeColor() {
 		float r = (rand() % 100 + 1) / 100.0f;
@@ -800,7 +867,7 @@ protected:
 		}
 
 
-
+		turnLights();
 
 		// Update global uniforms
 		GlobalUniformBufferObject gubo{};
@@ -819,7 +886,7 @@ protected:
 		gubo.eyePos = camPosition;
 		gubo.eyeDir = glm::vec4(0);
 		gubo.eyeDir.w = 1.0;
-		gubo.lightOn = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		gubo.lightOn = lights;
 		gubo.cosIn = cos(0.3490658504);
 		gubo.cosOut = cos(0.5235987756f);
 		SC.DSGlobal->map(currentImage, &gubo, sizeof(gubo), 0);

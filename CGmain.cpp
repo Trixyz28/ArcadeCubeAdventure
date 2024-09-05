@@ -96,21 +96,12 @@ protected:
 	// Static elements of the scene to draw
 	std::vector<std::string> staticObj = { 
 		"floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", 
+		// From here below: scene elements with bounding boxes
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
 		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable",
 		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
-
-	// Elements with bounding box around
-	std::vector<std::string> BBObj = { 
-		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
-		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
-		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable", 
-		"bluepouf", "brownpouf", "yellowpouf", "frenchchips", "macaron", "drink1", "drink2", "drink3"
-	};
-
-
 
 	// Reward gadgets to draw
 	std::vector<std::string> gadgetObj = { "diamond" };
@@ -361,8 +352,8 @@ protected:
 		// Initialize view matrix: look-at
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 
-		// Initialize bounding boxes
-		for (std::vector<std::string>::iterator it = BBObj.begin(); it != BBObj.end(); it++) {
+		// Initialize bounding boxes (no for the walls, ceiling and floor)
+		for (std::vector<std::string>::iterator it = staticObj.begin()+6; it != staticObj.end(); it++) {
 			std::string obj_id = it->c_str();
 			int i = SC.instanceMap[it->c_str()];
 			placeBB(obj_id, SC.I[i]->Wm, SC.bbMap);
@@ -712,12 +703,6 @@ protected:
 			updateCubePosition(newPosition);
 		}
 
-		/*
-		// Down
-		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-			cubePosition.y -= 1.0f;
-		}*/
-
 
 		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 			camRotation.y += camRotSpeed * deltaTime;
@@ -766,7 +751,6 @@ protected:
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		}
-
 
 		const float fovY = glm::radians(90.0f);
 		const float nearPlane = 0.01f;

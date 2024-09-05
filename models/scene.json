@@ -152,6 +152,7 @@
 			"format": "MGCG"
 		}
 	],
+
 	"textures": [
 		{
 			"id": "tfloor",
@@ -210,234 +211,328 @@
 			"texture": "textures/Coin_Gold_Albedo.png"
 		}
 	],
+
 	"instances": [
-		{"pipeline":  "P", "elements": [
-			{"id": "floor",   "model": "floor",   "texture": ["tfloor"],
-				"transform": [1.2, 0, 0, 0,
-					   0, 1.2, 0, 0,
-					   0, 0, 1.2, 0,
-					   0, 0, 0, 1]},
-			{"id": "ceiling",   "model": "ceiling",   "texture": ["tceil"],
-				"transform": [1.2, 0, 0,   0,
-					   0, 1.2, 0, 16,
-					   0, 0, 1.2, 0,
-					   0, 0, 0, 1]},
-			{"id": "leftwall",   "model": "leftwall",   "texture": ["tlwall"],
-				"transform": [0.5, 0, 0, 0,
-					   0, 0.5, 0, 0,
-					   0, 0, 0.5, 0,
-					   0, 0, 0, 1]},
+		{
+			"pipeline": "P",
+			"elements": [
+				{
+					"id": "floor",
+					"model": "floor",
+					"texture": [ "tfloor" ],
+					"scale": [ 1.2, 1.2, 1.2 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ 0.0, 0.0, 0.0 ]
+				},
+				{
+					"id": "ceiling",
+					"model": "ceiling",
+					"texture": [ "tceil" ],
+					"scale": [ 1.2, 1.2, 1.2 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ 0.0, 16.0, 0.0 ]
+				},
+				{
+					"id": "leftwall",
+					"model": "leftwall",
+					"texture": [ "tlwall" ],
+					"scale": [ 0.5, 0.5, 0.5 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ 0.0, 0.0, 0.0 ]
+				},
+				{
+					"id": "rightwall",
+					"model": "rightwall",
+					"texture": [ "trwall" ],
+					"scale": [ 0.5, 0.5, 0.5 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ 0.0, 0.0, 0.0 ]
+				},
+				{
+					"id": "backwall",
+					"model": "backwall",
+					"texture": [ "tbwall" ],
+					"scale": [ 0.5, 0.5, 0.5 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ 0.0, 0.0, 0.0 ]
+				},
+				{
+					"id": "frontwall",
+					"model": "frontwall",
+					"texture": [ "tfwall" ],
+					"scale": [ 0.5, 0.5, 0.5 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ 0.0, 0.0, 0.0 ]
+				},
+				{
+					"id": "redmachine1",
+					"model": "redmachine",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.0, 4.0, 4.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ -21.0, 0.0, -22.64 ]
+				},
+				{
+					"id": "redmachine2",
+					"model": "redmachine",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.0, 4.0, 4.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ -17.0, 0.0, -22.64 ]
+				},
+				{
+					"id": "redmachine3",
+					"model": "redmachine",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.0, 4.0, 4.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ -13.0, 0.0, -22.64 ]
+				},
+				{
+					"id": "hockeytable",
+					"model": "hockeytable",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.0, 4.0, 4.0 ],
+					"rotate": [ 0.0, 90.0, 0.0 ],
+					"translate": [ 15.0, 0.0, -5.0 ]
+				},
 
-		 	{"id": "rightwall",   "model": "rightwall",   "texture": ["trwall"],
-				"transform": [0.5, 0, 0, 0,
-					   0, 0.5, 0, 0,
-					   0, 0, 0.5, 0,
-					   0, 0, 0, 1]},
-
-			{"id": "backwall",   "model": "backwall",   "texture": ["tbwall"],
-				"transform": [0.5, 0, 0, 0,
-					   0, 0.5, 0, 0,
-					   0, 0, 0.5, 0,
-					   0, 0, 0, 1]},
-
-			{"id": "frontwall",   "model": "frontwall",   "texture": ["tfwall"],
-				"transform": [0.5, 0, 0, 0,
-					   0, 0.5, 0, 0,
-					   0, 0, 0.5, 0,
-					   0, 0, 0, 1]},
-			{"id": "redmachine1",   "model": "redmachine",   "texture": ["tfurniture"],
-				"transform": [4, 0, 0, -21,
-					   0, 4, 0, 0,
-					   0, 0, 4, -22.64,
-					   0, 0, 0, 1]},
-			{"id": "redmachine2",   "model": "redmachine",   "texture": ["tfurniture"],
-				"transform": [4, 0, 0, -17,
-					   0, 4, 0, 0,
-					   0, 0, 4, -22.64,
-					   0, 0, 0, 1]},
-
-			{"id": "redmachine3",   "model": "redmachine",   "texture": ["tfurniture"],
-				"transform": [4, 0, 0, -13,
-					   0, 4, 0, 0,
-					   0, 0, 4, -22.64,
-					   0, 0, 0, 1]},
-
-			{"id": "hockeytable",   "model": "hockeytable",   "texture": ["tfurniture"],
-				"transform": [0, 0, 4, 15,
-					   0, 4, 0, 0,
-					   4, 0, 0, -5,
-					   0, 0, 0, 1]},
-
-			{"id": "sofa",   "model": "sofa",   "texture": ["tfurniture"],
-				"transform": [0, 0, -5, 22,
-					   0, 5, 0, 0,
-					   -5, 0, 0, 6,
-					   0, 0, 0, 1]},
-
-
-			{"id": "dancemachine1",   "model": "dancemachine",   "texture": ["tfurniture"],
-				"transform": [-4, 0, 0, -12.05,
-					   0, 4, 0, -0.2,
-					   0, 0, -4, 21.35,
-					   0, 0, 0, 1]},
-
-			{"id": "dancemachine2",   "model": "dancemachine",   "texture": ["tfurniture"],
-				"transform": [-4, 0, 0, -19,
-					   0, 4, 0, -0.2,
-					   0, 0, -4, 21.35,
-					   0, 0, 0, 1]},
-
-			{"id": "pooltable",   "model": "pooltable",   "texture": ["tfurniture"],
-				"transform": [0, 0, 4, 12,
-					   0, 4, 0, 0,
-					   4, 0, 0, 16,
-					   0, 0, 0, 1]},
-
-			{"id": "poolsticks",   "model": "poolsticks",   "texture": ["tfurniture"],
-				"transform": [-4, 0, 0, 19.5,
-					   0, 4, 0, 4.5,
-					   0, 0, -4, 23.8,
-					   0, 0, 0, 1]},
-			{"id": "blackmachine1",   "model": "blackmachine",   "texture": ["tfurniture"],
-				"transform": [4, 0, 0, 21,
-					   0, 4, 0, 0,
-					   0, 0, 4, -22.37,
-					   0, 0, 0, 1]},
-			{"id": "blackmachine2",   "model": "blackmachine",   "texture": ["tfurniture"],
-				"transform": [4, 0, 0, 16.5,
-					   0, 4, 0, 0,
-					   0, 0, 4, -22.37,
-					   0, 0, 0, 1]},
-
-			{"id": "blackmachine3",   "model": "blackmachine",   "texture": ["tfurniture"],
-				"transform": [4, 0, 0, 12,
-					   0, 4, 0, 0,
-					   0, 0, 4, -22.37,
-					   0, 0, 0, 1]},
-			{"id": "doublemachine1",   "model": "doublemachine",   "texture": ["tfurniture"],
-				"transform": [0, 0, 4, 0,
-					   0, 4, 0, 4,
-					   4, 0, 0, -15,
-					   0, 0, 0, 1]},
-
-			{"id": "doublemachine2",   "model": "doublemachine",   "texture": ["tfurniture"],
-				"transform": [0, 0, 4, 0,
-					   0, 4, 0, 4,
-					   4, 0, 0, -20,
-					   0, 0, 0, 1]},
-
-			{"id": "vendingmachine",   "model": "vendingmachine",   "texture": ["tfurniture"],
-				"transform": [0, 0, 5, -22.85,
-					   0, 5, 0, 0,
-					   5, 0, 0, -3,
-					   0, 0, 0, 1]},
-
-			{"id": "popcornmachine",   "model": "popcornmachine",   "texture": ["tfurniture"],
-				"transform": [0, 0, -5, -22.7,
-					   0, 5, 0, 0,
-					   -5, 0, 0, -9,
-					   0, 0, 0, 1]},
-
-			{"id": "coffeetable",   "model": "coffeetable",   "texture": ["tfurniture"],
-				"transform": [4, 0, 0, -9,
-					   0, 4, 0, 0,
-					   0, 0, 4, 4,
-					   0, 0, 0, 1]},
-			
-			{"id": "frenchchips",   "model": "frenchchips",   "texture": ["tfurniture"],
-				"transform": [0, 0, 4.5, -9.5,
-					   0, 4, 0, 1.15,
-					   4, 0, 0, 5,
-					   0, 0, 0, 1]},
-
-			{"id": "macaron",   "model": "macaron",   "texture": ["tfurniture"],
-				"transform": [5, 0, 0, -9,
-					   0, 5, 0, 1.15,
-					   0, 0, 5, 4,
-					   0, 0, 0, 1]},
-
-			{"id": "drink1",   "model": "drink",   "texture": ["tfurniture"],
-				"transform": [4, 0, 0, -8,
-					   0, 4, 0, 1.15,
-					   0, 0, 4, 4,
-					   0, 0, 0, 1]},
-
-			{"id": "drink2",   "model": "drink",   "texture": ["tfurniture"],
-				"transform": [0, 0, 4, -10,
-					   0, 4, 0, 1.15,
-					   4, 0, 0, 5.5,
-					   0, 0, 0, 1]},
-
-			{"id": "drink3",   "model": "drink",   "texture": ["tfurniture"],
-				"transform": [0, 0, 4, -8,
-					   0, 4, 0, 1.15,
-					   -4, 0, 0, 3,
-					   0, 0, 0, 1]},
-
-
-			{"id": "bluepouf",   "model": "bluepouf",   "texture": ["tfurniture"],
-				"transform": [3, 0, 0, -8,
-					   0, 2, 0, 0,
-					   0, 0, 3, 0,
-					   0, 0, 0, 1]},
-
-			{"id": "brownpouf",   "model": "brownpouf",   "texture": ["tfurniture"],
-				"transform": [3, 0, 0, -12,
-					   0, 3, 0, 0,
-					   0, 0, 3, 8,
-					   0, 0, 0, 1]},
-
-			{"id": "yellowpouf",   "model": "yellowpouf",   "texture": ["tfurniture"],
-				"transform": [3, 0, 0, -5.5,
-					   0, 3, 0, 0,
-					   0, 0, 3, 6,
-					   0, 0, 0, 1]},
-
-			{"id": "paintpacman",   "model": "paint16x10",   "texture": ["tpacman"],
-				"transform": [1, 0, 0, 23.9,
-					   0, 0, -0.4, 9.5,
-					   0, -1.2, 0, 2,
-					   0, 0, 0, 1]},
-
-
-			{"id": "diamond",   "model": "diamond",   "texture": ["t0"],
-				"transform": [0.2, 0, 0, 0.7,
-					   0, 0.2, 0, 0.5,
-					   0, 0, 0.2, 1,
-					   0, 0, 0, 1]},
-
-			{"id": "coin",   "model": "coin",   "texture": ["tcoin"],
-				"transform": [1, 0, 0, 0,
-					   0, 1, 0, 0.5,
-					   0, 0, 1, 0,
-					   0, 0, 0, 1]}
-		 ]
+				{
+					"id": "sofa",
+					"model": "sofa",
+					"texture": [ "tfurniture" ],
+					"scale": [ 5.0, 5.0, 5.0 ],
+					"rotate": [ 0.0, -90.0, 0.0 ],
+					"translate": [ 22.0, 0.0, 6.0 ]
+				},
+				{
+					"id": "dancemachine1",
+					"model": "dancemachine",
+					"texture": [ "tfurniture" ],
+					"scale": [ -4.0, 4.0, -4.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ -12.05, -0.2, 21.35 ]
+				},
+				{
+					"id": "dancemachine2",
+					"model": "dancemachine",
+					"texture": [ "tfurniture" ],
+					"scale": [ -4.0, 4.0, -4.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ -19, -0.2, 21.35 ]
+				},
+				{
+					"id": "pooltable",
+					"model": "pooltable",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.0, 4.0, 4.0 ],
+					"rotate": [ 0.0, 90.0, 0.0 ],
+					"translate": [ 12.0, 0.0, 16.0 ]
+				},
+				{
+					"id": "poolsticks",
+					"model": "poolsticks",
+					"texture": [ "tfurniture" ],
+					"scale": [ -4.0, 4.0, -4.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ 19.5, 4.5, 23.8 ]
+				},
+				{
+					"id": "blackmachine1",
+					"model": "blackmachine",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.0, 4.0, 4.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ 21.0, 0.0, -22.37 ]
+				},
+				{
+					"id": "blackmachine2",
+					"model": "blackmachine",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.0, 4.0, 4.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ 16.5, 0.0, -22.37 ]
+				},
+				{
+					"id": "blackmachine3",
+					"model": "blackmachine",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.0, 4.0, 4.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ 12.0, 0.0, -22.37 ]
+				},
+				{
+					"id": "doublemachine1",
+					"model": "doublemachine",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.0, 4.0, 4.0 ],
+					"rotate": [ 0.0, 90.0, 0.0 ],
+					"translate": [ 0.0, 4.0, -15.0 ]
+				},
+				{
+					"id": "doublemachine2",
+					"model": "doublemachine",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.0, 4.0, 4.0 ],
+					"rotate": [ 0.0, 90.0, 0.0 ],
+					"translate": [ 0.0, 4.0, -20.0 ]
+				},
+				{
+					"id": "vendingmachine",
+					"model": "vendingmachine",
+					"texture": [ "tfurniture" ],
+					"scale": [ 5.0, 5.0, 5.0 ],
+					"rotate": [ 0.0, 90.0, 0.0 ],
+					"translate": [ -22.85, 0.0, -3.0 ]
+				},
+				{
+					"id": "popcornmachine",
+					"model": "popcornmachine",
+					"texture": [ "tfurniture" ],
+					"scale": [ 5.0, 5.0, 5.0 ],
+					"rotate": [ 0.0, -90.0, 0.0 ],
+					"translate": [ -22.7, 0.0, -9.0 ]
+				},
+				{
+					"id": "window",
+					"model": "window",
+					"texture": [ "tfurniture" ],
+					"scale": [ 3.0, 3.0, 3.0 ],
+					"rotate": [ 0.0, 90.0, 0.0 ],
+					"translate": [ -23.7, 9.0, 9.0 ]
+				},
+				{
+					"id": "coffeetable",
+					"model": "coffeetable",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.0, 4.0, 4.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ -9.0, 0.0, 4.0 ]
+				},
+				{
+					"id": "frenchchips",
+					"model": "frenchchips",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.5, 4.0, 4.0 ],
+					"rotate": [ 0.0, 90.0, 0.0 ],
+					"translate": [ -9.5, 1.15, 5.0 ]
+				},
+				{
+					"id": "macaron",
+					"model": "macaron",
+					"texture": [ "tfurniture" ],
+					"scale": [ 5.0, 5.0, 5.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ -9.0, 1.15, 4.0 ]
+				},
+				{
+					"id": "drink1",
+					"model": "drink",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.0, 4.0, 4.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ -8.0, 1.15, 4.0 ]
+				},
+				{
+					"id": "drink2",
+					"model": "drink",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.0, 4.0, 4.0 ],
+					"rotate": [ 0.0, 90.0, 0.0 ],
+					"translate": [ -10.0, 1.15, 5.5 ]
+				},
+				{
+					"id": "drink3",
+					"model": "drink",
+					"texture": [ "tfurniture" ],
+					"scale": [ 4.0, 4.0, -4.0 ],
+					"rotate": [ 0.0, 90.0, 0.0 ],
+					"translate": [ -8.0, 1.15, 3.0 ]
+				},
+				{
+					"id": "bluepouf",
+					"model": "bluepouf",
+					"texture": [ "tfurniture" ],
+					"scale": [ 3.0, 2.0, 3.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ -8.0, 0.0, 0.0 ]
+				},
+				{
+					"id": "brownpouf",
+					"model": "brownpouf",
+					"texture": [ "tfurniture" ],
+					"scale": [ 3.0, 3.0, 3.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ -12.0, 0.0, 8.0 ]
+				},
+				{
+					"id": "yellowpouf",
+					"model": "yellowpouf",
+					"texture": [ "tfurniture" ],
+					"scale": [ 3.0, 3.0, 3.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ -5.5, 0.0, 6.0 ]
+				},
+				{
+					"id": "paintpacman",
+					"model": "paint16x10",
+					"texture": [ "tpacman" ],
+					"scale": [ 1.0, 1.2, 0.4 ],
+					"rotate": [ 90.0, 0.0, 0.0 ],
+					"translate": [ 23.9, 9.5, 2.0 ]
+				},
+				{
+					"id": "diamond",
+					"model": "diamond",
+					"texture": [ "t0" ],
+					"scale": [ 0.2, 0.2, 0.2 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ 0.7, 0.5, 1.0 ]
+				},
+				{
+					"id": "coin",
+					"model": "coin",
+					"texture": [ "tcoin" ],
+					"scale": [ 1.0, 1.0, 1.0 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ 0.0, 0.5, 0.0 ]
+				}
+			]
 
 		},
-		{"pipeline":  "PBlinn", "elements": [
-			 {"id": "cube",   "model": "cube",   "texture": ["tcube"],
-				"transform": [1.5, 0, 0, 0,
-					   0, 1.5, 0, 0,
-					   0, 0, 1.5, 0,
-					   0, 0, 0, 1]}
-		]},
-		{"pipeline":  "PLight", "elements": [
-			 {"id": "window",   "model": "window",   "texture": ["tfurniture", "tfurniture"],
-				"transform": [0, 0, 3, -23.7,
-					   0, 3, 0, 9,
-					   3, 0, 0, 9,
-					   0, 0, 0, 1]},
-			 {"id": "light",   "model": "light",   "texture": ["tlight", "tlight"],
-				"transform": [0.1, 0, 0, 0,
-					   0, 0.05, 0, 15.5,
-					   0, 0, 0.1, 0,
-					   0, 0, 0, 1]}
-		 ,
-			 {"id": "sign24h",   "model": "sign24h",   "texture": ["t24h","t24h_m"],
-				"transform": [0, 0, 0.1, 0,
-					   0, 0.1, 0, 9.5,
-					   0.1, 0, 0, 23.2,
-					   0, 0, 0, 1]}
+
+		{
+			"pipeline": "PBlinn",
+			"elements": [
+				{
+					"id": "cube",
+					"model": "cube",
+					"texture": [ "tcube" ],
+					"scale": [ 1.5, 1.5, 1.5 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ 0.0, 0.0, 0.0 ]
+				}
+			]
+		},
+
+		{
+			"pipeline":  "PLight", "elements": [
+				{
+					"id": "light",
+					"model": "light",
+					"texture": [ "tlight", "tlight" ],
+					"scale": [ 0.1, 0.05, 0.1 ],
+					"rotate": [ 0.0, 0.0, 0.0 ],
+					"translate": [ 0.0, 15.5, 0.0 ]
+				},
+				{
+					"id": "sign24h",
+					"model": "sign24h",
+					"texture": [ "t24h", "t24h_m" ],
+					"scale": [ 0.1, 0.1, 0.1 ],
+					"rotate": [ 0.0, 90.0, 0.0 ],
+					"translate": [ 0.0, 9.5, 23.2 ]
+				}
 		]}
 	]
 }

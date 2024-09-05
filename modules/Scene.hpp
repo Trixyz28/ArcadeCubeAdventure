@@ -18,12 +18,10 @@ struct Instance {
 struct PipelineRef {
 	std::string* id;
 	Pipeline* P;
-	VertexDescriptor* VD;
 
-	void init(const char* _id, Pipeline* _P, VertexDescriptor* _VD) {
+	void init(const char* _id, Pipeline* _P) {
 		id = new std::string(_id);
 		P = _P;
-		VD = _VD;
 	}
 };
 

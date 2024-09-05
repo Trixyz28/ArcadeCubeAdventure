@@ -27,13 +27,6 @@ struct CubeUniformBufferObject {
 	alignas(16) glm::vec3 col;
 };
 
-// UBO for the lights
-struct LightUniformBufferObject {
-	alignas(16) glm::mat4 mvpMat;
-	alignas(16) glm::mat4 mMat;
-	alignas(16) glm::mat4 nMat;
-};
-
 // ParUBO for the lights
 struct LightParUniformBufferObject {
 	alignas(4) float id;
@@ -53,7 +46,7 @@ struct GlobalUniformBufferObject {
 	alignas(4) float cosOut;
 	alignas(16) glm::vec3 eyePos;
 	alignas(16) glm::vec4 eyeDir;
-	alignas(16) glm::vec3 lightOn;
+	alignas(16) glm::vec4 lightOn;
 };
 
 
@@ -112,7 +105,7 @@ protected:
 
 	CubeUniformBufferObject cubeUbo{};
 	UniformBufferObject staticUbo{};
-	LightUniformBufferObject lightUbo{};
+	UniformBufferObject lightUbo{};
 	LightParUniformBufferObject lightParUbo{};
 
 
@@ -255,7 +248,7 @@ protected:
 
 		// DSL for light
 		DSLlight.init(this, {
-					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(LightUniformBufferObject)},
+					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(UniformBufferObject)},
 					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
 					{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(LightParUniformBufferObject)},
 			});
@@ -286,7 +279,7 @@ protected:
 		Pcube.init(this, &VD, "shaders/CubeVert.spv", "shaders/CubeFrag.spv", { &DSLGlobal, &DSLcube });
 		
 		// LightShader.vert, LightShader.frag
-		Plight.init(this, &VD, "shaders/LightVert.spv", "shaders/LightFrag.spv", { &DSLGlobal, &DSLlight });
+		Plight.init(this, &VD, "shaders/Vert.spv", "shaders/LightFrag.spv", { &DSLGlobal, &DSLlight });
 		Plight.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
 			VK_CULL_MODE_NONE, false);
 
@@ -376,7 +369,7 @@ protected:
 			std::cout << "There are " << n_lights << " lights.\n";
 			for (int i = 0; i < lights.size(); i++) {
 				lPos[i] = glm::vec3(lights[i]["position"][0], lights[i]["position"][1], lights[i]["position"][2]);
-				lDir[i] = glm::vec3(lights[i]["direction"][0], lights[i]["direction"][1], lights[i]["direction"][2]);
+				lDir[i] = glm::normalize(glm::vec3(lights[i]["direction"][0], lights[i]["direction"][1], lights[i]["direction"][2]));
 				lCol[i] = glm::vec4(lights[i]["color"][0], lights[i]["color"][1], lights[i]["color"][2], lights[i]["intensity"]);
 				emInt[i] = lights[i]["em"];	/*emission intensity*/
 			}
@@ -826,7 +819,7 @@ protected:
 		gubo.eyePos = camPosition;
 		gubo.eyeDir = glm::vec4(0);
 		gubo.eyeDir.w = 1.0;
-		gubo.lightOn = glm::vec3(1.0f, 1.0f, 1.0f);
+		gubo.lightOn = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		gubo.cosIn = cos(0.3490658504);
 		gubo.cosOut = cos(0.5235987756f);
 		SC.DSGlobal->map(currentImage, &gubo, sizeof(gubo), 0);

@@ -81,7 +81,7 @@ class CGmain : public BaseProject {
 protected:
 
 	// Descriptor Layouts ["classes" of what will be passed to the shaders]
-	DescriptorSetLayout DSL, DSLcube, DSLlight;
+	DescriptorSetLayout DSLGlobal, DSL, DSLcube, DSLlight;
 
 	// Vertex formats
 	VertexDescriptor VD;
@@ -235,23 +235,24 @@ protected:
 	void localInit() {
 
 		// Descriptor Layouts [what will be passed to the shaders]
+		DSLGlobal.init(this, {
+					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(GlobalUniformBufferObject)}
+			});
+
 		DSL.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(UniformBufferObject)},
-					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
-					{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(GlobalUniformBufferObject)}
+					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0}
 			});
 
 		DSLcube.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(CubeUniformBufferObject)},
-					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
-					{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(GlobalUniformBufferObject)}
+					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0}
 			});
 
 		DSLlight.init(this, {
 					{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, sizeof(LightUniformBufferObject)},
 					{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0},
-					{2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(GlobalUniformBufferObject)},
-					{3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1}
+					{2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1}
 			});
 
 
@@ -269,13 +270,13 @@ protected:
 
 
 		// Pipelines [Shader couples]
-		P.init(this, &VD, "shaders/Vert.spv", "shaders/PhongFrag.spv", { &DSL });
+		P.init(this, &VD, "shaders/Vert.spv", "shaders/PhongFrag.spv", { &DSLGlobal, &DSL });
 		
 		// VK_POLYGON_MODE_FILL for normal view, VK_POLYGON_MODE_LINE for meshes
 		P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
 			VK_CULL_MODE_NONE, false);
-		Pcube.init(this, &VD, "shaders/CubeVert.spv", "shaders/CubeFrag.spv", { &DSLcube });
-		Plight.init(this, &VD, "shaders/LightVert.spv", "shaders/LightFrag.spv", { &DSLlight });
+		Pcube.init(this, &VD, "shaders/CubeVert.spv", "shaders/CubeFrag.spv", { &DSLGlobal, &DSLcube });
+		Plight.init(this, &VD, "shaders/LightVert.spv", "shaders/LightFrag.spv", { &DSLGlobal, &DSLlight });
 
 		PRs.resize(3);
 		PRs[0].init("P", &P, &VD);
@@ -294,9 +295,9 @@ protected:
 		M1.initMesh(this, &VD); */
 
 		// Initialize pools
-		uniformBlocksInPool = 0;
+		uniformBlocksInPool = 1; /* Global Ubo */
 		texturesInPool = 0;
-		setsInPool = 0;
+		setsInPool = 1;  /* DSGlobal */
 
 		// Load Scene: the models are stored in json
 		SC.init(this, &VD, PRs, "models/scene.json");
@@ -390,7 +391,7 @@ protected:
 		Plight.create();
 
 		// Here you define the data set
-		SC.pipelinesAndDescriptorSetsInit();
+		SC.pipelinesAndDescriptorSetsInit( &DSLGlobal );
 		txt.pipelinesAndDescriptorSetsInit();
 	}
 
@@ -418,6 +419,7 @@ protected:
 		free(deltaP);*/
 
 		// Cleanup descriptor set layouts
+		DSLGlobal.cleanup();
 		DSL.cleanup();
 		DSLcube.cleanup();
 		DSLlight.cleanup();
@@ -853,7 +855,7 @@ protected:
 		gubo.lightOn = glm::vec3(0.0f, 1.0f, 1.0f);
 		gubo.cosIn = cos(0.3490658504);
 		gubo.cosOut = cos(0.5235987756f);
-
+		SC.DSGlobal->map(currentImage, &gubo, sizeof(gubo), 0);
 
 
 		// Draw the landscape
@@ -868,7 +870,7 @@ protected:
 			// placeBB(it->c_str(), it->c_str(), SC.I[i]->Wm, SC.bbMap);
 			
 			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
-			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
+			
 		}
 
 
@@ -887,7 +889,6 @@ protected:
 			lightUbo.id = k;
 
 			SC.I[i]->DS[0]->map(currentImage, &lightUbo, sizeof(lightUbo), 0);
-			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
 
 
@@ -900,7 +901,6 @@ protected:
 			staticUbo.mvpMat = viewPrjMatrix * staticUbo.mMat;
 			staticUbo.nMat = glm::inverse(glm::transpose(staticUbo.mMat));
 			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
-			SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 		}
 
 
@@ -981,7 +981,6 @@ protected:
 		cubeUbo.col = cubeColor;
 
 		SC.I[i]->DS[0]->map(currentImage, &cubeUbo, sizeof(cubeUbo), 0);
-		SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 
 		camPosition = newCamPosition;
 
@@ -1006,7 +1005,6 @@ protected:
 		CoinUbo.nMat = glm::inverse(glm::transpose(CoinUbo.mMat));
 		placeBB("coin", World, SC.bbMap);
 		SC.I[i]->DS[0]->map(currentImage, &CoinUbo, sizeof(CoinUbo), 0);
-		SC.I[i]->DS[0]->map(currentImage, &gubo, sizeof(gubo), 2);
 	
 }
 

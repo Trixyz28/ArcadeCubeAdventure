@@ -37,6 +37,8 @@ struct PipelineInstances {
 class Scene {
 	public:
 	VertexDescriptor *VD;	
+
+	DescriptorSet *DSGlobal;
 	
 	BaseProject *BP;
 
@@ -148,11 +150,10 @@ class Scene {
 
 					PI[k].I[j].PI = &PI[k];
 					PI[k].I[j].D = &PI[k].PR->P->D;
-					PI[k].I[j].NDs = PI[k].I[j].D->size();
-					BP->setsInPool += PI[k].I[j].NDs;
-
+					PI[k].I[j].NDs = PI[k].I[j].D->size()-1; /* exclude DSLGlobal */
+					BP->setsInPool += (PI[k].I[j].NDs); 
 					for (int h = 0; h < PI[k].I[j].NDs; h++) {
-						DescriptorSetLayout* DSL = (*PI[k].I[j].D)[h];
+						DescriptorSetLayout* DSL = (*PI[k].I[j].D)[h+1];
 						int DSLsize = DSL->Bindings.size();
 
 						for (int l = 0; l < DSLsize; l++) {
@@ -189,19 +190,25 @@ class Scene {
 	}
 
 
-	void pipelinesAndDescriptorSetsInit() {
+	void pipelinesAndDescriptorSetsInit(DescriptorSetLayout *DSL) {
 		std::cout << "Scene DS init\n";
+
+		/* DSGlobal initialization */
+		DSGlobal = new DescriptorSet();
+		DSGlobal->init(BP, DSL, {});
+
 		for(int i = 0; i < InstanceCount; i++) {
 			std::cout << "I: " << i << ", NTx: " << I[i]->NTx << ", NDs: " << I[i]->NDs << "\n";
 			Texture** Tids = (Texture**)calloc(I[i]->NTx, sizeof(Texture*));
 			for (int j = 0; j < I[i]->NTx; j++) {
 				Tids[j] = T[I[i]->Tid[j]];
 			}
-			
+			/* initialize DS of all the Instances */
 			I[i]->DS = (DescriptorSet**)calloc(I[i]->NDs, sizeof(DescriptorSet*));
 			for (int j = 0; j < I[i]->NDs; j++) {
 				I[i]->DS[j] = new DescriptorSet();
-				I[i]->DS[j]->init(BP, (*I[i]->D)[j], Tids);
+				/* start from the DSL after DSLGlobal */
+				I[i]->DS[j]->init(BP, (*I[i]->D)[j+1], Tids);
 			}
 			free(Tids); 
 		}
@@ -210,6 +217,8 @@ class Scene {
 	
 	void pipelinesAndDescriptorSetsCleanup() {
 		// Cleanup datasets
+		DSGlobal->cleanup();
+		free(DSGlobal);
 		for (int i = 0; i < InstanceCount; i++) {
 			for (int j = 0; j < I[i]->NDs; j++) {
 				I[i]->DS[j]->cleanup();
@@ -248,12 +257,16 @@ class Scene {
 	
     void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
 		for (int k = 0; k < PipelineInstanceCount; k++) {
+			/* Pipelines Binding */
+			Pipeline* P = PI[k].PR->P;
+			P->bind(commandBuffer);
 			for (int i = 0; i < PI[k].InstanceCount; i++) {
-				Pipeline *P = PI[k].I[i].PI->PR->P;
-				P->bind(commandBuffer);
+
 				M[PI[k].I[i].Mid]->bind(commandBuffer);
-				for (int j = 0; j < PI[k].I[i].NDs; j++) {
-					PI[k].I[i].DS[j]->bind(commandBuffer, *P, j, currentImage);
+				/* DS Bingdings: DSGlobal, DS */
+				DSGlobal->bind(commandBuffer, *P, 0, currentImage);
+				for (int j = 0; j < PI[k].I[i].NDs; j++) { /* start from the DS after DSGlobal */
+					PI[k].I[i].DS[j]->bind(commandBuffer, *P, j+1, currentImage);
 				}
 				vkCmdDrawIndexed(commandBuffer,
 					static_cast<uint32_t>(M[PI[k].I[i].Mid]->indices.size()), 1, 0, 0, 0);

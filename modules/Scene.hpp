@@ -17,22 +17,18 @@ struct Instance {
 	PipelineInstances *PI;
 };
 
-// Struct for reference to pipeline
-struct PipelineRef {
+
+// Struct for instance of pipeline
+struct PipelineInstances {
 	std::string* id;
 	Pipeline* P;
+	Instance* I;
+	int InstanceCount;	/*number of instances of the current pipeline */
 
 	void init(const char* _id, Pipeline* _P) {
 		id = new std::string(_id);
 		P = _P;
 	}
-};
-
-// Struct for instance of pipeline
-struct PipelineInstances {
-	Instance* I;
-	int InstanceCount;	/*number of instances of the current pipeline*/
-	PipelineRef* PR;
 };
 
 // Main class
@@ -52,7 +48,7 @@ class Scene {
 	int modelCount = 0;
 	Model **M;
 	// Map the name of the model to its id
-	std::unordered_map<std::string, int> modelMap;
+	std::unordered_map<std::string, int> modelIdMap;
 
 	// Map the name of the model to its vertices
 	std::unordered_map<std::string, std::vector<glm::vec3>> vecMap;
@@ -63,13 +59,13 @@ class Scene {
 	Texture **T;
 
 	// Map the name of the texture to its id
-	std::unordered_map<std::string, int> textureMap;
+	std::unordered_map<std::string, int> textureIdMap;
 	
 
 	// Instances
 	int instanceCount = 0;
 	Instance **I;
-	std::unordered_map<std::string, int> instanceMap;
+	std::unordered_map<std::string, int> instanceIdMap;
 
 	// Map the name (id) of the instance to the bounding box
 	std::unordered_map<std::string, BoundingBox> bbMap;
@@ -77,19 +73,19 @@ class Scene {
 
 	// Pipelines
 	// Map the name of the pipeline to PipelineRef
-	std::unordered_map<std::string, PipelineRef*> pipelineMap;
+	std::unordered_map<std::string, Pipeline*> pipelineMap;
 
 	int pipelineInstanceCount = 0;
-	PipelineInstances* PI;
+	PipelineInstances *PI;
 
 
 	// Initialization
-	void init(BaseProject *_BP, VertexDescriptor *VD, std::vector<PipelineRef>& PRs, std::string file) {
+	void init(BaseProject *_BP, VertexDescriptor *VD, std::vector<PipelineInstances>& PRs, std::string file) {
 		
 		BP = _BP;
 
 		for (int i = 0; i < PRs.size(); i++) {
-			pipelineMap[*PRs[i].id] = &PRs[i];
+			pipelineMap[*PRs[i].id] = PRs[i].P;
 		}
 
 		// Open json file
@@ -118,7 +114,7 @@ class Scene {
 
 			for(int k = 0; k < modelCount; k++) {
 				// Map the name (id) of the model to index (k)
-				modelMap[models[k]["id"]] = k;
+				modelIdMap[models[k]["id"]] = k;
 
 				// Initialize model
 				M[k] = new Model();
@@ -138,7 +134,7 @@ class Scene {
 
 			for(int k = 0; k < textureCount; k++) {
 				// Map the name of the texture to the index
-				textureMap[textures[k]["id"]] = k;
+				textureIdMap[textures[k]["id"]] = k;
 
 				// Initialize texture
 				T[k] = new Texture();
@@ -158,7 +154,8 @@ class Scene {
 			for (int k = 0; k < pipelineInstanceCount; k++) {
 
 				std::string pipelineId = pInstances[k]["pipeline"];
-				PI[k].PR = pipelineMap[pipelineId];
+				PI[k].id = &pipelineId;
+				PI[k].P = pipelineMap[pipelineId];
 
 				// Load elements for each pipeline
 				nlohmann::json instances = pInstances[k]["elements"];
@@ -169,9 +166,9 @@ class Scene {
 
 				for (int j = 0; j < PI[k].InstanceCount; j++) {
 					// Load parameters for instances
-					std::cout << k << "." << j << "\t" << instances[j]["id"] << ", " << instances[j]["model"] << "(" << modelMap[instances[j]["model"]] << "), {";
+					std::cout << k << "." << j << "\t" << instances[j]["id"] << ", " << instances[j]["model"] << "(" << modelIdMap[instances[j]["model"]] << "), {";
 					PI[k].I[j].id = new std::string(instances[j]["id"]);
-					PI[k].I[j].modelId = modelMap[instances[j]["model"]];
+					PI[k].I[j].modelId = modelIdMap[instances[j]["model"]];
 					
 					// Save textures
 					int nTx = instances[j]["texture"].size();
@@ -181,7 +178,7 @@ class Scene {
 
 					// More textures
 					for (int h = 0; h < nTx; h++) {
-						PI[k].I[j].textureVec[h] = textureMap[instances[j]["texture"][h]];
+						PI[k].I[j].textureVec[h] = textureIdMap[instances[j]["texture"][h]];
 						std::cout << " " << instances[j]["texture"][h] << "(" << PI[k].I[j].textureVec[h] << ")";
 					}
 					std::cout << "}\n";
@@ -215,7 +212,7 @@ class Scene {
 
 					// Link references pipeline - instance
 					PI[k].I[j].PI = &PI[k];
-					PI[k].I[j].DSL = &PI[k].PR->P->D;
+					PI[k].I[j].DSL = &PI[k].P->D;
 					PI[k].I[j].nDSs = PI[k].I[j].DSL->size()-1; /* exclude DSLGlobal */
 					BP->setsInPool += (PI[k].I[j].nDSs);
 
@@ -233,7 +230,6 @@ class Scene {
 							}
 						}
 					}
-
 					instanceCount++;
 				}
 			}
@@ -247,7 +243,7 @@ class Scene {
 				for (int j = 0; j < PI[k].InstanceCount; j++) {
 					// Load all instances in the map
 					I[i] = &PI[k].I[j];
-					instanceMap[*I[i]->id] = i;
+					instanceIdMap[*I[i]->id] = i;
 
 					i++;
 				}
@@ -340,7 +336,7 @@ class Scene {
 		for (int k = 0; k < pipelineInstanceCount; k++) {
 
 			/* Pipelines Binding */
-			Pipeline* P = PI[k].PR->P;
+			Pipeline* P = PI[k].P;
 			P->bind(commandBuffer);
 
 			// Bind Global Descriptor Set at set 0 for pipeline

@@ -75,9 +75,6 @@ protected:
 	// Scene
 	Scene SC;
 
-	// Reference to pipelines: name (string), corresponding pipeline
-	std::vector<PipelineRef> PRs;
-
 	TextMaker txt;
 
 	UniformBufferObject CoinUbo;
@@ -280,12 +277,12 @@ protected:
 		Plight.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
 			VK_CULL_MODE_NONE, false);
 
-		// Initialize PipelineRef with names and pipelines
+
+		std::vector<PipelineInstances> PRs;
 		PRs.resize(3);
 		PRs[0].init("P", &P);
 		PRs[1].init("PBlinn", &Pcube);
 		PRs[2].init("PLight", &Plight);
-
 
 		// Initialize pools
 		uniformBlocksInPool = 1; /* Global Ubo */
@@ -348,7 +345,7 @@ protected:
 		// Initialize bounding boxes (no for the walls, ceiling and floor)
 		for (std::vector<std::string>::iterator it = staticObj.begin()+6; it != staticObj.end(); it++) {
 			std::string obj_id = it->c_str();
-			int i = SC.instanceMap[it->c_str()];
+			int i = SC.instanceIdMap[it->c_str()];
 			placeBB(obj_id, SC.I[i]->Wm, SC.bbMap);
 		}
 
@@ -567,12 +564,12 @@ protected:
 	// Place a bounding box on scene for the given instance
 	void placeBB(std::string instanceName, glm::mat4 &worldMatrix, std::unordered_map<std::string, BoundingBox> &bbMap){
 
-		int instanceId = SC.instanceMap[instanceName];
+		int instanceId = SC.instanceIdMap[instanceName];
 		int modelId = SC.I[instanceId]->modelId;
 
 		// Retrieve the model name for the given model id
 		std::string modelName = "";
-		for (std::unordered_map<std::string, int>::iterator it = SC.modelMap.begin(); it != SC.modelMap.end(); ++it) {
+		for (std::unordered_map<std::string, int>::iterator it = SC.modelIdMap.begin(); it != SC.modelIdMap.end(); ++it) {
 			if (it->second == modelId) {
 				modelName = it->first;
 			} 
@@ -887,7 +884,7 @@ protected:
 
 		// Draw the landscape
 		for (std::vector<std::string>::iterator it = staticObj.begin(); it != staticObj.end(); it++) {
-			int i = SC.instanceMap[it->c_str()];
+			int i = SC.instanceIdMap[it->c_str()];
 			// Product per transform matrix
 			// staticUbo.mMat = baseMatrix * SC.I[i]->Wm * SC.M[SC.I[i]->Mid]->Wm;
 			staticUbo.mMat = baseMatrix * SC.I[i]->Wm;
@@ -903,7 +900,7 @@ protected:
 		int k;
 		/* k = 1 starts from first point light */
 		for (it = lightObj.begin(),  k = 0; it != lightObj.end(); it++, k++) {
-			int i = SC.instanceMap[it->c_str()];
+			int i = SC.instanceIdMap[it->c_str()];
 			//std::cout << *it << " " << i << "\n";
 						// Product per transform matrix
 			
@@ -980,7 +977,7 @@ protected:
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
 
 
-		int i = SC.instanceMap[cubeObj];
+		int i = SC.instanceIdMap[cubeObj];
 		cubeUbo.mMat = baseMatrix * worldMatrix * SC.M[SC.I[i]->modelId]->Wm * SC.I[i]->Wm;
 		cubeUbo.mvpMat = viewPrjMatrix * cubeUbo.mMat;
 		cubeUbo.nMat = glm::inverse(glm::transpose(cubeUbo.mMat));
@@ -1001,7 +998,7 @@ protected:
 		coinRot += COIN_ROT_SPEED * deltaTime;
 		if(coinRot > 360.0f) coinRot = 0.0f;
 		
-		i = SC.instanceMap["coin"];
+		i = SC.instanceIdMap["coin"];
 		World = glm::translate(glm::mat4(1.0f),coinPos);
 		World *= glm::rotate(glm::mat4(1.0f),glm::radians(90.0f), glm::vec3(1,0,0));
 		World *= glm::rotate(glm::mat4(1.0f), coinRot, glm::vec3(0.0f, 0.0f, 1.0f));

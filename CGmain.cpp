@@ -263,7 +263,7 @@ protected:
 
 		// Pipelines [Shader couples]
 		// Shader.vert, PhongShader.frag
-		P.init(this, &VD, "shaders/Vert.spv", "shaders/PhongFrag.spv", { &DSLGlobal, &DSLstatic });
+		P.init(this, &VD, "shaders/Vert.spv", "shaders/Cook-TorranceFrag.spv", { &DSLGlobal, &DSLstatic });
 		
 		// VK_POLYGON_MODE_FILL for normal view, VK_POLYGON_MODE_LINE for meshes
 		P.setAdvancedFeatures(VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,

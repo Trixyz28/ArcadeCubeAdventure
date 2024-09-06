@@ -158,20 +158,12 @@
 			"texture": "textures/ceiling.jpg"
 		},
 		{
-			"id": "tlwall",
-			"texture": "textures/leftwall.jpg"
+			"id": "tlrwall",
+			"texture": "textures/lrwall.jpg"
 		},
 		{
-			"id": "trwall",
-			"texture": "textures/rightwall.jpg"
-		},
-		{
-			"id": "tfwall",
-			"texture": "textures/frontwall.jpg"
-		},
-		{
-			"id": "tbwall",
-			"texture": "textures/backwall.jpg"
+			"id": "tfbwall",
+			"texture": "textures/fbwall.jpg"
 		},
 		{
 			"id": "tfurniture",
@@ -226,7 +218,7 @@
 				{
 					"id": "leftwall",
 					"model": "leftwall",
-					"texture": [ "tlwall" ],
+					"texture": [ "tlrwall" ],
 					"scale": [ 0.5, 0.5, 0.5 ],
 					"rotate": [ 0.0, 0.0, 0.0 ],
 					"translate": [ 0.0, 0.0, 0.0 ]
@@ -234,7 +226,7 @@
 				{
 					"id": "rightwall",
 					"model": "rightwall",
-					"texture": [ "trwall" ],
+					"texture": [ "tlrwall" ],
 					"scale": [ 0.5, 0.5, 0.5 ],
 					"rotate": [ 0.0, 0.0, 0.0 ],
 					"translate": [ 0.0, 0.0, 0.0 ]
@@ -242,7 +234,7 @@
 				{
 					"id": "backwall",
 					"model": "backwall",
-					"texture": [ "tbwall" ],
+					"texture": [ "tfbwall" ],
 					"scale": [ 0.5, 0.5, 0.5 ],
 					"rotate": [ 0.0, 0.0, 0.0 ],
 					"translate": [ 0.0, 0.0, 0.0 ]
@@ -250,7 +242,7 @@
 				{
 					"id": "frontwall",
 					"model": "frontwall",
-					"texture": [ "tfwall" ],
+					"texture": [ "tfbwall" ],
 					"scale": [ 0.5, 0.5, 0.5 ],
 					"rotate": [ 0.0, 0.0, 0.0 ],
 					"translate": [ 0.0, 0.0, 0.0 ]

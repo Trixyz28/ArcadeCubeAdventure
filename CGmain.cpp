@@ -92,11 +92,8 @@ protected:
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
 		"vendingmachine", "popcornmachine", "paintpacman", "sofa", "coffeetable",
 		"bluepouf", "brownpouf", "yellowpouf", 
-		//"frenchchips", "macaron", "drink1", "drink2", "drink3"
+		"frenchchips", "macaron", "drink1", "drink2", "drink3"
 	};
-
-	// Reward gadgets to draw
-	std::vector<std::string> gadgetObj = { "diamond" };
 
 	// Lights to draw
 	std::vector<std::string> lightObj = { "window", "light", "sign24h" };
@@ -322,8 +319,8 @@ protected:
 		// Variables for jumping and collision check
 		jumpSpeed = 0.0f;
 		isJumping = false;
-		gravity = -0.003f;
-		jumpForce = 0.2f;
+		gravity = -0.0003f;
+		jumpForce = 0.03f;
 		groundLevel = 0.0f;
 		isCollision = false;
 		isCollisionXZ = false;
@@ -446,11 +443,15 @@ protected:
 	// Helper function for collision check
 	bool checkBBCollision(const BoundingBox& box, glm::vec3 newPos) {
 
-		bool overlapX = newPos.x+cubeHalfSize >= box.min.x && newPos.x-cubeHalfSize <= box.max.x;
-		bool overlapY = newPos.y+cubeHalfSize >= box.min.y && newPos.y-cubeHalfSize <= box.max.y;
-		bool overlapZ = newPos.z+cubeHalfSize >= box.min.z && newPos.z-cubeHalfSize <= box.max.z;
+		float x = glm::max(box.min.x, glm::min(newPos.x, box.max.x));
+		float y = glm::max(box.min.y, glm::min(newPos.y, box.max.y));
+		float z = glm::max(box.min.z, glm::min(newPos.z, box.max.z));
 
-		return overlapX && overlapY && overlapZ;
+		float distance = glm::sqrt((x - newPos.x) * (x - newPos.x) +
+			(y - newPos.y) * (y - newPos.y) +
+			(z - newPos.z) * (z - newPos.z));
+
+		return distance < cubeHalfSize;
 	}
   
 
@@ -468,7 +469,7 @@ protected:
 
 		isCollisionXZ = false;
 		isCollision = false;
-		float dampLambda = 10.0f;
+
 
 		// Check collision between new position of cube and each bounding box
 		for (auto bb : SC.bbMap) {
@@ -479,7 +480,7 @@ protected:
 				isCollision = true;
 				// Grab key of colliding object
 				collisionId = bb.first;
-				std::cout << "\n\n" << "collision with " << collisionId << "\n";
+				// std::cout << "\n\n" << "collision with " << collisionId << "\n";
 				break;
 			}
 		}
@@ -493,7 +494,7 @@ protected:
 			}
 		}
 
-		if (isCollision || isCollisionXZ) {
+		if (isCollision) {
 
 			switch (SC.bbMap[collisionId].cType) {
 				// Colliding with objects
@@ -502,21 +503,25 @@ protected:
 
 					glm::vec3 difference = newPos - closestPoint;
 
-					// This vector represents the direction of the collision response
-					glm::vec3 normal = glm::normalize(difference);
+					float distance = glm::length(difference);
+					// std::cout << "distance: " << distance << "\n";
 
-					float height = newPos.y;
-					
-					// Collision from axes x, y, z
-					if (height < SC.bbMap[collisionId].max.y && isCollisionXZ) {
-						//new ground level
-						groundLevel = SC.bbMap[collisionId].max.y;
-						//position update 
-						newPos.y = SC.bbMap[collisionId].max.y + cubeHalfSize + 0.01f;
+					// the normalized vector (unit vector) pointing from the closest point on the AABB to the rocket's center
+					// This vector represents the direction of the collision response.
+					glm::vec3 normal = glm::normalize(difference);
+					// std::cout << "normal         = " << normal.x << " " <<  normal.y << " " << normal.z   << ";\n";
+
+					//if collision is from y 
+					if (newPos.y <= SC.bbMap[collisionId].max.y + cubeHalfSize &&  // If the collision is coming from above
+						!(std::abs(normal.x) > 0.5f || std::abs(normal.z) > 0.5f) &&	 // Not from the side
+						normal.y != -1.0f && !glm::any(glm::isnan(normal))) {
+
+						groundLevel = newPos.y;
 						isJumping = false;
 					}
+
 					// Collision not from above
-					else if(isCollision){
+					else {
 						// Adjustment for nan values
 						if (glm::any(glm::isnan(normal))) {
 							normal = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -911,18 +916,6 @@ protected:
 
 			SC.I[i]->DS[0]->map(currentImage, &lightUbo, sizeof(lightUbo), 0);
 			SC.I[i]->DS[0]->map(currentImage, &lightParUbo, sizeof(lightParUbo), 2);
-		}
-
-
-		for (std::vector<std::string>::iterator it = gadgetObj.begin(); it != gadgetObj.end(); it++) {
-			int i = SC.instanceMap[it->c_str()];
-			
-			//std::cout << *it << " " << i << "\n";
-						// Product per transform matrix
-			staticUbo.mMat = baseMatrix * SC.I[i]->Wm * SC.M[SC.I[i]->modelId]->Wm;
-			staticUbo.mvpMat = viewPrjMatrix * staticUbo.mMat;
-			staticUbo.nMat = glm::inverse(glm::transpose(staticUbo.mMat));
-			SC.I[i]->DS[0]->map(currentImage, &staticUbo, sizeof(staticUbo), 0);
 		}
 
 		getJump();

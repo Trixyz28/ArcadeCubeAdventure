@@ -2,13 +2,8 @@
 
 #define JSON_DIAGNOSTICS 1
 #include "modules/Starter.hpp"
-#include "modules/TextMaker.hpp"
 #include "modules/Scene.hpp"
 
-// Vector of text
-std::vector<SingleText> outText = {
-	{1, {"Arcade Cube Adventure"}, 0, 0},
-};
 
 
 // Descriptor Buffers: data structure to be sent to the shader
@@ -75,9 +70,7 @@ protected:
 	// Scene
 	Scene SC;
 
-	TextMaker txt;
 
-	UniformBufferObject CoinUbo;
 
 	std::string cubeObj = "cube";
 
@@ -100,6 +93,7 @@ protected:
 	UniformBufferObject staticUbo{};
 	UniformBufferObject lightUbo{};
 	LightParUniformBufferObject lightParUbo{};
+	UniformBufferObject coinUbo{};
 
 
 	// Aspect ratio of the application window
@@ -278,7 +272,7 @@ protected:
 			VK_CULL_MODE_NONE, false);
 
 
-		std::vector<PipelineInstances> PRs;
+		std::vector<PipelineStruct> PRs;
 		PRs.resize(3);
 		PRs[0].init("P", &P);
 		PRs[1].init("PBlinn", &Pcube);
@@ -292,9 +286,6 @@ protected:
 
 		// Load Scene with VD, PRs, and models / textures / instances stored in json
 		SC.init(this, &VD, PRs, "models/scene.json");
-
-		// Update the text
-		txt.init(this, &outText);
 
 
 		// Initialize local variables
@@ -389,7 +380,6 @@ protected:
 
 		// Create the Descriptor Sets
 		SC.descriptorSetsInit( &DSLGlobal );
-		txt.pipelinesAndDescriptorSetsInit();
 	}
 
 
@@ -404,7 +394,6 @@ protected:
 
 		// Cleanup descriptor sets
 		SC.descriptorSetsCleanup();
-		txt.pipelinesAndDescriptorSetsCleanup();
 	}
 
 
@@ -426,15 +415,12 @@ protected:
 		Pcube.destroy();
 		Plight.destroy();
 
-
-		txt.localCleanup();
 	}
 
 
 	// Creation of the command buffer: send to the GPU all the objects to draw with their buffers and textures
 	void populateCommandBuffer(VkCommandBuffer commandBuffer, int currentImage) {
 		SC.populateCommandBuffer(commandBuffer, currentImage);
-		txt.populateCommandBuffer(commandBuffer, currentImage, 0);
 	}
 
 	// Helper function for collision check
@@ -1004,14 +990,14 @@ protected:
 		World *= glm::rotate(glm::mat4(1.0f), coinRot, glm::vec3(0.0f, 0.0f, 1.0f));
 		World *= glm::scale(glm::vec3(0.004f,0.004f,0.004f));
 
-		CoinUbo.mMat = baseMatrix * World;
-		CoinUbo.mvpMat = viewPrjMatrix * World;
-		CoinUbo.nMat = glm::inverse(glm::transpose(CoinUbo.mMat));
+		coinUbo.mMat = baseMatrix * World;
+		coinUbo.mvpMat = viewPrjMatrix * World;
+		coinUbo.nMat = glm::inverse(glm::transpose(coinUbo.mMat));
 
 		// place bouding box
 		placeBB("coin", World, SC.bbMap);
 
-		SC.I[i]->DS[0]->map(currentImage, &CoinUbo, sizeof(CoinUbo), 0);	
+		SC.I[i]->DS[0]->map(currentImage, &coinUbo, sizeof(coinUbo), 0);	
 }
 
 };

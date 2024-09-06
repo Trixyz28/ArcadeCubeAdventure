@@ -1,7 +1,6 @@
 
 // Handler for the elements in the scene
 
-struct PipelineInstances;
 
 // Struct for instance
 struct Instance {
@@ -14,12 +13,11 @@ struct Instance {
 	std::vector<DescriptorSetLayout *> *DSL;
 
 	glm::mat4 Wm;
-	PipelineInstances *PI;
 };
 
 
-// Struct for instance of pipeline
-struct PipelineInstances {
+// Struct for pipeline containing its instances
+struct PipelineStruct {
 	std::string* id;
 	Pipeline* P;
 	Instance* I;
@@ -72,15 +70,17 @@ class Scene {
 
 
 	// Pipelines
-	// Map the name of the pipeline to PipelineRef
+	// Map the name of the pipeline to the pipeline itself
 	std::unordered_map<std::string, Pipeline*> pipelineMap;
 
 	int pipelineInstanceCount = 0;
-	PipelineInstances *PI;
+	
+	// Pipelines with their instances
+	PipelineStruct *PI;
 
 
 	// Initialization
-	void init(BaseProject *_BP, VertexDescriptor *VD, std::vector<PipelineInstances>& PRs, std::string file) {
+	void init(BaseProject *_BP, VertexDescriptor *VD, std::vector<PipelineStruct>& PRs, std::string file) {
 		
 		BP = _BP;
 
@@ -148,7 +148,7 @@ class Scene {
 			std::cout << "Pipeline Instances count: " << pipelineInstanceCount << "\n";
 
 			// Initialize instances for each pipeline
-			PI = (PipelineInstances*)calloc(pipelineInstanceCount, sizeof(PipelineInstances));
+			PI = (PipelineStruct*)calloc(pipelineInstanceCount, sizeof(PipelineStruct));
 			instanceCount = 0;
 
 			for (int k = 0; k < pipelineInstanceCount; k++) {
@@ -211,7 +211,6 @@ class Scene {
 		
 
 					// Link references pipeline - instance
-					PI[k].I[j].PI = &PI[k];
 					PI[k].I[j].DSL = &PI[k].P->D;
 					PI[k].I[j].nDSs = PI[k].I[j].DSL->size()-1; /* exclude DSLGlobal */
 					BP->setsInPool += (PI[k].I[j].nDSs);

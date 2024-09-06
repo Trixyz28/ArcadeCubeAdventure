@@ -162,10 +162,12 @@ protected:
 	const glm::vec3 DEFAULT_POS = glm::vec3(4.0f, 0.2f, 0.0f);
 	const glm::vec3 POS_1 = glm::vec3(-4.10249f, 0.2f, -6.00859f);
 	const glm::vec3 POS_2 = glm::vec3(4.9367f, 0.2f, 3.3424f);
-	const glm::vec3 POS_3 = glm::vec3(-11.3001f, 0.3f, -9.65229f);
-	const glm::vec3 ON_COFFEE_TABLE = glm::vec3(-8.73825f, 1.2f, 4.34894f);
-	// const glm::vec3 ON_YELLOW_POUF = glm::vec3(-5.59736f, 1.2f, 5.71061f);
-	const glm::vec3 ON_POOL_TABLE = glm::vec3(12.6f, 2.8f, 16.0f);
+	const glm::vec3 POS_3 = glm::vec3(-11.3001f, 0.2f, -9.65229f);
+	const glm::vec3 POS_4 = glm::vec3(-0.537122f, 0.2f, 12.1236f);
+	// const glm::vec3 ON_COFFEE_TABLE = glm::vec3(-8.73825f, 1.2f, 4.34894f);
+	const glm::vec3 ON_YELLOW_POUF = glm::vec3(-8.39734f, 1.2f, 5.27297f);
+	const glm::vec3 ON_POOL_TABLE_1 = glm::vec3(12.6f, 2.8f, 16.0f);
+	const glm::vec3 ON_POOL_TABLE_2 = glm::vec3(9.1f, 2.8f, 15.0f);
 	
 
 	const std::vector<glm::vec3> coinLocations = { 
@@ -173,8 +175,10 @@ protected:
 		POS_1,
 		POS_2,
 		POS_3,
-		ON_COFFEE_TABLE,
-		ON_POOL_TABLE,
+		POS_4,
+		ON_YELLOW_POUF,
+		ON_POOL_TABLE_1,
+		ON_POOL_TABLE_2,
 
 	};
 
@@ -307,8 +311,8 @@ protected:
 		// Variables for jumping and collision check
 		jumpSpeed = 0.0f;
 		isJumping = false;
-		gravity = -0.0003f;
-		jumpForce = 0.03f;
+		gravity = -0.0005f;
+		jumpForce = 0.02f;
 		groundLevel = 0.0f;
 		isCollision = false;
 		isCollisionXZ = false;
@@ -489,11 +493,11 @@ protected:
 					glm::vec3 normal = glm::normalize(difference);
 
 					// Collision is from x, y, z axes
-					if (newPos.y <= SC.bbMap[collisionId].max.y + cubeHalfSize &&  // If the collision is coming from above
+					if (newPos.y < SC.bbMap[collisionId].max.y + cubeHalfSize &&  // If the collision is coming from above
 						!(std::abs(normal.x) > 0.5f || std::abs(normal.z) > 0.5f) &&	 // Not from the side
 						normal.y != -1.0f && !glm::any(glm::isnan(normal))) {
-
-						groundLevel = newPos.y;
+						// std::cout << "Collision on object\n" << std::endl;
+						groundLevel = SC.bbMap[collisionId].max.y + cubeHalfSize;
 						isJumping = false;
 					}
 					// Collision not from above
@@ -510,12 +514,15 @@ protected:
 				// Colliding with "Rewards"
 				case COLLECTIBLE: {
 					if(collisionId == "coin"){
+
 						// New position for "coin"
 						coinLocationId = int(std::rand() % coinLocations.size());
 						coinPos = coinLocations[coinLocationId];
 						coinPosY = coinPos.y;
 						coinMaxHeight = coinPosY + COIN_MAX_HEIGHT;
 						collectedCoin += 1;
+						jumpForce = glm::clamp(jumpForce+0.02f, 0.0f, 0.1f);
+						// std::cout << "Collision with coin: " << collectedCoin << std::endl;
 					}
 					// Delete the bouding box for that coin
 					SC.bbMap.erase(collisionId);

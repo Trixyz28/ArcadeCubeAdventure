@@ -491,24 +491,18 @@ protected:
 			}
 		}
 
+		// Collision management
 		if (isCollision) {
-
 			switch (SC.bbMap[collisionId].cType) {
 				// Colliding with objects
 				case OBJECT: {
 					glm::vec3 closestPoint = glm::clamp(newPos, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
-
 					glm::vec3 difference = newPos - closestPoint;
 
-					float distance = glm::length(difference);
-					// std::cout << "distance: " << distance << "\n";
-
-					// the normalized vector (unit vector) pointing from the closest point on the AABB to the rocket's center
 					// This vector represents the direction of the collision response.
 					glm::vec3 normal = glm::normalize(difference);
-					// std::cout << "normal         = " << normal.x << " " <<  normal.y << " " << normal.z   << ";\n";
 
-					//if collision is from y 
+					// Collision is from x, y, z axes
 					if (newPos.y <= SC.bbMap[collisionId].max.y + cubeHalfSize &&  // If the collision is coming from above
 						!(std::abs(normal.x) > 0.5f || std::abs(normal.z) > 0.5f) &&	 // Not from the side
 						normal.y != -1.0f && !glm::any(glm::isnan(normal))) {
@@ -516,7 +510,6 @@ protected:
 						groundLevel = newPos.y;
 						isJumping = false;
 					}
-
 					// Collision not from above
 					else {
 						// Adjustment for nan values
@@ -525,19 +518,15 @@ protected:
 						}
 						// Move the cube out of collision along the normal
 						newPos = closestPoint + normal * glm::vec3(cubeHalfSize);
-						// std::cout << "cubePosition         = " << cubePosition.x << " " <<  cubePosition.y << " " << cubePosition.z   << ";\n";
 					}
-
 					break;
 				}
-				// Colliding with "rewards"
+				// Colliding with "Rewards"
 				case COLLECTIBLE: {
-
-					if(isCollision && collisionId == "coin" ){
+					if(collisionId == "coin"){
 						// New position for "coin"
 						coinLocationId = int(std::rand() % coinLocations.size());
 						coinPos = coinLocations[coinLocationId];
-
 						coinPosY = coinPos.y;
 						coinMaxHeight = coinPosY + COIN_MAX_HEIGHT;
 						collectedCoin += 1;

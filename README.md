@@ -16,9 +16,9 @@ The game sets up an arcade-style playroom with various furniture and game machin
 
 - <kbd>W</kbd>, <kbd>A</kbd>, <kbd>S</kbd>, <kbd>D</kbd> to move towards the four directions with respect to the cube's current orientation.
 - <kbd>Space</kbd> to jump.
-- <kbd>¡û</kbd>, <kbd>¡ú</kbd> to rotate the cube.
-- <kbd>¡ü</kbd>, <kbd>¡ý</kbd> to modify the height of the camera.
-- <kbd>R</kbd>, <kbd>F</kbd> to modify the distance between the camera and the cube. 
+- <kbd>&#8592;</kbd>, <kbd>&#8594;</kbd> to rotate the cube.
+- <kbd>&#8593;</kbd>, <kbd>&#8595;</kbd> to modify the height of the camera.
+- <kbd>R</kbd>, <kbd>F</kbd> to move the camera closer to or farther from the cube. 
 - <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>, <kbd>4</kbd> to turn on or off the 4 different light sources. 
 
 

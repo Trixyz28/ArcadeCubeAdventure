@@ -71,12 +71,13 @@ protected:
 	Scene SC;
 
 
-
+	// Cube object
 	std::string cubeObj = "cube";
 
 	// Static elements of the scene to draw
 	std::vector<std::string> staticObj = { 
 		"floor", "ceiling", "leftwall", "rightwall", "frontwall", "backwall", 
+
 		// From here below: scene elements with bounding boxes
 		"redmachine1", "redmachine2", "redmachine3", "hockeytable", "pooltable", "poolsticks", "dancemachine1", "dancemachine2",
 		"blackmachine1", "blackmachine2", "blackmachine3", "doublemachine1", "doublemachine2",
@@ -105,7 +106,7 @@ protected:
 		// Window size, title and initial background
 		windowWidth = 1920;
 		windowHeight = 1080;
-		windowTitle = "CG - Project";
+		windowTitle = "Arcade Cube Adventure";
 		windowResizable = GLFW_TRUE;
 		initialBackgroundColor = { 0.0f, 0.0f, 0.0f, 1.0f };
 
@@ -311,7 +312,7 @@ protected:
 		// Variables for jumping and collision check
 		jumpSpeed = 0.0f;
 		isJumping = false;
-		gravity = -0.0005f;
+		gravity = -0.0007f;
 		jumpForce = 0.02f;
 		groundLevel = 0.0f;
 		isCollision = false;
@@ -484,6 +485,7 @@ protected:
 		// Collision management
 		if (isCollision) {
 			switch (SC.bbMap[collisionId].cType) {
+
 				// Colliding with objects
 				case OBJECT: {
 					glm::vec3 closestPoint = glm::clamp(newPos, SC.bbMap[collisionId].min, SC.bbMap[collisionId].max);
@@ -521,7 +523,7 @@ protected:
 						coinPosY = coinPos.y;
 						coinMaxHeight = coinPosY + COIN_MAX_HEIGHT;
 						collectedCoin += 1;
-						jumpForce = glm::clamp(jumpForce+0.02f, 0.0f, 0.1f);
+						jumpForce = glm::clamp(jumpForce + 0.01f, 0.0f, 0.07f);
 						// std::cout << "Collision with coin: " << collectedCoin << std::endl;
 					}
 					// Delete the bouding box for that coin
@@ -617,10 +619,13 @@ protected:
 
 		glm::vec3 newPosition = cubePosition;
 
+		// Rotate anticlockwise
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 			cubeRotAngle += cubeRotSpeed * deltaTime;
 			camRotation.x += cubeRotSpeed * deltaTime;
 		}
+
+		// Rotate clockwise
 		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
 			cubeRotAngle -= cubeRotSpeed * deltaTime;
 			camRotation.x -= cubeRotSpeed * deltaTime;
@@ -829,6 +834,7 @@ protected:
 
 				printVec3("Cube position", cubePosition);
 				printVec3("Camera position", camPosition);
+				printFloat("Jump force", jumpForce);
 				printFloat("DeltaTime", deltaTime);
 			}
 		} else {
@@ -926,11 +932,12 @@ protected:
 
 		getActions();
 
-
+		// Constraint the cube's position into the available map
 		cubePosition.x = glm::clamp(cubePosition.x, -mapLimit, mapLimit);
 		cubePosition.z = glm::clamp(cubePosition.z, -mapLimit, mapLimit);
 		cubePosition.y = glm::clamp(cubePosition.y, 0.0f, 16.0f);
 
+		// Constraint the camera's position
 		camDistance = glm::clamp(camDistance, minCamDistance, maxCamDistance);
 		camRotation.y = glm::clamp(camRotation.y, 0.0f, 89.0f);
 
@@ -942,18 +949,20 @@ protected:
 
 		float dampLambda = 10.0f;
 
+		// Define the behaviour of the camera when approaching walls
 		if (abs(newCamPosition.x) > mapLimit - 0.01f || abs(newCamPosition.z) > mapLimit - 0.01f) {
 			camRotation.y = camRotation.y * exp(-dampLambda * deltaTime) + 30.0f * (1 - exp(-dampLambda * deltaTime));
 		}
 		else {
 			camRotation.y = oldCamRoty;
 		}
-
+		
+		// Define the next position of the camera
 		newCamPosition.x = glm::clamp(newCamPosition.x, -mapLimit + 0.02f, mapLimit-0.02f);
 		newCamPosition.z = glm::clamp(newCamPosition.z, -mapLimit + 0.02f, mapLimit-0.02f);
 		newCamPosition.y = glm::clamp(newCamPosition.y, camMinHeight, 16.0f);
 
-
+		// Introduce damping to avoid scattering
 		camPosition = camPosition * exp(-dampLambda * deltaTime)  + newCamPosition * (1-exp(-dampLambda * deltaTime));
 
 		viewMatrix = glm::lookAt(camPosition, cubePosition, glm::vec3(0.0f, 1.0f, 0.0f));
